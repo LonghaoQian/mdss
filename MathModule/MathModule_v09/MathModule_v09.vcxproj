@@ -147,26 +147,32 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DynamicQuaternion.h" />
+    <ClInclude Include="LTIsystem.h" />
     <ClInclude Include="OdeSolver.h" />
     <ClInclude Include="Quaternion2.h" />
     <ClInclude Include="RigidBody.h" />
+    <ClInclude Include="SimController.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Subsystem.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UtilityFunctions.h" />
     <ClInclude Include="VariableDefinitions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DynamicQuaternion.cpp" />
+    <ClCompile Include="LTIsystem.cpp" />
     <ClCompile Include="MathModule_v09.cpp" />
     <ClCompile Include="OdeSolver.cpp" />
     <ClCompile Include="Quaternion2.cpp" />
     <ClCompile Include="RigidBody.cpp" />
+    <ClCompile Include="SimController.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Subsystem.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

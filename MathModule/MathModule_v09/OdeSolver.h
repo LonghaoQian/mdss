@@ -5,12 +5,13 @@
 */
 
 #pragma once
-# include <math.h>
+#include <math.h> 
 #include <vector>
 #include <Eigen\Dense>
 #include <iostream>
 using namespace Eigen;
 using namespace std;
+
 ////////////////////////求解状态的结构体///////////////////////
 //单步的信息
 struct simulation_step_info{
