@@ -4,50 +4,53 @@
 LTIsystem::LTIsystem()
 {}
 
-LTIsystem::LTIsystem(const MatrixXd& A_, const MatrixXd& B_, const MatrixXd& C_, const MatrixXd& D_)
+LTIsystem::LTIsystem(const LTIParameter& parameter, const LTIInitialCondition& IC)
 {
-	A = A_;
-	B = B_;
-	C = C_;
-	D = D_;
+	state = IC.X_0;// assign the initial condition to the state
+	system_info.system_type = LTI;
+	A = parameter.A;
+	B = parameter.B;
+	C = parameter.C;
+	D = parameter.D;
 	// determine the size of the system
-	num_of_continuous_states = A.rows();
-	num_of_inputs = B.cols();
-	num_of_outputs = C.rows();
+	system_info.num_of_continuous_states = A.rows();
+	system_info.num_of_inputs = B.cols();
+	system_info.num_of_outputs = C.rows();
 
 	// check the compatibility of the system matrices:
-	system_info = 0;
+	system_info.system_parameter_ok = true;
 	if (A.rows() != B.rows())
 	{
-		system_info = STATE_INPUT_MISMATCH;
+		system_info.system_parameter_ok = false;
 	}
 
 	if (A.rows() != A.cols())
 	{
-		system_info = STATE_INPUT_MISMATCH;
+		system_info.system_parameter_ok = false;
 	}
 
 	if (A.rows() !=  C.cols())
 	{
-		system_info = STATE_OUTPUT_MISMATCH;
+		system_info.system_parameter_ok = false;
 	}
 
 	if (C.rows() != D.rows())
 	{
-		system_info = INPUT_OUTPUT_MISMATCH;
+		system_info.system_parameter_ok = false;
 	}
 
-	if (num_of_inputs != D.cols())
+	if (system_info.num_of_inputs != D.cols())
 	{
-		system_info = INPUT_OUTPUT_MISMATCH;
+		system_info.system_parameter_ok = false;
 	}
 
-	if (system_info == 0)
+	if (system_info.system_parameter_ok == true)
 	{
 		ready_to_run = true;
 		// initialize state memeory
-		state.resize(num_of_continuous_states);
-		output.resize(num_of_outputs);
+		state.resize(system_info.num_of_continuous_states);
+		output.resize(system_info.num_of_outputs);
+		system_info.input_connection.resize(system_info.num_of_inputs, 2);
 	}
 	else {
 		ready_to_run = false;
@@ -74,11 +77,44 @@ void LTIsystem::OutputEquation(const VectorXd& state, const VectorXd& input, Vec
 	output = C * state + D * input;
 }
 
-void LTIsystem::LoadInitialCondition(const VectorXd& initial_condition)
+void LTIsystem::IncrementState(const VectorXd & state_increment)
 {
+	state += state_increment;
 }
 
-void LTIsystem::LoadParameters(const VectorXd& parameter_list)
+VectorXd LTIsystem::GetState()
 {
+	return state;
+}
+
+void LTIsystem::UpdateOutput(const VectorXd& input)
+{
+	OutputEquation(state, input, output);
+}
+
+VectorXd LTIsystem::GetOutput()
+{
+	return output;
+}
+
+void LTIsystem::DisplayParameters()
+{
+	cout << "---------------------" << endl;
+	cout<< "LTI system parameter:"<<endl;
+	cout << "A = " << endl << A << endl;
+	cout << "----" << endl;
+	cout<< "B = " <<endl<< B << endl;
+	cout << "----" << endl;
+	cout<< "C = " <<endl << C << endl;
+	cout << "----" << endl;
+	cout<< "D = " <<endl<< D << endl;
+}
+
+void LTIsystem::DisplayInitialCondition()
+{
+	cout << "---------------------" << endl;
+	cout << "LTI system initial condition X_0:" << endl;
+	cout << "The initial condition is:  " << endl;
+	cout << state << endl;
 }
 

@@ -2,6 +2,8 @@
 #include <Eigen\Dense>
 #include "Subsystem.h"
 #include "LTIsystem.h"
+#include <iostream>
+#include "RigidBody.h"
 using namespace Eigen;
 using namespace std;
 struct SolverConfig {
@@ -14,26 +16,30 @@ class SimController
 {
 private:
 	bool system_ok;// if all good, the system is ok and ready to go.
+	//-------------------------- system parameters---------------------------------//
 	unsigned int num_of_subsystems;
 	unsigned int num_of_continuous_states;
 	unsigned int num_of_outputs;
 	unsigned int num_of_external_inputs;
 	SolverConfig solver_config;
 	vector<unique_ptr<Subsystem>> subsystem_list;// a list of all subsystems
-	vector<unique_ptr<VectorXd>> external_input_list;// a list of all external inputs
-	vector<unique_ptr<MatrixX2i>> output_connection;// a list of all output_connections
-	vector<unique_ptr<MatrixX2i>> input_connection;// al iist of all input connections
 	MatrixXd connectivity;// connectivity map of the simulation
+	MatrixXd external_mapping;
 	// temp space for numerical integration
-	void UpdateExternalInputs(const VectorXd& external_input);// get external inputs
-	int Add_subsystem(unsigned  int system_type, const MatrixX2i& input_connection, const VectorXd& parameters); // input all system info to the sim control object
-	int LoadInitialCondition();
-	int PreRunProcess();// Parsing all the subsystems, load parameters, and check the con
+	//----------------------------- Solver Variables---------------------------//
+	VectorXd external_input_buffer;// store the external input at every time step;
 public:
+	/*overloads of AddSubsystems to suit for every pre-defined type of model*/
+	bool AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC); // input all system info to the sim control object
+	bool AddSubSystem(const RigidBodyParameter& parameters, const RigidBodyCondition& IC); // input all system info to the sim control object
+	/*----------------------------------------------------------------------*/
+	void GetExternalInputs(const VectorXd& extern_input);
+	bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);
+	bool PreRunProcess();// check and parse the system connection relationship.
 	int Run();
 	int PostRunProcess();
-	int GetSystemInfo();
-	SimController(const SolverConfig& config, const vector<subsystem_info>& system_construct, const vector<VectorXd>& parameter_list);
+	void DisplayTopology();
+	SimController(const SolverConfig& config);
 	~SimController();
 };
 

@@ -1,18 +1,37 @@
 #pragma once
-#include "odesolver.h"
+#include "Subsystem.h"
+#include <iostream>
+#include "UtilityFunctions.h"
+struct RigidBodyParameter {
+	Matrix3d J;
+	double m;
+};
+struct RigidBodyCondition {
+	Vector3d X_I;
+	Vector3d V_I;
+	Vector3d Omega_BI;
+	Vector3d Euler;
+};
+
 class RigidBody :
-	public OdeSolver
+	public Subsystem
 {
+private:
+	Matrix3d J;// moment of inertia
+	Matrix3d J_inv; // the inverse of moment of inertia
+	double m;// mass
+	Matrix3d R_IB;
 public:
-	Matrix3d m_I_;//惯量阵
-	Matrix3d m_I_inv;//惯量阵的逆
-	Vector3d m_Fb_;//合外力在体坐标系上的坐标
-	Vector3d m_Md_;//合外力矩在体坐标系上的坐标
-	Vector3d m_Omegab_;//刚体的角速度
-	Matrix3d m_OmegaCross_;//角速度的矢量阵
-	VectorXd  OrdinaryDifferentialEquation(double& t,//时间
-	const VectorXd& state);
-	RigidBody(void);
-	~RigidBody(void);
+	void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
+	void OutputEquation(const VectorXd& state, const VectorXd& input, VectorXd& output);
+	void DisplayParameters();
+	void DisplayInitialCondition();
+	void IncrementState(const VectorXd& state_increment);
+	VectorXd GetState();
+	void UpdateOutput(const VectorXd& input);
+	VectorXd GetOutput();
+	RigidBody();
+	RigidBody(const RigidBodyParameter& parameter, const RigidBodyCondition& IC);
+	~RigidBody();
 };
 

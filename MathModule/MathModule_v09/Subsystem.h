@@ -5,7 +5,7 @@
 #define NOCONNECTION -1
 #define EXTERNAL -2
 // 
-#define GENERIC 1
+#define GENERIC 0
 #define LTI 1
 #define INTEGRATOR 2
 #define RIGIDBODY 3
@@ -18,8 +18,7 @@ struct subsystem_info {
 	unsigned int num_of_inputs;
 	unsigned int num_of_outputs;
 	unsigned int system_type;
-	unsigned int subsystem_ID;// a unique ID for all subsystems
-	unsigned int subsystem_type;// system type
+	bool system_parameter_ok;
 	MatrixX2i input_connection;
 };
 class Subsystem
@@ -32,10 +31,15 @@ protected:
 	VectorXd output;
 	// connection property
 public:
+	
 	virtual void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& temp_derivative) = 0;// differential equation for the system
 	virtual void OutputEquation(const VectorXd& state, const VectorXd& input, VectorXd& output)=0;// output of the sub system
-	virtual void LoadInitialCondition(const VectorXd& initial_condition) = 0;
-	virtual void LoadParameters(const VectorXd& parameter_list) = 0;
+	virtual void IncrementState(const VectorXd& state_increment) = 0;
+	virtual VectorXd GetState() = 0;
+	virtual void UpdateOutput(const VectorXd& input) = 0;
+	virtual VectorXd GetOutput() = 0;
+	virtual void DisplayParameters() = 0;
+	virtual void DisplayInitialCondition() = 0;
 	void SetInputConnection(const MatrixX2i& connection);
 	subsystem_info GetSystemInfo();
 	Subsystem();
