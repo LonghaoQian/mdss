@@ -163,35 +163,35 @@ void OdeSolver::Initialization(solvername name,
 
 void OdeSolver::ode45_DormandPrince(void)
 {
-	//变步长Dormand-Prince 方法求解微分方程
-	//计算得出Ki的值
-	ode_RungeKuttaFamily(solver_info.butchertableau);
-	step_info.t += step_info.step;
-
-	//计算残差
-	VectorXd Y;
-	VectorXd Z;
-	ode_Increment(solver_info.butchertableau(8));
-	m_temp_error = m_systemstate_;
-	cout<<m_systemstate_<<endl;
-	ode_Increment(m_butchertableau_dormandprince.row(7));//输出结果
-	cout<<m_systemstate_<<endl;
-	m_temp_error -=m_systemstate_;
-	cout<<m_temp_error.norm()<<endl;
-	// 调整步长
-	m_step *= pow((0.5*m_eposilon*m_step/m_temp_error.norm()),0.2);
-	cout<<m_step<<endl;
-	if(m_step>m_step_max)
-	{
-		m_step = m_step_max;
-	}else
-	{
-		if(m_step<m_step_min)
-		{
-			m_step = m_step_min;
-		}
-	}
-	
+//	//变步长Dormand-Prince 方法求解微分方程
+//	//计算得出Ki的值
+//	ode_RungeKuttaFamily(solver_info.butchertableau);
+//	step_info.t += step_info.step;
+//
+//	//计算残差
+//	VectorXd Y;
+//	VectorXd Z;
+//	ode_Increment(solver_info.butchertableau(8));
+//	m_temp_error = m_systemstate_;
+//	cout<<m_systemstate_<<endl;
+//	ode_Increment(m_butchertableau_dormandprince.row(7));//输出结果
+//	cout<<m_systemstate_<<endl;
+//	m_temp_error -=m_systemstate_;
+//	cout<<m_temp_error.norm()<<endl;
+//	// 调整步长
+//	m_step *= pow((0.5*m_eposilon*m_step/m_temp_error.norm()),0.2);
+//	cout<<m_step<<endl;
+//	if(m_step>m_step_max)
+//	{
+//		m_step = m_step_max;
+//	}else
+//	{
+//		if(m_step<m_step_min)
+//		{
+//			m_step = m_step_min;
+//		}
+//	}
+//	
 }
 
 void OdeSolver::ode45_RungeKutta(void)
@@ -263,34 +263,34 @@ void OdeSolver::OneStepUpdate(solvername name)
 	}
 }
 
-vector<simulationdata> OdeSolver::RunSimulation(double SimulationTime)
-{
-	//速度比较慢，用来分析运动曲线。
-	vector<simulationdata> m_solution;//初始化动态矩阵，用来储存计算变量
-	simulationdata onestepsolution;//零时储存变量
-	//输入初始化的结果
-	onestepsolution.m_eposilon=0;
-	onestepsolution.m_step = m_step;
-	onestepsolution.m_systemstate_derivative = m_systemstate_derivative;
-	onestepsolution.m_t = 0;
-	onestepsolution.m_systemstate_ = m_systemstate_;
-
-	bool exitflag = true; //退出标示
-	while(exitflag)
-	{
-		if(SimulationTime-onestepsolution.m_t<m_step)
-		{
-			m_step = SimulationTime-m_t_;
-			exitflag = false;}
-		ode45_DormandPrince();
-		//将结果存入零时变量
-		onestepsolution.m_eposilon=m_eposilon;
-		onestepsolution.m_step = m_step;
-		onestepsolution.m_systemstate_derivative = m_systemstate_derivative;
-		onestepsolution.m_t = m_t_;
-		onestepsolution.m_systemstate_ = m_systemstate_;
-			//推入结果中
-		m_solution.push_back(onestepsolution);
-	}
-	return m_solution;
-}
+//vector<simulationdata> OdeSolver::RunSimulation(double SimulationTime)
+//{
+//	//速度比较慢，用来分析运动曲线。
+//	vector<simulationdata> m_solution;//初始化动态矩阵，用来储存计算变量
+//	simulationdata onestepsolution;//零时储存变量
+//	//输入初始化的结果
+//	onestepsolution.m_eposilon=0;
+//	onestepsolution.m_step = m_step;
+//	onestepsolution.m_systemstate_derivative = m_systemstate_derivative;
+//	onestepsolution.m_t = 0;
+//	onestepsolution.m_systemstate_ = m_systemstate_;
+//
+//	bool exitflag = true; //退出标示
+//	while(exitflag)
+//	{
+//		if(SimulationTime-onestepsolution.m_t<m_step)
+//		{
+//			m_step = SimulationTime-m_t_;
+//			exitflag = false;}
+//		ode45_DormandPrince();
+//		//将结果存入零时变量
+//		onestepsolution.m_eposilon=m_eposilon;
+//		onestepsolution.m_step = m_step;
+//		onestepsolution.m_systemstate_derivative = m_systemstate_derivative;
+//		onestepsolution.m_t = m_t_;
+//		onestepsolution.m_systemstate_ = m_systemstate_;
+//			//推入结果中
+//		m_solution.push_back(onestepsolution);
+//	}
+//	return m_solution;
+//}

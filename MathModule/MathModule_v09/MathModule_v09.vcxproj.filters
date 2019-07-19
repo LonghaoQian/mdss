@@ -82,5 +82,8 @@
     <ClCompile Include="SimController.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="UtilityFunctions.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

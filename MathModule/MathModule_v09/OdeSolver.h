@@ -104,8 +104,8 @@ public:
 	double initialstep);
 
 	void OneStepUpdate(solvername name);
-	void Reset(void);
-	vector<simulationdata> RunSimulation(double SimulationTime);
-	int RunSimulation(double SimulationTime,double pace);
+	//void Reset(void);
+	//vector<simulationdata> RunSimulation(double SimulationTime);
+	//int RunSimulation(double SimulationTime,double pace);
 };
 
