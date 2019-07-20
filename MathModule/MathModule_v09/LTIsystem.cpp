@@ -16,7 +16,6 @@ LTIsystem::LTIsystem(const LTIParameter& parameter, const LTIInitialCondition& I
 	system_info.num_of_continuous_states = A.rows();
 	system_info.num_of_inputs = B.cols();
 	system_info.num_of_outputs = C.rows();
-
 	// check the compatibility of the system matrices:
 	system_info.system_parameter_ok = true;
 	if (A.rows() != B.rows())
@@ -71,7 +70,7 @@ void LTIsystem::DifferentialEquation(const double& t, const VectorXd& state, con
 	derivative = A * state + B * input;
 }
 
-void LTIsystem::OutputEquation(const VectorXd& state, const VectorXd& input, VectorXd& output)
+void LTIsystem::OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output)
 {
 	// y = Cx + Du
 	output = C * state + D * input;
@@ -87,9 +86,9 @@ VectorXd LTIsystem::GetState()
 	return state;
 }
 
-void LTIsystem::UpdateOutput(const VectorXd& input)
+void LTIsystem::UpdateOutput(const double& t, const VectorXd& input)
 {
-	OutputEquation(state, input, output);
+	OutputEquation(t,state, input, output);
 }
 
 VectorXd LTIsystem::GetOutput()

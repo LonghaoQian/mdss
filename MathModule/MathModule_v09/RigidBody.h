@@ -23,12 +23,12 @@ private:
 	Matrix3d R_IB;
 public:
 	void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
-	void OutputEquation(const VectorXd& state, const VectorXd& input, VectorXd& output);
+	void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
 	void DisplayParameters();
 	void DisplayInitialCondition();
 	void IncrementState(const VectorXd& state_increment);
 	VectorXd GetState();
-	void UpdateOutput(const VectorXd& input);
+	void UpdateOutput(const double& t, const VectorXd& input);
 	VectorXd GetOutput();
 	RigidBody();
 	RigidBody(const RigidBodyParameter& parameter, const RigidBodyCondition& IC);

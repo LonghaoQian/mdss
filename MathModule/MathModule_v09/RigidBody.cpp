@@ -14,7 +14,6 @@ RigidBody::RigidBody(const RigidBodyParameter & parameter, const RigidBodyCondit
 	system_info.num_of_inputs = 6;// 0-2 F_B M_B
 	// loading initial condition:
 	state.resize(system_info.num_of_continuous_states);
-
 	state.segment(0, 3) = IC.V_I;
 	state.segment(3, 3) = IC.X_I;
 	state.segment(6, 3) = IC.Omega_BI;
@@ -47,7 +46,7 @@ void RigidBody::DifferentialEquation(const double & t, const VectorXd & state_te
 	derivative.segment(9, 4) = 0.5*mathauxiliary::GetLmatrixFromQuaterion(q.normalized()).transpose()*state_temp.segment(3, 3);
 }
 
-void RigidBody::OutputEquation(const VectorXd & state_temp, const VectorXd & input, VectorXd & output_temp)
+void RigidBody::OutputEquation(const double& t, const VectorXd & state_temp, const VectorXd & input, VectorXd & output_temp)
 {
 	// output allocation:
 	/*
@@ -105,9 +104,9 @@ VectorXd RigidBody::GetState()
 	return state;
 }
 
-void RigidBody::UpdateOutput(const VectorXd & input)
+void RigidBody::UpdateOutput(const double& t, const VectorXd & input)
 {
-	OutputEquation(state, input, output);
+	OutputEquation(t,state, input, output);
 }
 
 

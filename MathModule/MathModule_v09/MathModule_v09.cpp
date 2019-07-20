@@ -11,7 +11,7 @@ int main()
 	config1.eposilon = 0.000001;
 	config1.max_step = 0.01;
 	config1.mim_step = 0.002;
-	config1.solver_type = 0;
+	config1.solver_type = DORMANDPRINCE;
 	SimController SimInstance1(config1);
 	// add a LTI system into the subsystem chain
 	MatrixXd A(3, 3), B(3, 1), C(1, 3), D(1, 1);
@@ -96,7 +96,6 @@ int main()
 
 	SimInstance1.PreRunProcess();
 	// print the system info
-	SimInstance1.DisplayTopology();
 	getchar();
 	return 0;
 }

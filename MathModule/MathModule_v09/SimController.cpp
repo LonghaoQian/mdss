@@ -76,8 +76,9 @@ bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& conn
 	return flag;
 }
 
-int SimController::Run()
+int SimController::Run(const VectorXd& extern_input)
 {
+	int flag = 0;
 	/*Logic
 	1. update the external input to the external_input butter
 
@@ -85,10 +86,30 @@ int SimController::Run()
 
 	update all subsystem states based on the increment
 	
+	3. check the residue, if the optimum step is less than the 
+
 	*/
+	// step 1
+	GetExternalInputs(extern_input);// update external input
+	// step 2 calculate the 1st update k1
+	for (int i = 0; i < num_of_subsystems; i++)
+	{
+		if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
+		{
 
+		}
 
-	return 0;
+	}
+	// k2-kn
+	for (int ki = 1; ki <solver_config.num_of_k; ki++)
+	{
+		for (int i = 0; i < num_of_subsystems; i++)
+		{
+
+		}
+
+	}
+	return flag;
 }
 
 int SimController::PostRunProcess()
@@ -220,9 +241,28 @@ bool SimController::PreRunProcess()
 				
 		}	
 	}
+	DisplayTopology();
 	if (flag == true)
 	{
 		cout << "PARSING IS SUCESSFUL, READY TO RUN! " << endl;
+		switch (solver_config.solver_type)
+		{
+		case DORMANDPRINCE:
+			RungeKuttaFamily::InitbutchertableauDORMANDPRINCE();// update butcher tableau
+			// reference: http://depa.fquim.unam.mx/amyd/archivero/DormandPrince_19856.pdf
+			solver_config.num_of_k = 7;
+			break;
+			//case RUNGKUTTA45:
+				//break;
+		default:
+			cout << "WARNING: INCORRECT SOLVER TYPE SETTING. THE DEFAULT SOLVER DORMANDPRINCE IS USED" << endl;
+			break;
+		}
+		// allocate temp buffer of k_1,...,k_7
+		for (int i = 0; i < num_of_subsystems; i++)
+		{
+			subsystem_list[i]->UpdateSolverBuffer(solver_config.num_of_k);
+		}
 	}
 	else {
 		cout << "PARSING ERROR EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
@@ -230,9 +270,18 @@ bool SimController::PreRunProcess()
 	return flag;
 }
 
-void SimController::GetExternalInputs(const VectorXd & extern_input)
+bool SimController::GetExternalInputs(const VectorXd & extern_input)
 {
-	external_input_buffer = extern_input;
+	bool flag = false;
+	if (extern_input.size() == num_of_external_inputs)
+	{
+		external_input_buffer = extern_input;
+		flag = true;
+	}
+	else {
+		cout << "RUN-TIME ERROR: EXTERNAL INPUTS SIZE MISMATCH" << endl;
+	}
+	return flag;
 }
 
 SimController::~SimController()

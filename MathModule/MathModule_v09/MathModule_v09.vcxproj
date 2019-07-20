@@ -151,6 +151,7 @@
     <ClInclude Include="OdeSolver.h" />
     <ClInclude Include="Quaternion2.h" />
     <ClInclude Include="RigidBody.h" />
+    <ClInclude Include="RungeKuttaFamily.h" />
     <ClInclude Include="SimController.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Subsystem.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="OdeSolver.cpp" />
     <ClCompile Include="Quaternion2.cpp" />
     <ClCompile Include="RigidBody.cpp" />
+    <ClCompile Include="RungeKuttaFamily.cpp" />
     <ClCompile Include="SimController.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

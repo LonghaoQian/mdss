@@ -1,5 +1,6 @@
 #pragma once
 #include <Eigen\Dense>
+#include "RungeKuttaFamily.h"
 #include "Subsystem.h"
 #include "LTIsystem.h"
 #include <iostream>
@@ -11,6 +12,7 @@ struct SolverConfig {
 	double mim_step;
 	int solver_type;
 	double eposilon;
+	unsigned int num_of_k;
 };
 class SimController
 {
@@ -28,15 +30,16 @@ private:
 	// temp space for numerical integration
 	//----------------------------- Solver Variables---------------------------//
 	VectorXd external_input_buffer;// store the external input at every time step;
+	bool GetExternalInputs(const VectorXd& extern_input);// buffer the external inputs
+	MatrixXd butchertableau;
 public:
 	/*overloads of AddSubsystems to suit for every pre-defined type of model*/
 	bool AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC); // input all system info to the sim control object
 	bool AddSubSystem(const RigidBodyParameter& parameters, const RigidBodyCondition& IC); // input all system info to the sim control object
 	/*----------------------------------------------------------------------*/
-	void GetExternalInputs(const VectorXd& extern_input);
 	bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);
 	bool PreRunProcess();// check and parse the system connection relationship.
-	int Run();
+	int Run(const VectorXd& extern_input);
 	int PostRunProcess();
 	void DisplayTopology();
 	SimController(const SolverConfig& config);
