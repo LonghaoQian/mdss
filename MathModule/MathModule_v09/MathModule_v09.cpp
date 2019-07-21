@@ -61,12 +61,12 @@ int main()
 
 	LTI3connection.resize(1, 2);
 
-	LTI3connection(0, 0) = 0;
+	LTI3connection(0, 0) = 3;
 	LTI3connection(0, 1) = 0;
 
 	Rigid1connection.resize(6, 2);
 
-	Rigid1connection(0, 0) = -1;
+	Rigid1connection(0, 0) = 0;
 	Rigid1connection(0, 1) = 0;
 
 	Rigid1connection(1, 0) = -1;
@@ -75,7 +75,7 @@ int main()
 	Rigid1connection(2, 0) = -1;
 	Rigid1connection(2, 1) = 0;
 
-	Rigid1connection(3, 0) = 0;
+	Rigid1connection(3, 0) = 1;
 	Rigid1connection(3, 1) = 0;
 
 	Rigid1connection(4, 0) = 2;

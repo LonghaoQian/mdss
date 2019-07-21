@@ -5,6 +5,7 @@
 #include "LTIsystem.h"
 #include <iostream>
 #include "RigidBody.h"
+#include "TopologyAnalysis.h"
 using namespace Eigen;
 using namespace std;
 struct SolverConfig {
@@ -25,13 +26,14 @@ private:
 	unsigned int num_of_external_inputs;
 	SolverConfig solver_config;
 	vector<unique_ptr<Subsystem>> subsystem_list;// a list of all subsystems
-	MatrixXd connectivity;// connectivity map of the simulation
-	MatrixXd external_mapping;
+	MatrixXi connectivity;// connectivity map of the simulation
+	MatrixXi external_mapping;
 	// temp space for numerical integration
 	//----------------------------- Solver Variables---------------------------//
-	VectorXd external_input_buffer;// store the external input at every time step;
 	bool GetExternalInputs(const VectorXd& extern_input);// buffer the external inputs
 	MatrixXd butchertableau;
+	double current_stepsize;
+	double current_time;
 public:
 	/*overloads of AddSubsystems to suit for every pre-defined type of model*/
 	bool AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC); // input all system info to the sim control object
@@ -39,7 +41,7 @@ public:
 	/*----------------------------------------------------------------------*/
 	bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);
 	bool PreRunProcess();// check and parse the system connection relationship.
-	int Run(const VectorXd& extern_input);
+	int Run(const double& t, const VectorXd& extern_input);
 	int PostRunProcess();
 	void DisplayTopology();
 	SimController(const SolverConfig& config);

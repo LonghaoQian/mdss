@@ -1,0 +1,7 @@
+﻿  TopologyAnalysis.cpp
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\topologyanalysis.cpp(82): warning C4244: '=': conversion from 'Eigen::EigenBase<Derived>::Index' to 'int', possible loss of data
+          with
+          [
+              Derived=Eigen::Matrix<int,-1,-1,0,-1,-1>
+          ]
+  MathModule_v09.vcxproj -> C:\Users\arthus\Documents\SimulationSolver\MathModule\x64\Debug\MathModule_v09.exe

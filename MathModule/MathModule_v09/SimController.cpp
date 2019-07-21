@@ -5,6 +5,7 @@
 SimController::SimController(const SolverConfig& config)
 {
 	solver_config = config;// load the solver information
+	current_stepsize = solver_config.max_step;
 }
 
 bool SimController::AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC)
@@ -76,39 +77,100 @@ bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& conn
 	return flag;
 }
 
-int SimController::Run(const VectorXd& extern_input)
+int SimController::Run(const double& t, const VectorXd& extern_input)
 {
 	int flag = 0;
 	/*Logic
 	1. update the external input to the external_input butter
 
-	2. 
+	2. calculate perturbed output based on butchertabealu
 
-	update all subsystem states based on the increment
-	
-	3. check the residue, if the optimum step is less than the 
+	3. check the residue, if the optimum step is less than the current step size, then reduce the current stepsize by 
 
 	*/
 	// step 1
 	GetExternalInputs(extern_input);// update external input
+	// step 2
 	// step 2 calculate the 1st update k1
+	// k1 = hf(tk, xk, uk),
+	int from_system = 0;// from target  system 
+	int from_index = 0;// from  target ouput of the system
+	for (int i = 0; i < num_of_subsystems; i++)
+	{
+		for (int j = 0; j < subsystem_list[i]->GetSystemInfo().num_of_inputs; j++)
+		{
+			from_system = subsystem_list[i]->GetSystemInfo().input_connection(j, 0);
+			if (from_system >= 0)// detect if this input port is an non-external input
+			{
+					// fetch input from the output of other subsystems
+					from_index = subsystem_list[i]->GetSystemInfo().input_connection(j, 1);
+					subsystem_list[i]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->GetOutput()(from_index));
+			}
+		}
+		// update k1
+		subsystem_list[i]->Solver_PreturbState(0, butchertableau);
+		subsystem_list[i]->Solver_UpdateKiBuffer(0, current_time, current_stepsize, butchertableau);
+	}
+	// k2-kn
+	for (int index_ki = 1; index_ki <solver_config.num_of_k; index_ki++)
+	{
+		// Preturb states
+		for (int i = 0; i < num_of_subsystems; i++)
+		{
+			subsystem_list[i]->Solver_PreturbState(index_ki, butchertableau);
+			if (!subsystem_list[i]->GetSystemInfo().DIRECT_FEED_THROUGH)// Update outputs of non-direct feed-through systems first
+			{
+				subsystem_list[i]->Solver_PreturbOutput(index_ki, current_time, current_stepsize, butchertableau);
+			}
+		}
+		// Update outputs of direct feed-through systems
+		for (int i = 0; i < num_of_subsystems; i++)
+		{
+			// load 
+			if (subsystem_list[i]->GetSystemInfo().DIRECT_FEED_THROUGH)
+			{
+
+			}
+		}
+
+		//// fetch input from the output of other subsystems
+		//for (int j = 0; j < subsystem_list[i]->GetSystemInfo().num_of_inputs; j++)
+		//{
+		//	from_system = subsystem_list[i]->GetSystemInfo().input_connection(j, 0);
+		//	if (from_system >= 0)// detect if this input port is an non-external input
+		//	{
+		//		// fetch input from the output of other subsystems
+		//		from_index = subsystem_list[i]->GetSystemInfo().input_connection(j, 1);
+		//		subsystem_list[i]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->GetOutput()(from_index));
+		//	}
+		//}
+		// update the ki
+		for (int i = 0; i < num_of_subsystems; i++)
+		{
+			subsystem_list[i]->Solver_UpdateKiBuffer(0, current_time, current_stepsize, butchertableau);//
+		}
+		
+	}
+
+	// calculate state increment for all subsystems
+
 	for (int i = 0; i < num_of_subsystems; i++)
 	{
 		if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
 		{
 
 		}
-
 	}
-	// k2-kn
-	for (int ki = 1; ki <solver_config.num_of_k; ki++)
-	{
-		for (int i = 0; i < num_of_subsystems; i++)
-		{
 
-		}
+	// compare the average error 
 
-	}
+
+	// determine the optimal step size
+
+	// update the current step size
+
+
+
 	return flag;
 }
 
@@ -171,9 +233,10 @@ bool SimController::PreRunProcess()
 	bool flag = false;
 	/* Logic:
 	1. Parsing the external input mappiing
-	a. for each subsystem, find the row index associated with -1 in the 2st colume and determine the total number of external inputs
+	a. for each subsystem, find the row index associated with -1 in the 1st colume and determine the total number of external inputs
 	b. assign the external_mapping with subsystem_ID and port number
 	2. Update the connectivity matirx
+	3. Determine the algebraic loop (in progress)
 	*/
 	// step 1 determine the external input mapping
 	num_of_external_inputs = 0;
@@ -242,26 +305,31 @@ bool SimController::PreRunProcess()
 		}	
 	}
 	DisplayTopology();
+	TopologyAnalysis system_topology(connectivity);
+	system_topology.InitRecord(1);
+	system_topology.DFS(0, 1);
+	system_topology.DisplayClosedLoops();
+
 	if (flag == true)
 	{
 		cout << "PARSING IS SUCESSFUL, READY TO RUN! " << endl;
 		switch (solver_config.solver_type)
 		{
 		case DORMANDPRINCE:
-			RungeKuttaFamily::InitbutchertableauDORMANDPRINCE();// update butcher tableau
+			butchertableau = RungeKuttaFamily::InitbutchertableauDORMANDPRINCE();// update butcher tableau
 			// reference: http://depa.fquim.unam.mx/amyd/archivero/DormandPrince_19856.pdf
 			solver_config.num_of_k = 7;
 			break;
 			//case RUNGKUTTA45:
 				//break;
 		default:
-			cout << "WARNING: INCORRECT SOLVER TYPE SETTING. THE DEFAULT SOLVER DORMANDPRINCE IS USED" << endl;
+			cout << "WARNING: INCORRECT SOLVER SETTING. THE DEFAULT SOLVER DORMANDPRINCE IS USED" << endl;
 			break;
 		}
 		// allocate temp buffer of k_1,...,k_7
 		for (int i = 0; i < num_of_subsystems; i++)
 		{
-			subsystem_list[i]->UpdateSolverBuffer(solver_config.num_of_k);
+			subsystem_list[i]->Solver_InitSolverBuffer(solver_config.num_of_k);
 		}
 	}
 	else {
@@ -275,7 +343,10 @@ bool SimController::GetExternalInputs(const VectorXd & extern_input)
 	bool flag = false;
 	if (extern_input.size() == num_of_external_inputs)
 	{
-		external_input_buffer = extern_input;
+		for (int i = 0; i < num_of_external_inputs; i++)
+		{
+			subsystem_list[external_mapping(i, 0)]->Solver_UpdateInputTemp(external_mapping(i, 1), extern_input(i));// insert external inputs into buffer
+		}
 		flag = true;
 	}
 	else {

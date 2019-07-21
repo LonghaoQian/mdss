@@ -12,6 +12,14 @@ LTIsystem::LTIsystem(const LTIParameter& parameter, const LTIInitialCondition& I
 	B = parameter.B;
 	C = parameter.C;
 	D = parameter.D;
+	// determine whether D is a zero matrix
+	if (D.norm() < 0.0000000001)// very small norm
+	{
+		system_info.DIRECT_FEED_THROUGH = false;
+	}
+	else {
+		system_info.DIRECT_FEED_THROUGH = true;
+	}
 	// determine the size of the system
 	system_info.num_of_continuous_states = A.rows();
 	system_info.num_of_inputs = B.cols();

@@ -23,6 +23,7 @@ RigidBody::RigidBody(const RigidBodyParameter & parameter, const RigidBodyCondit
 	m = parameter.m;
 	J_inv = parameter.J.inverse();
 	// output mapping: 0-2 V_I 3-5 X_I 6-8 Omega_BI 9-17 R_IB
+	system_info.DIRECT_FEED_THROUGH = false;
 	system_info.input_connection.resize(6, 2);
 	system_info.num_of_outputs = 20;
 	system_info.system_parameter_ok = true;
