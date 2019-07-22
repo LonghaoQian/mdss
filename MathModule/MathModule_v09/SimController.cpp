@@ -8,6 +8,8 @@ SimController::SimController(const SolverConfig& config)
 	current_stepsize = solver_config.max_step;
 }
 
+
+
 bool SimController::AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC)
 {
 	/* Logic:
@@ -64,7 +66,7 @@ bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& conn
 	}
 	else {
 		if(connection_mapping.rows()== subsystem_list[system_ID]->GetSystemInfo().num_of_inputs)
-		{
+		{	
 			subsystem_list[system_ID]->SetInputConnection(connection_mapping);
 			flag = true;
 		   }
@@ -123,7 +125,7 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 				subsystem_list[i]->Solver_PreturbOutput(index_ki, current_time, current_stepsize, butchertableau);
 			}
 		}
-		// Update outputs of direct feed-through systems
+		// Update outputs of direct feed-through systems according to the update sequence
 		for (int i = 0; i < num_of_subsystems; i++)
 		{
 			// load 
@@ -133,17 +135,6 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 			}
 		}
 
-		//// fetch input from the output of other subsystems
-		//for (int j = 0; j < subsystem_list[i]->GetSystemInfo().num_of_inputs; j++)
-		//{
-		//	from_system = subsystem_list[i]->GetSystemInfo().input_connection(j, 0);
-		//	if (from_system >= 0)// detect if this input port is an non-external input
-		//	{
-		//		// fetch input from the output of other subsystems
-		//		from_index = subsystem_list[i]->GetSystemInfo().input_connection(j, 1);
-		//		subsystem_list[i]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->GetOutput()(from_index));
-		//	}
-		//}
 		// update the ki
 		for (int i = 0; i < num_of_subsystems; i++)
 		{
@@ -239,7 +230,7 @@ bool SimController::PreRunProcess()
 	3. Determine the algebraic loop (in progress)
 	*/
 	// step 1 determine the external input mapping
-	num_of_external_inputs = 0;
+	num_of_external_inputs = 0;// total amount of external inputs
 	// a. determine the total number of external inputs
 	for (unsigned int i = 0; i < num_of_subsystems; i++)
 	{
@@ -297,7 +288,8 @@ bool SimController::PreRunProcess()
 					else
 					{
 						flag = true;
-						connectivity(i, subsystem_list[i]->GetSystemInfo().input_connection(j, 0)) = 1;
+						//connectivity(i, subsystem_list[i]->GetSystemInfo().input_connection(j, 0)) = 1;
+						connectivity(subsystem_list[i]->GetSystemInfo().input_connection(j, 0),i) = 1;
 					}
 				}
 			}
@@ -305,12 +297,8 @@ bool SimController::PreRunProcess()
 		}	
 	}
 	DisplayTopology();
-	TopologyAnalysis system_topology(connectivity);
-	system_topology.InitRecord(1);
-	system_topology.DFS(0, 1);
-	system_topology.DisplayClosedLoops();
-
-	if (flag == true)
+	bool isalgebraricloop = RunTopologyAnalysis();
+	if (flag == true&& isalgebraricloop==false)
 	{
 		cout << "PARSING IS SUCESSFUL, READY TO RUN! " << endl;
 		switch (solver_config.solver_type)
@@ -333,9 +321,139 @@ bool SimController::PreRunProcess()
 		}
 	}
 	else {
-		cout << "PARSING ERROR EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
+
+		if (flag == true && isalgebraricloop == true)
+		{
+			cout << "ALGEBRARICLOOP EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
+		}
+		else {
+			cout << "PARSING ERROR EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
+		}
+		
 	}
 	return flag;
+}
+
+bool SimController::RunTopologyAnalysis()
+{
+	bool isAlegraricloopexist = false;
+	// determine all the closed loops in the system
+	TopologyAnalysis system_topology(connectivity);
+	num_of_closed_loops = system_topology.RunSimulationTopologyAnalysis();// get the loop results from DFS
+    output_sequence.clear();
+	vector<bool> temp_all_susystems;
+	for (int i = 0; i < num_of_subsystems; i++)
+	{
+		temp_all_susystems.push_back(false);
+		bool inputconnected = false;
+		for (int j = 0; j < num_of_subsystems;j++)// override the direct feedback info if the system is not connected to any other systems
+		{
+			if (connectivity(j, i) > 0)// input is connected
+			{
+				inputconnected = true;
+				break;
+			}
+				
+		}
+		if (!inputconnected)
+		{
+			subsystem_list[i]->OverrideDirectFeedThroughFlag(false);// if not connected to any other subsystems, override the DIRECT_FEED_THROUGH to false
+		}
+
+	}
+	for (int i = 0; i < num_of_subsystems; i++)// first segement is the non-direct feed-through block
+	{
+		if (!subsystem_list[i]->GetSystemInfo().DIRECT_FEED_THROUGH)
+		{
+			output_sequence.push_back(i);
+			temp_all_susystems[i] = true;// set true if system is a non-direct feedback system
+		}
+	}
+	/*--------------------------------determine the algebraric loop-----------------------------------------*/
+	algebraric_loops.clear();
+	if (num_of_closed_loops > 0)// check the existence of algebraric loops
+	{
+		for (int i = 0; i < num_of_closed_loops; i++)
+		{
+			// determine whether the ith closed loop 
+			bool isnondirectfeedthrough = false;
+			for (int j = 0; j < system_topology.GetLoopIndex(i).size(); j++)
+			{
+				isnondirectfeedthrough = temp_all_susystems[system_topology.GetLoopIndex(i)(j)];
+				if (isnondirectfeedthrough)
+				{
+					break;
+				}
+			}
+			if (!isnondirectfeedthrough)
+			{
+				// push node index to buffer if algebraric loop exists
+				isAlegraricloopexist = true;
+				cout << "PARSING ERROR: ALGEBRARIC LOOP FOUND! THE LOOP CONTAINS THE FOLLOWING SUBSYSTMES: " << endl;
+				for (int k = 0; k < system_topology.GetLoopIndex(i).size(); k++)
+				{
+					cout << " -> " << system_topology.GetLoopIndex(i)(k);
+				}
+				cout << endl;
+				algebraric_loops.push_back(system_topology.GetLoopIndex(i));
+			}
+
+		}
+	}
+	/*----------------------------------------------------------------------------------------*/ 
+	if (isAlegraricloopexist == false)// if no algebraric loop exists, then determine the output update sequence
+	{
+		if (output_sequence.size() < num_of_subsystems)// there are direct feed-through blocks
+		{
+			int node_left = num_of_subsystems - output_sequence.size();
+			int counter = 0;
+			while ((node_left>0)&&(counter< num_of_subsystems))
+			{
+				for (int i = 0; i< num_of_subsystems; i++)
+				{
+					if (temp_all_susystems[i]) continue;
+					bool flag = true;
+					for (int j = 0; j < num_of_subsystems; j++)
+					{
+						if (connectivity(j, i) > 0)
+						{
+							if (temp_all_susystems[j])
+							{
+								continue; // found a connectioin with true notation
+							}
+							else {
+								flag = false;// found a connection with false notation
+							}
+						}
+
+
+					}
+					if (flag = false)
+					{
+						continue;
+					}
+					else {
+						output_sequence.push_back(i);// now the system receiving input is a non-direct feedback system
+						temp_all_susystems[i] = true;// now the system receiving input is a non-direct feedback system
+						node_left--;
+					}
+
+
+				}
+				counter++;
+			}
+		}
+		cout << "The output sequence is : " << endl;
+		for (int k = 0; k < output_sequence.size(); k++)
+		{
+			cout << output_sequence[k] << " -> ";
+				
+		}
+		cout << "END" << endl;
+	}
+	
+
+	return isAlegraricloopexist;
 }
 
 bool SimController::GetExternalInputs(const VectorXd & extern_input)

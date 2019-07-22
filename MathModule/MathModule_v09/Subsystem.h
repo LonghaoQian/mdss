@@ -16,6 +16,7 @@ typedef Matrix<int, Dynamic, 2> MatrixX2i;
 struct subsystem_info {
 	unsigned int num_of_continuous_states;
 	unsigned int num_of_inputs;
+	unsigned int num_of_external_inputs;
 	unsigned int num_of_outputs;
 	unsigned int system_type;
 	bool system_parameter_ok;
@@ -49,6 +50,7 @@ public:
 	virtual void DisplayParameters() = 0;
 	virtual void DisplayInitialCondition() = 0;
 	void SetInputConnection(const MatrixX2i& connection);
+	void OverrideDirectFeedThroughFlag(bool isDirectFeedThrough);
 	subsystem_info GetSystemInfo();
 	/**-----------SolverRelated--------*/
 	void Solver_InitSolverBuffer(unsigned int num_of_kn);// Solver Init Function

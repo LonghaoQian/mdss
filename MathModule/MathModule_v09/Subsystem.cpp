@@ -18,6 +18,11 @@ void Subsystem::SetInputConnection(const MatrixX2i& connection)
 	system_info.input_connection = connection;
 }
 
+void Subsystem::OverrideDirectFeedThroughFlag(bool isDirectFeedThrough)
+{
+	system_info.DIRECT_FEED_THROUGH = isDirectFeedThrough;
+}
+
 void Subsystem::Solver_InitSolverBuffer(unsigned int num_of_kn)
 {
 	solver_buffer_output_temp.resize(system_info.num_of_outputs);

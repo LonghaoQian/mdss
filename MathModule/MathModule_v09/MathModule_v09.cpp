@@ -20,7 +20,7 @@ int main()
 		7, 8, 9;
 	B << 2, 2, 3;
 	C << 1, 1, 0;
-	D << 0;
+	D << 1;
 	LTIParameter LTI1;
 	LTI1.A = A;
 	LTI1.B = B;
@@ -31,6 +31,7 @@ int main()
 	LTI1IC.X_0(0) = 0.0;
 	LTI1IC.X_0(1) = 0.0;
 	LTI1IC.X_0(2) = 0.0;
+	SimInstance1.AddSubSystem(LTI1, LTI1IC);
 	SimInstance1.AddSubSystem(LTI1, LTI1IC);
 	SimInstance1.AddSubSystem(LTI1, LTI1IC);
 	SimInstance1.AddSubSystem(LTI1, LTI1IC);
@@ -47,7 +48,7 @@ int main()
 	RigidIC1.X_I << 0, 3, 1;
 	SimInstance1.AddSubSystem(Rigid1, RigidIC1);
 
-	MatrixX2i LTI1connection, LTI2connection, LTI3connection, Rigid1connection;
+	MatrixX2i LTI1connection, LTI2connection, LTI3connection, LTI4connection, Rigid1connection;
 
 	LTI1connection.resize(1, 2);
 
@@ -56,7 +57,7 @@ int main()
 
 	LTI2connection.resize(1, 2);
 
-	LTI2connection(0, 0) = 2;
+	LTI2connection(0, 0) = 3;
 	LTI2connection(0, 1) = 0;
 
 	LTI3connection.resize(1, 2);
@@ -64,21 +65,25 @@ int main()
 	LTI3connection(0, 0) = 3;
 	LTI3connection(0, 1) = 0;
 
+	LTI4connection.resize(1, 2);
+	LTI4connection(0, 0) = 1;
+	LTI4connection(0, 1) = 0;
+
 	Rigid1connection.resize(6, 2);
 
-	Rigid1connection(0, 0) = 0;
+	Rigid1connection(0, 0) = 3;
 	Rigid1connection(0, 1) = 0;
 
-	Rigid1connection(1, 0) = -1;
+	Rigid1connection(1, 0) = 2;
 	Rigid1connection(1, 1) = 0;
 
-	Rigid1connection(2, 0) = -1;
+	Rigid1connection(2, 0) = 1;
 	Rigid1connection(2, 1) = 0;
 
-	Rigid1connection(3, 0) = 1;
+	Rigid1connection(3, 0) = 3;
 	Rigid1connection(3, 1) = 0;
 
-	Rigid1connection(4, 0) = 2;
+	Rigid1connection(4, 0) = -1;
 	Rigid1connection(4, 1) = 0;
 
 	Rigid1connection(5, 0) = -1;
@@ -92,7 +97,9 @@ int main()
 
 	SimInstance1.MakeConnection(2, LTI3connection);
 
-	SimInstance1.MakeConnection(3, Rigid1connection);
+	SimInstance1.MakeConnection(3, LTI4connection);
+
+	SimInstance1.MakeConnection(4, Rigid1connection);
 
 	SimInstance1.PreRunProcess();
 	// print the system info
