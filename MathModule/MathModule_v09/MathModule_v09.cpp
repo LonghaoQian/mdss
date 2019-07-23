@@ -22,6 +22,10 @@ int main()
 	C << 1, 1, 0;
 	D << 1;
 	LTIParameter LTI1;
+	LTIParameter LTI2;
+	LTIParameter LTI3;
+	LTIParameter LTI4;
+	LTIParameter LTI5;
 	LTI1.A = A;
 	LTI1.B = B;
 	LTI1.C = C;
@@ -32,11 +36,24 @@ int main()
 	LTI1IC.X_0(1) = 0.0;
 	LTI1IC.X_0(2) = 0.0;
 	SimInstance1.AddSubSystem(LTI1, LTI1IC);
-	SimInstance1.AddSubSystem(LTI1, LTI1IC);
-	SimInstance1.AddSubSystem(LTI1, LTI1IC);
-	SimInstance1.AddSubSystem(LTI1, LTI1IC);
+	LTI2 = LTI1;
+	LTI3 = LTI1;
+	LTI4 = LTI1;
+
+	LTI3.D(0, 0) = 0;
+
+
+
+
+	SimInstance1.AddSubSystem(LTI2, LTI1IC);
+
+	SimInstance1.AddSubSystem(LTI3, LTI1IC);
+
+	SimInstance1.AddSubSystem(LTI4, LTI1IC);
 
 	RigidBodyParameter Rigid1;
+	RigidBodyParameter Rigid2;
+	RigidBodyParameter Rigid3;
 	Rigid1.J << 1, 0, 0,
 		0, 5, 0,
 		0, 0, 9;
