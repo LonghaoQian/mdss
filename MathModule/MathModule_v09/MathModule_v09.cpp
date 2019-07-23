@@ -15,10 +15,12 @@ int main()
 	SimController SimInstance1(config1);
 	// add a LTI system into the subsystem chain
 	MatrixXd A(3, 3), B(3, 1), C(1, 3), D(1, 1);
+	MatrixXd B1(3, 2), C1(2, 3);
 	A << 1, 2, 3,
 		4, 5, 6,
 		7, 8, 9;
 	B << 2, 2, 3;
+	
 	C << 1, 1, 0;
 	D << 1;
 	LTIParameter LTI1;
@@ -26,16 +28,18 @@ int main()
 	LTIParameter LTI3;
 	LTIParameter LTI4;
 	LTIParameter LTI5;
+
 	LTI1.A = A;
 	LTI1.B = B;
 	LTI1.C = C;
-	LTI1.D = D;
+	LTI1.D = D; 
+
 	LTIInitialCondition LTI1IC;
 	LTI1IC.X_0.resize(3);
 	LTI1IC.X_0(0) = 0.0;
 	LTI1IC.X_0(1) = 0.0;
 	LTI1IC.X_0(2) = 0.0;
-	SimInstance1.AddSubSystem(LTI1, LTI1IC);
+	SimInstance1.AddSubSystem(LTI1, LTI1IC); 
 	LTI2 = LTI1;
 	LTI3 = LTI1;
 	LTI4 = LTI1;
@@ -117,6 +121,9 @@ int main()
 	SimInstance1.MakeConnection(3, LTI4connection);
 
 	SimInstance1.MakeConnection(4, Rigid1connection);
+
+
+
 
 	SimInstance1.PreRunProcess();
 	// print the system info
