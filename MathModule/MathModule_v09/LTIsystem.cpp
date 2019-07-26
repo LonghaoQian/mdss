@@ -99,11 +99,6 @@ void LTIsystem::UpdateOutput(const double& t, const VectorXd& input)
 	OutputEquation(t,state, input, output);
 }
 
-VectorXd LTIsystem::GetOutput()
-{
-	return output;
-}
-
 void LTIsystem::DisplayParameters()
 {
 	cout << "---------------------" << endl;

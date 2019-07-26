@@ -5,7 +5,7 @@
 SimController::SimController(const SolverConfig& config)
 {
 	solver_config = config;// load the solver information
-	current_stepsize = solver_config.max_step;
+	current_stepsize = solver_config.frame_step;
 }
 
 
@@ -82,13 +82,16 @@ bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& conn
 int SimController::Run(const double& t, const VectorXd& extern_input)
 {
 	int flag = 0;
+
+	for (int cycle = 0; cycle < num_of_cycles_per_step; cycle++)
+	{
+
+	}
+
 	/*Logic
 	1. update the external input to the external_input butter
-
 	2. calculate perturbed output based on butchertabealu
-
 	3. check the residue, if the optimum step is less than the current step size, then reduce the current stepsize by 
-
 	*/
 	// step 1
 	GetExternalInputs(extern_input);// update external input
@@ -114,24 +117,48 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 		subsystem_list[i]->Solver_UpdateKiBuffer(0, current_time, current_stepsize, butchertableau);
 	}
 	// k2-kn
-	for (int index_ki = 1; index_ki <solver_config.num_of_k; index_ki++)
+	for (int index_ki = 1; index_ki < solver_config.num_of_k; index_ki++)
 	{
 		// Preturb states
 		for (int i = 0; i < num_of_subsystems; i++)
 		{
 			subsystem_list[i]->Solver_PreturbState(index_ki, butchertableau);
-			if (!subsystem_list[i]->GetSystemInfo().DIRECT_FEED_THROUGH)// Update outputs of non-direct feed-through systems first
-			{
-				subsystem_list[i]->Solver_PreturbOutput(index_ki, current_time, current_stepsize, butchertableau);
-			}
 		}
-		// Update outputs of direct feed-through systems according to the update sequence
+		// reset these indexes:
+		from_system = 0;
+		from_index = 0;
+
+		// preturb outputs of direct feed-through systems according to the update sequence
 		for (int i = 0; i < num_of_subsystems; i++)
 		{
-			// load 
-			if (subsystem_list[i]->GetSystemInfo().DIRECT_FEED_THROUGH)
+			if (subsystem_list[output_sequence[i]]->GetSystemInfo().DIRECT_FEED_THROUGH)// update input_temp first
 			{
-
+				for (int j = 0; j < subsystem_list[output_sequence[i]]->GetSystemInfo().num_of_inputs; j++)
+				{
+					from_system = subsystem_list[output_sequence[i]]->GetSystemInfo().input_connection(j, 0);
+					if (from_system >= 0)// detect if this input port is an non-external input
+					{
+						// fetch input from the output of other subsystems
+						from_index = subsystem_list[output_sequence[i]]->GetSystemInfo().input_connection(j, 1);
+						subsystem_list[output_sequence[i]]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->Solver_GetOuputTemp()(from_index));
+					}
+				}
+			}
+			subsystem_list[output_sequence[i]]->Solver_PreturbOutput(index_ki, current_time, current_stepsize, butchertableau);
+		}
+		
+		// update the input_temp for all non_feed_through blocks
+		for (int i = 0; non_direct_feedthrough_index.size(); i++)
+		{
+			for (int j = 0; j < subsystem_list[non_direct_feedthrough_index[i]]->GetSystemInfo().num_of_inputs; j++)
+			{
+				from_system = subsystem_list[non_direct_feedthrough_index[i]]->GetSystemInfo().input_connection(j, 0);
+				if (from_system >= 0)// detect if this input port is an non-external input
+				{
+					// fetch input from the output of other subsystems
+					from_index = subsystem_list[non_direct_feedthrough_index[i]]->GetSystemInfo().input_connection(j, 1);
+					subsystem_list[non_direct_feedthrough_index[i]]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->Solver_GetOuputTemp()(from_index));
+				}
 			}
 		}
 
@@ -140,27 +167,40 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 		{
 			subsystem_list[i]->Solver_UpdateKiBuffer(0, current_time, current_stepsize, butchertableau);//
 		}
-		
 	}
-
-	// calculate state increment for all subsystems
-
-	for (int i = 0; i < num_of_subsystems; i++)
+	
+	// calculate state increment and determine optimum step size
+	double optimum_step = 0;
+	switch (solver_config.solver_type)
 	{
-		if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
+	case DORMANDPRINCE:
+		for (int i = 0; i < num_of_subsystems; i++)
 		{
 
 		}
+			break;
+		//case RUNGKUTTA45:
+			//break;
+	default:
+		break;
 	}
 
-	// compare the average error 
-
-
 	// determine the optimal step size
+	if (optimum_step< solver_config.)
+	{
+		current_stepsize = optimum_step;
+	}
+	else {
+		current_stepsize = solver_config.forward_step;
+	}
+
+	// determine how many steps are needed to fill the gap 
+
+
 
 	// update the current step size
-
-
+	current_time += solver_config.forward_step;
+	Update_num_of_steps_per_cycle();
 
 	return flag;
 }
@@ -341,6 +381,7 @@ bool SimController::RunTopologyAnalysis()
 	TopologyAnalysis system_topology(connectivity);
 	num_of_closed_loops = system_topology.RunSimulationTopologyAnalysis();// get the loop results from DFS
     output_sequence.clear();
+	non_direct_feedthrough_index.clear();
 	vector<bool> temp_all_susystems;
 	for (int i = 0; i < num_of_subsystems; i++)
 	{
@@ -366,6 +407,7 @@ bool SimController::RunTopologyAnalysis()
 		if (!subsystem_list[i]->GetSystemInfo().DIRECT_FEED_THROUGH)
 		{
 			output_sequence.push_back(i);
+			non_direct_feedthrough_index.push_back(i);
 			temp_all_susystems[i] = true;// set true if system is a non-direct feedback system
 		}
 	}
@@ -454,6 +496,17 @@ bool SimController::RunTopologyAnalysis()
 	
 
 	return isAlegraricloopexist;
+}
+
+double SimController::IncrementState()
+{
+
+	return 0.0;
+}
+
+void SimController::Update_num_of_steps_per_cycle()
+{
+	num_of_steps_per_cycle = ceil(solver_config.frame_step / current_stepsize);
 }
 
 bool SimController::GetExternalInputs(const VectorXd & extern_input)

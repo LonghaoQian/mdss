@@ -110,12 +110,6 @@ void RigidBody::UpdateOutput(const double& t, const VectorXd & input)
 	OutputEquation(t,state, input, output);
 }
 
-
-VectorXd RigidBody::GetOutput()
-{
-	return output;
-}
-
 RigidBody::~RigidBody()
 {
 }

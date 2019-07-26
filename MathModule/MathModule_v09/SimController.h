@@ -8,9 +8,9 @@
 #include "TopologyAnalysis.h"
 using namespace Eigen;
 using namespace std;
-struct SolverConfig {
-	double max_step;        
+struct SolverConfig {      
 	double mim_step;
+	double frame_step;// step_size according to the frame
 	int solver_type;
 	double eposilon;
 	unsigned int num_of_k;
@@ -34,15 +34,21 @@ private:
 	MatrixXd butchertableau;
 	double current_stepsize;
 	double current_time;
+	int num_of_steps_per_cycle;
 	/*--------------------------------System Topology------------------------------*/
 	vector<int> output_sequence;
+	vector<int> non_direct_feedthrough_index;
 	vector<VectorXi> algebraric_loops;
+	int num_of_cycles_per_step;
 	int num_of_closed_loops;
 	bool RunTopologyAnalysis();
+	double IncrementState();
+	void Update_num_of_steps_per_cycle();
 public:
 	/*overloads of AddSubsystems to suit for every pre-defined type of model*/
 	bool AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC); // input all system info to the sim control object
 	bool AddSubSystem(const RigidBodyParameter& parameters, const RigidBodyCondition& IC); // input all system info to the sim control object
+	//bool AddSUbSystem(const GainParameter& parameters);
 	/*------------------------define connections between subsystems--------------------------------*/
 	bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);
 	/*------------------------PreRunProcess of the Connected Subystems--------------*/

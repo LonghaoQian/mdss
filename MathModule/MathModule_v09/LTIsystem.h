@@ -30,7 +30,6 @@ public:
 	void IncrementState(const VectorXd& state_increment);
 	VectorXd GetState();
     void UpdateOutput(const double& t, const VectorXd& input);
-    VectorXd GetOutput();
 	void DisplayParameters();
 	void DisplayInitialCondition();
 	~LTIsystem();

@@ -46,7 +46,7 @@ public:
 	virtual void IncrementState(const VectorXd& state_increment) = 0;
 	virtual VectorXd GetState() = 0;
 	virtual void UpdateOutput(const double& t, const VectorXd& input) = 0;
-	virtual VectorXd GetOutput() = 0;
+	VectorXd GetOutput();
 	virtual void DisplayParameters() = 0;
 	virtual void DisplayInitialCondition() = 0;
 	void SetInputConnection(const MatrixX2i& connection);
@@ -57,6 +57,8 @@ public:
 	void Solver_UpdateKiBuffer(int index, double& current_time, double& stepsize, const MatrixXd& butchertableau);
 	void Solver_UpdateInputTemp(int index, double input_temp_i);
 	void Solver_PreturbState(int index, const MatrixXd& butchertableau);
+	VectorXd Solver_GetOuputTemp();
+	VectorXd Solver_CalculateIncrement();
 	VectorXd Solver_GetInputTemp();
     void Solver_PreturbOutput(int index, double& current_time, double& stepsize, const MatrixXd& butchertableau);
 	Subsystem();

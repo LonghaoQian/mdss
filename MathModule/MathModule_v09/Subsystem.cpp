@@ -13,6 +13,11 @@ Subsystem::~Subsystem()
 {
 }
 
+VectorXd Subsystem::GetOutput()
+{
+	return output;
+}
+
 void Subsystem::SetInputConnection(const MatrixX2i& connection)
 {
 	system_info.input_connection = connection;
@@ -71,6 +76,11 @@ void Subsystem::Solver_PreturbState(int index,  const MatrixXd & butchertableau)
 			solver_buffer_state_temp += butchertableau(index, i + 1)*solver_buffer_k_sequence.block(0, i, system_info.num_of_continuous_states, 1);
 		}
 	}
+}
+
+VectorXd Subsystem::Solver_GetOuputTemp()
+{
+	return solver_buffer_output_temp;
 }
 
 VectorXd Subsystem::Solver_GetInputTemp()
