@@ -26,9 +26,8 @@ public:
 	void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
 	void DisplayParameters();
 	void DisplayInitialCondition();
-	void IncrementState(const VectorXd& state_increment);
+	void IncrementState();
 	VectorXd GetState();
-	void UpdateOutput(const double& t, const VectorXd& input);
 	RigidBody();
 	RigidBody(const RigidBodyParameter& parameter, const RigidBodyCondition& IC);
 	~RigidBody();

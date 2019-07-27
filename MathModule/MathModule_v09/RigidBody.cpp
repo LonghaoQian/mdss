@@ -85,7 +85,7 @@ void RigidBody::DisplayInitialCondition()
 	cout << state << endl;
 }
 
-void RigidBody::IncrementState(const VectorXd & state_increment)
+void RigidBody::IncrementState()
 {
 	// state allocation:
 	/*
@@ -94,8 +94,8 @@ void RigidBody::IncrementState(const VectorXd & state_increment)
 	state(6,7,8) = X_I
 	state(9,0,11,12) = quaternion
 	*/
-	state.segment(0, 9) += state_increment.segment(0, 9);
-	state.segment(9, 4) += state_increment.segment(9, 4);
+	state.segment(0, 9) += solver_buffer_state_increment1.segment(0, 9);
+	state.segment(9, 4) += solver_buffer_state_increment1.segment(9, 4);
 	state.segment(9, 4).normalize();// normalize the quaternion
 }
 
@@ -103,11 +103,6 @@ void RigidBody::IncrementState(const VectorXd & state_increment)
 VectorXd RigidBody::GetState()
 {
 	return state;
-}
-
-void RigidBody::UpdateOutput(const double& t, const VectorXd & input)
-{
-	OutputEquation(t,state, input, output);
 }
 
 RigidBody::~RigidBody()

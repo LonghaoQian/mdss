@@ -13,6 +13,11 @@ Subsystem::~Subsystem()
 {
 }
 
+void Subsystem::UpdateOutput(const double& t, const double& current_stepsize)
+{
+	OutputEquation(t+ current_stepsize, state, solver_buffer_input_temp, output);
+}
+
 VectorXd Subsystem::GetOutput()
 {
 	return output;
@@ -81,6 +86,53 @@ void Subsystem::Solver_PreturbState(int index,  const MatrixXd & butchertableau)
 VectorXd Subsystem::Solver_GetOuputTemp()
 {
 	return solver_buffer_output_temp;
+}
+
+void Subsystem::Solver_CalculateIncrement(const VectorXd & updatecoefficients)
+{
+	if (!system_info.NO_CONTINUOUS_STATE)
+	{
+		solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);// set to zero before added
+		for (int i = 0; i < updatecoefficients.size(); i++)
+		{
+			solver_buffer_state_increment1 += updatecoefficients(i)*solver_buffer_k_sequence.col(i);
+		}
+	}
+}
+
+double Subsystem::Solver_CalculateIncrement(const VectorXd & updatecoefficients1, const VectorXd & updatecoefficients2)
+{
+	if (!system_info.NO_CONTINUOUS_STATE)
+	{
+
+		solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);// set to zero before added
+		for (int i = 0; i < updatecoefficients1.size(); i++)
+		{
+			solver_buffer_state_increment1 += updatecoefficients1(i)*solver_buffer_k_sequence.col(i);
+		}
+		solver_buffer_state_increment2.setZero(system_info.num_of_continuous_states);// set to zero before added
+		for (int i = 0; i < updatecoefficients2.size(); i++)
+		{
+			solver_buffer_state_increment2 += updatecoefficients2(i)*solver_buffer_k_sequence.col(i);
+		}
+		// calculate relative error
+		VectorXd relative_error;
+		relative_error.resize(system_info.num_of_continuous_states);
+		for (int i = 0; i < system_info.num_of_continuous_states; i++)
+		{
+			if (abs(state(i)) > 1)// if this state is greater than 1, then normalize it to 1;
+			{
+				relative_error(i) = (solver_buffer_state_increment1(i) - solver_buffer_state_increment2(i)) / abs(state(i));
+			}
+			else {
+				relative_error(i) = solver_buffer_state_increment1(i) - solver_buffer_state_increment2(i);
+			}
+		}
+		return relative_error.norm();
+	}
+	else {
+		return 0;
+	}
 }
 
 VectorXd Subsystem::Solver_GetInputTemp()

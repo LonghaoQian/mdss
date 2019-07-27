@@ -37,15 +37,17 @@ protected:
 	VectorXd solver_buffer_input_temp;
 	VectorXd solver_buffer_state_temp;
 	VectorXd solver_buffer_Ki_temp;
+	VectorXd solver_buffer_state_increment1;
+	VectorXd solver_buffer_state_increment2;
 	// k1,...,kn vector for numerical solver
 	MatrixXd solver_buffer_k_sequence;
 public:
 	/*----------SystemSetUp--------------*/
 	virtual void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& temp_derivative) = 0;// differential equation for the system
 	virtual void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output)=0;// output of the sub system
-	virtual void IncrementState(const VectorXd& state_increment) = 0;
+	virtual void IncrementState() = 0;
 	virtual VectorXd GetState() = 0;
-	virtual void UpdateOutput(const double& t, const VectorXd& input) = 0;
+    void UpdateOutput(const double& t, const double& current_stepsize);
 	VectorXd GetOutput();
 	virtual void DisplayParameters() = 0;
 	virtual void DisplayInitialCondition() = 0;
@@ -58,7 +60,8 @@ public:
 	void Solver_UpdateInputTemp(int index, double input_temp_i);
 	void Solver_PreturbState(int index, const MatrixXd& butchertableau);
 	VectorXd Solver_GetOuputTemp();
-	VectorXd Solver_CalculateIncrement();
+	void Solver_CalculateIncrement(const VectorXd& updatecoefficients);
+	double Solver_CalculateIncrement(const VectorXd& updatecoefficients1, const VectorXd& updatecoefficients2);// two coefficiet overload
 	VectorXd Solver_GetInputTemp();
     void Solver_PreturbOutput(int index, double& current_time, double& stepsize, const MatrixXd& butchertableau);
 	Subsystem();

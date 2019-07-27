@@ -14,6 +14,7 @@ struct SolverConfig {
 	int solver_type;
 	double eposilon;
 	unsigned int num_of_k;
+	bool adaptive_step;
 };
 class SimController
 {
@@ -39,11 +40,12 @@ private:
 	vector<int> output_sequence;
 	vector<int> non_direct_feedthrough_index;
 	vector<VectorXi> algebraric_loops;
+	VectorXd step_error;// step error for each continuous system
+	VectorXd updatecoefficient1;
+	VectorXd updatecoefficient2;
 	int num_of_cycles_per_step;
 	int num_of_closed_loops;
 	bool RunTopologyAnalysis();
-	double IncrementState();
-	void Update_num_of_steps_per_cycle();
 public:
 	/*overloads of AddSubsystems to suit for every pre-defined type of model*/
 	bool AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC); // input all system info to the sim control object
@@ -53,9 +55,11 @@ public:
 	bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);
 	/*------------------------PreRunProcess of the Connected Subystems--------------*/
 	bool PreRunProcess();// check and parse the system connection relationship.
-	int Run(const double& t, const VectorXd& extern_input);
-	int PostRunProcess();
 	void DisplayTopology();
+	/*------------------------Run Time Function -------------------------------------*/
+	int Run(const double& t, const VectorXd& extern_input);
+	/*-----------------------Post run process----------------------------------------*/
+	int PostRunProcess();
 	SimController(const SolverConfig& config);
 	~SimController();
 };

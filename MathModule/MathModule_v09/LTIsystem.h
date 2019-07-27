@@ -27,9 +27,8 @@ public:
 	LTIsystem(const LTIParameter& parameter, const LTIInitialCondition& IC);
 	void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
 	void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
-	void IncrementState(const VectorXd& state_increment);
+	void IncrementState();
 	VectorXd GetState();
-    void UpdateOutput(const double& t, const VectorXd& input);
 	void DisplayParameters();
 	void DisplayInitialCondition();
 	~LTIsystem();

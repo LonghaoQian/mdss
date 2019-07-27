@@ -84,19 +84,14 @@ void LTIsystem::OutputEquation(const double& t, const VectorXd& state, const Vec
 	output = C * state + D * input;
 }
 
-void LTIsystem::IncrementState(const VectorXd & state_increment)
+void LTIsystem::IncrementState()
 {
-	state += state_increment;
+	state += solver_buffer_state_increment1;
 }
 
 VectorXd LTIsystem::GetState()
 {
 	return state;
-}
-
-void LTIsystem::UpdateOutput(const double& t, const VectorXd& input)
-{
-	OutputEquation(t,state, input, output);
 }
 
 void LTIsystem::DisplayParameters()
