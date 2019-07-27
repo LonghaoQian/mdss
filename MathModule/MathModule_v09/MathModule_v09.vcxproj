@@ -158,6 +158,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TopologyAnalysis.h" />
     <ClInclude Include="UtilityFunctions.h" />
+    <ClInclude Include="util_Recorder.h" />
     <ClInclude Include="VariableDefinitions.h" />
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +179,7 @@
     <ClCompile Include="Subsystem.cpp" />
     <ClCompile Include="TopologyAnalysis.cpp" />
     <ClCompile Include="UtilityFunctions.cpp" />
+    <ClCompile Include="util_Recorder.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

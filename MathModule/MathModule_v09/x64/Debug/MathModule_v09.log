@@ -1,2 +1,3 @@
 ﻿  MathModule_v09.cpp
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\mathmodule_v09.cpp(20): warning C4101: 'Data_input': unreferenced local variable
   MathModule_v09.vcxproj -> C:\Users\arthus\Documents\SimulationSolver\MathModule\x64\Debug\MathModule_v09.exe

@@ -7,6 +7,7 @@ SimController::SimController(const SolverConfig& config)
 	solver_config = config;// load the solver information
 	current_stepsize = solver_config.frame_step;
 	num_of_cycles_per_step = 1;
+	current_time = solver_config.start_time;
 }
 
 
@@ -80,7 +81,7 @@ bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& conn
 	return flag;
 }
 
-int SimController::Run(const double& t, const VectorXd& extern_input)
+int SimController::Run_Update(const VectorXd& extern_input)
 {
 	int flag = 0;
 	/*Logic
@@ -91,7 +92,7 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 	// step 1
 	GetExternalInputs(extern_input);// update external input
 	// step 2
-	// for each intermediate cycle, step 2 calculate the 1st update k1	
+	// for each intermediate cycle, calculate increments using numerical method
 	double error_cycle = 0;
 	for (int cycle = 0; cycle < num_of_cycles_per_step; cycle++)
 	{
@@ -147,7 +148,7 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 			}
 
 			// update the input_temp for all non_feed_through blocks
-			for (int i = 0; non_direct_feedthrough_index.size(); i++)
+			for (int i = 0; i<non_direct_feedthrough_index.size(); i++)
 			{
 				for (int j = 0; j < subsystem_list[non_direct_feedthrough_index[i]]->GetSystemInfo().num_of_inputs; j++)
 				{
@@ -178,7 +179,7 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 				if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
 				{
 					error_cycle += subsystem_list[i]->Solver_CalculateIncrement(updatecoefficient1, updatecoefficient2);
-				}	
+				}
 			}
 			break;
 		case RUNGKUTTA45:
@@ -197,7 +198,6 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 		{
 			subsystem_list[i]->IncrementState();// increment state first
 		}
-		double cycle_time_end = cycle_time + current_stepsize;
 		for (int i = 0; i < num_of_subsystems; i++)
 		{
 			for (int j = 0; j < subsystem_list[output_sequence[i]]->GetSystemInfo().num_of_inputs; j++)
@@ -207,11 +207,11 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 				{
 					// fetch input from the output of other subsystems
 					from_index = subsystem_list[output_sequence[i]]->GetSystemInfo().input_connection(j, 1);
-					subsystem_list[output_sequence[i]]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->Solver_GetOuputTemp()(from_index));
+					subsystem_list[output_sequence[i]]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->GetOutput()(from_index));
 				}
 			}
 			// then update output
-			subsystem_list[output_sequence[i]]->UpdateOutput(cycle_time_end,)
+			subsystem_list[output_sequence[i]]->UpdateOutput(cycle_time, current_stepsize);
 		}
 	}
 	if (solver_config.adaptive_step)
@@ -221,9 +221,17 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 		// determine the optimal step size
 		double s = pow(solver_config.eposilon*current_stepsize/(2* average_error), 0.2);
 		double optimum_step = s * current_stepsize;
-
-		if (optimum_step< solver_config.frame_step)// if the optimum step is smaller than the frame step, equally space the frame step below the size of the optimum step;
+		/*if the optimum step is smaller than the frame step,
+		  then equally separate the framestep to multiple ministeps
+		*/
+		if (optimum_step< solver_config.frame_step)
 		{
+			/*If the optimum step is smaller than the minmum step, then use minimum step*/
+			if (optimum_step < solver_config.mim_step)
+			{
+				optimum_step = solver_config.mim_step;
+			}
+			
 			num_of_cycles_per_step = ceil(solver_config.frame_step / optimum_step);
 			current_stepsize = solver_config.frame_step / num_of_cycles_per_step;
 		}
@@ -236,6 +244,16 @@ int SimController::Run(const double& t, const VectorXd& extern_input)
 	current_time += solver_config.frame_step;
 	/*------------step calculation complete------------------------*/
 	return flag;
+}
+
+double SimController::Run_GetSystemTime()
+{
+	return current_time;
+}
+
+VectorXd SimController::Run_GetSubsystemOuput(const unsigned int system_ID)
+{
+	return subsystem_list[system_ID]->GetOutput();
 }
 
 int SimController::PostRunProcess()
@@ -294,7 +312,7 @@ void SimController::DisplayTopology()
 
 bool SimController::PreRunProcess()
 {
-	bool flag = false;
+	bool flag = true;
 	/* Logic:
 	1. Parsing the external input mappiing
 	a. for each subsystem, find the row index associated with -1 in the 1st colume and determine the total number of external inputs
@@ -304,6 +322,7 @@ bool SimController::PreRunProcess()
 	*/
 	// step 1 determine the external input mapping
 	num_of_external_inputs = 0;// total amount of external inputs
+	num_of_continuous_states = 0;// total number of continuous states
 	// a. determine the total number of external inputs
 	for (unsigned int i = 0; i < num_of_subsystems; i++)
 	{
@@ -316,6 +335,11 @@ bool SimController::PreRunProcess()
 		}
 	}
 	external_mapping.resize(num_of_external_inputs,2);
+	for (unsigned int i = 0; i < num_of_subsystems; i++)
+	{
+		num_of_continuous_states += subsystem_list[i]->GetSystemInfo().num_of_continuous_states;
+	}
+
 	// b. determine the external input mapping:
 	int mapping_counter = 0;
 	for (unsigned int i = 0; i < num_of_subsystems; i++)
@@ -348,6 +372,7 @@ bool SimController::PreRunProcess()
 				if (subsystem_list[i]->GetSystemInfo().input_connection(j, 0)>= num_of_subsystems)// detect if the input mapping index exceeds the total number of subsystems
 				{
 					cout << "PARSING ERROR: subsystem # "<<i<<" input index "<<j<<" exceeds num_of_subsystems. "<<endl;
+					flag = false;
 				}
 				else
 				{
@@ -357,10 +382,10 @@ bool SimController::PreRunProcess()
 					if (subsystem_list[i]->GetSystemInfo().input_connection(j, 1) >= num_of_target_output)
 					{
 						cout << "PARSING ERROR: subsystem # " << i << " input index " << j << " exceeds num_of_outputs of subsystem # " << subsystem_list[i]->GetSystemInfo().input_connection(j, 0) <<endl;
+						flag = false;
 					}
 					else
 					{
-						flag = true;
 						//connectivity(i, subsystem_list[i]->GetSystemInfo().input_connection(j, 0)) = 1;
 						connectivity(subsystem_list[i]->GetSystemInfo().input_connection(j, 0),i) = 1;
 					}
@@ -378,8 +403,14 @@ bool SimController::PreRunProcess()
 		{
 		case DORMANDPRINCE:
 			butchertableau = RungeKuttaFamily::InitbutchertableauDORMANDPRINCE();// update butcher tableau
-			updatecoefficient1 = butchertableau.block(7, 1, 1, 7);
-			updatecoefficient2 = butchertableau.block(8, 1, 1, 7);
+			updatecoefficient1.resize(7);
+			updatecoefficient2.resize(7);
+
+			for (int i = 0; i < 7; i++)
+			{
+				updatecoefficient1(i) = butchertableau(7,i);
+				updatecoefficient2(i) = butchertableau(8,i);
+			}
 			// reference: http://depa.fquim.unam.mx/amyd/archivero/DormandPrince_19856.pdf
 			solver_config.num_of_k = 7;
 			break;
@@ -540,6 +571,10 @@ bool SimController::GetExternalInputs(const VectorXd & extern_input)
 	{
 		for (int i = 0; i < num_of_external_inputs; i++)
 		{
+			//int a = external_mapping(i, 0);
+			//int b = external_mapping(i, 1);
+			//cout<<" --extern--- " << extern_input.size()<< endl;
+			//double c = extern_input(i);
 			subsystem_list[external_mapping(i, 0)]->Solver_UpdateInputTemp(external_mapping(i, 1), extern_input(i));// insert external inputs into buffer
 		}
 		flag = true;

@@ -15,6 +15,7 @@ struct SolverConfig {
 	double eposilon;
 	unsigned int num_of_k;
 	bool adaptive_step;
+	double start_time;
 };
 class SimController
 {
@@ -57,7 +58,9 @@ public:
 	bool PreRunProcess();// check and parse the system connection relationship.
 	void DisplayTopology();
 	/*------------------------Run Time Function -------------------------------------*/
-	int Run(const double& t, const VectorXd& extern_input);
+	int Run_Update(const VectorXd& extern_input);
+	double Run_GetSystemTime();
+	VectorXd Run_GetSubsystemOuput(const unsigned int system_ID);
 	/*-----------------------Post run process----------------------------------------*/
 	int PostRunProcess();
 	SimController(const SolverConfig& config);
