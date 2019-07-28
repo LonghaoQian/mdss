@@ -8,9 +8,24 @@ C =[ 1, 0, 0;
 	0, 0, 1];
 D =[ 0,0,0]';
 
-sys = ss(A,B,C,D);
+x0 = [0 0 0]';
 
-[Y,T] = step(sys,10);
+
+A1 = [0 ,- 0.1;
+		1,   0];
+B1 = [0;1];
+
+C1 = [1, 0;
+	0, 1];
+D1 = [0, 0]';
+
+x1 = [0,1]';
+
+sim('LTI_test.slx',20);
+
+%sys = ss(A,B,C,D);
+
+%//[Y,T] = step(sys,10);
 
 close all
 filename = 'LTIsimulation.txt';
@@ -34,15 +49,15 @@ figure(1)
 subplot(3,1,1)
 plot(time,X1,'-xk')
 hold on
-plot(T,Y(:,1),'-og')
+plot(Y1.Time,Y1.Data(:,1),'-og')
 subplot(3,1,2)
 plot(time,X2,'-xk')
 hold on
-plot(T,Y(:,2),'-og')
+plot(Y1.Time,Y1.Data(:,2),'-og')
 subplot(3,1,3)
 plot(time,X3,'-xk')
 hold on
-plot(T,Y(:,3),'-og')
+plot(Y1.Time,Y1.Data(:,3),'-og')
 
 
 

@@ -1,6 +1,8 @@
 ﻿  MathModule_v09.cpp
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\math_gain.h(4): warning C4005: 'READYTOGO': macro redefinition
+  c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\ltisystem.h(4): note: see previous definition of 'READYTOGO'
   Generating code
-  1 of 1876 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  1 of 1917 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code

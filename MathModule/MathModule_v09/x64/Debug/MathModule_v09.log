@@ -1,3 +1,4 @@
 ﻿  MathModule_v09.cpp
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\mathmodule_v09.cpp(20): warning C4101: 'Data_input': unreferenced local variable
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\math_gain.h(4): warning C4005: 'READYTOGO': macro redefinition
+  c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\ltisystem.h(4): note: see previous definition of 'READYTOGO'
   MathModule_v09.vcxproj -> C:\Users\arthus\Documents\SimulationSolver\MathModule\x64\Debug\MathModule_v09.exe

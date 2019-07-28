@@ -55,6 +55,24 @@ bool SimController::AddSubSystem(const RigidBodyParameter & parameters, const Ri
 	return flag;
 }
 
+bool SimController::AddSubSystem(const Gainparameter & parameters)
+{
+	bool flag;
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new Math_Gain(parameters));
+	system_info = subsystem_list.back()->GetSystemInfo();
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	if (system_info.system_parameter_ok == true)
+	{
+		flag = true;
+	}
+	else {
+		flag = false;
+	}
+	return flag;
+}
+
 bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping)
 {
 	// parse the connection mapping 
@@ -425,6 +443,24 @@ bool SimController::PreRunProcess()
 		{
 			subsystem_list[i]->Solver_InitSolverBuffer(solver_config.num_of_k);
 		}
+		// calculate the initial outputs based on initial conditions
+		int from_system = 0;
+		int from_index = 0;
+		for (int i = 0; i < num_of_subsystems; i++)
+		{
+			for (int j = 0; j < subsystem_list[output_sequence[i]]->GetSystemInfo().num_of_inputs; j++)
+			{
+				from_system = subsystem_list[output_sequence[i]]->GetSystemInfo().input_connection(j, 0);
+				if (from_system >= 0)// detect if this input port is an non-external input
+				{
+					// fetch input from the output of other subsystems
+					from_index = subsystem_list[output_sequence[i]]->GetSystemInfo().input_connection(j, 1);
+					subsystem_list[output_sequence[i]]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->GetOutput()(from_index));
+				}
+			}
+			// then update output
+			subsystem_list[output_sequence[i]]->UpdateOutput(solver_config.start_time, 0);
+		}
 	}
 	else {
 
@@ -567,21 +603,28 @@ bool SimController::RunTopologyAnalysis()
 bool SimController::GetExternalInputs(const VectorXd & extern_input)
 {
 	bool flag = false;
-	if (extern_input.size() == num_of_external_inputs)
+	if (num_of_external_inputs > 0)
 	{
-		for (int i = 0; i < num_of_external_inputs; i++)
+		if (extern_input.size() == num_of_external_inputs)
 		{
-			//int a = external_mapping(i, 0);
-			//int b = external_mapping(i, 1);
-			//cout<<" --extern--- " << extern_input.size()<< endl;
-			//double c = extern_input(i);
-			subsystem_list[external_mapping(i, 0)]->Solver_UpdateInputTemp(external_mapping(i, 1), extern_input(i));// insert external inputs into buffer
+			for (int i = 0; i < num_of_external_inputs; i++)
+			{
+				//int a = external_mapping(i, 0);
+				//int b = external_mapping(i, 1);
+				//cout<<" --extern--- " << extern_input.size()<< endl;
+				//double c = extern_input(i);
+				subsystem_list[external_mapping(i, 0)]->Solver_UpdateInputTemp(external_mapping(i, 1), extern_input(i));// insert external inputs into buffer
+			}
+			flag = true;
 		}
-		flag = true;
+		else {
+			cout << "RUN-TIME ERROR: EXTERNAL INPUTS SIZE MISMATCH" << endl;
+		}
 	}
 	else {
-		cout << "RUN-TIME ERROR: EXTERNAL INPUTS SIZE MISMATCH" << endl;
+		flag = true;// if there is no external inputs, then do nothing
 	}
+
 	return flag;
 }
 

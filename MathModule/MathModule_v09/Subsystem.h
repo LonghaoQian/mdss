@@ -9,6 +9,7 @@
 #define LTI 1
 #define INTEGRATOR 2
 #define RIGIDBODY 3
+#define Gain 4
 // A template for a subsystem used for schecduling.
 using namespace std;
 using namespace Eigen;
@@ -47,10 +48,11 @@ public:
 	virtual void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output)=0;// output of the sub system
 	virtual void IncrementState() = 0;
 	virtual VectorXd GetState() = 0;
-    void UpdateOutput(const double& t, const double& current_stepsize);
-	VectorXd GetOutput();
 	virtual void DisplayParameters() = 0;
 	virtual void DisplayInitialCondition() = 0;
+	/**------------------------------------*/
+    void UpdateOutput(const double& t, const double& current_stepsize);
+	VectorXd GetOutput();
 	void SetInputConnection(const MatrixX2i& connection);
 	void OverrideDirectFeedThroughFlag(bool isDirectFeedThrough);
 	subsystem_info GetSystemInfo();

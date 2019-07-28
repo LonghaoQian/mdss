@@ -3,6 +3,7 @@
 #include "RungeKuttaFamily.h"
 #include "Subsystem.h"
 #include "LTIsystem.h"
+#include "Math_Gain.h"
 #include <iostream>
 #include "RigidBody.h"
 #include "TopologyAnalysis.h"
@@ -51,6 +52,7 @@ public:
 	/*overloads of AddSubsystems to suit for every pre-defined type of model*/
 	bool AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC); // input all system info to the sim control object
 	bool AddSubSystem(const RigidBodyParameter& parameters, const RigidBodyCondition& IC); // input all system info to the sim control object
+	bool AddSubSystem(const Gainparameter& parameters);
 	//bool AddSUbSystem(const GainParameter& parameters);
 	/*------------------------define connections between subsystems--------------------------------*/
 	bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);

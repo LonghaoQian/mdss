@@ -62,6 +62,15 @@
     <ClInclude Include="util_Recorder.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Source_SignalGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Math_Gain.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -103,5 +112,16 @@
     <ClCompile Include="util_Recorder.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Source_SignalGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Math_Gain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MathModule_v09.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
