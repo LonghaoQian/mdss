@@ -28,7 +28,6 @@ public:
 	void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
 	void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
 	void IncrementState();
-	VectorXd GetState();
 	void DisplayParameters();
 	void DisplayInitialCondition();
 	~LTIsystem();

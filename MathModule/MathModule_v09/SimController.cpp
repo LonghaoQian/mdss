@@ -73,6 +73,24 @@ bool SimController::AddSubSystem(const Gainparameter & parameters)
 	return flag;
 }
 
+bool SimController::AddSubsystem(const SignalGeneratorparameter& parameters)
+{
+	bool flag;
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new Source_SignalGenerator(parameters));
+	system_info = subsystem_list.back()->GetSystemInfo();
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	if (system_info.system_parameter_ok == true)
+	{
+		flag = true;
+	}
+	else {
+		flag = false;
+	}
+	return flag;
+}
+
 bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping)
 {
 	// parse the connection mapping 
@@ -237,7 +255,7 @@ int SimController::Run_Update(const VectorXd& extern_input)
 		double average_error = error_cycle / num_of_continuous_states;
 
 		// determine the optimal step size
-		double s = pow(solver_config.eposilon*current_stepsize/(2* average_error), 0.2);
+		double s = pow(solver_config.eposilon/(2* average_error), 0.2);
 		double optimum_step = s * current_stepsize;
 		/*if the optimum step is smaller than the frame step,
 		  then equally separate the framestep to multiple ministeps
@@ -607,13 +625,10 @@ bool SimController::GetExternalInputs(const VectorXd & extern_input)
 	{
 		if (extern_input.size() == num_of_external_inputs)
 		{
+			// insert external inputs into buffer
 			for (int i = 0; i < num_of_external_inputs; i++)
 			{
-				//int a = external_mapping(i, 0);
-				//int b = external_mapping(i, 1);
-				//cout<<" --extern--- " << extern_input.size()<< endl;
-				//double c = extern_input(i);
-				subsystem_list[external_mapping(i, 0)]->Solver_UpdateInputTemp(external_mapping(i, 1), extern_input(i));// insert external inputs into buffer
+				subsystem_list[external_mapping(i, 0)]->Solver_UpdateInputTemp(external_mapping(i, 1), extern_input(i));
 			}
 			flag = true;
 		}

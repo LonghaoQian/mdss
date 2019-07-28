@@ -88,12 +88,6 @@ void LTIsystem::IncrementState()
 {
 	state += solver_buffer_state_increment1;
 }
-
-VectorXd LTIsystem::GetState()
-{
-	return state;
-}
-
 void LTIsystem::DisplayParameters()
 {
 	cout << "---------------------" << endl;

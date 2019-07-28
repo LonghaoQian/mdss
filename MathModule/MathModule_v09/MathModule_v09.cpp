@@ -9,13 +9,14 @@ using namespace std;
 int main()
 {
 	SolverConfig config1;
-	config1.eposilon = 0.0001;
-	config1.adaptive_step = false;
+	config1.eposilon = 0.00001;
+	config1.adaptive_step = true;
 	config1.frame_step = 0.02;
 	config1.mim_step = 0.005;
 	config1.start_time = 0.0;
 	config1.solver_type = DORMANDPRINCE;
 	SimController SimInstance1(config1);
+
 	util_Recorder Recorder1("LTIsimulation.txt", 4);
 	double Data_input[4];
 
@@ -61,33 +62,50 @@ int main()
 	LTI1IC.X_0(1) = 1;
 
 
-	Gainparameter Gain1;
+	Gainparameter Gain1, Gain2;
 	Gain1.K.resize(1, 1);
 	Gain1.K(0,0) = -2;
 	Gain1.num_of_inputs = 1;
 	Gain1.type = GAIN_SCALER;
 
+	Gain2.K.resize(1, 2);
+	Gain2.K(0, 0) = -1;
+	Gain2.K(0, 1) = -0.2;
+	Gain2.type = GAIN_MATRIX;
+
 
 	SimInstance1.AddSubSystem(LTI0, LTI0IC); 
 	SimInstance1.AddSubSystem(Gain1);
 	SimInstance1.AddSubSystem(LTI1, LTI1IC);
-	MatrixX2i LTI0connection, Gain1connection, LTI1connection;
+	SimInstance1.AddSubSystem(Gain2);
+	MatrixX2i LTI0connection, Gain1connection, LTI1connection, Gain2connection;
 
 	LTI0connection.resize(1, 2);
-	LTI0connection(0, 0) = 2;
+	LTI0connection(0, 0) = 3;
 	LTI0connection(0, 1) = 0;
+
+	SimInstance1.MakeConnection(0, LTI0connection);
 
 	Gain1connection.resize(1, 2);
 	Gain1connection(0, 0) = 0;
 	Gain1connection(0, 1) = 0;
 
+	SimInstance1.MakeConnection(1, Gain1connection);
+
 	LTI1connection.resize(1, 2);
 	LTI1connection(0, 0) = 1;
 	LTI1connection(0, 1) = 0;
 
-	SimInstance1.MakeConnection(0, LTI0connection);
-	SimInstance1.MakeConnection(1, Gain1connection);
 	SimInstance1.MakeConnection(2, LTI1connection);
+
+	Gain2connection.resize(2, 2);
+	Gain2connection(0, 0) = 2;
+	Gain2connection(0, 1) = 0;
+	Gain2connection(1, 0) = 2;
+	Gain2connection(1, 1) = 1;
+
+
+	SimInstance1.MakeConnection(3, Gain2connection);
 
 	SimInstance1.PreRunProcess();
 	// print the system info

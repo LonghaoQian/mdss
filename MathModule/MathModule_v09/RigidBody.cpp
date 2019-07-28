@@ -38,12 +38,11 @@ void RigidBody::DifferentialEquation(const double & t, const VectorXd & state_te
 	state(6,7,8) = X_I
 	state(9,0,11,12) = quaternion
 	*/
-	derivative.segment(0, 3) = input.segment(0, 3) / m;// dot_VI = F_I /m
-	derivative.segment(3, 3) = J_inv * (input.segment(3, 3) - mathauxiliary::Hatmap(state_temp.segment(3,3))*J*state_temp.segment(3, 3)); // dot_omega = J_inv *( M - omega^x J omega) 
-	derivative.segment(6, 3) = state_temp.segment(0, 3);
-
 	Vector4d q = state_temp.segment(9, 4);
 
+	derivative.segment(0, 3) = mathauxiliary::GetR_IBFromQuaterion(q)*input.segment(0, 3) / m;// dot_VI = R_IB F_B/m
+	derivative.segment(3, 3) = J_inv * (input.segment(3, 3) - mathauxiliary::Hatmap(state_temp.segment(3,3))*J*state_temp.segment(3, 3)); // dot_omega = J_inv *( M - omega^x J omega) 
+	derivative.segment(6, 3) = state_temp.segment(0, 3);
 	derivative.segment(9, 4) = 0.5*mathauxiliary::GetLmatrixFromQuaterion(q.normalized()).transpose()*state_temp.segment(3, 3);
 }
 

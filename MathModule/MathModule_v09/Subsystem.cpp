@@ -13,6 +13,11 @@ Subsystem::~Subsystem()
 {
 }
 
+VectorXd Subsystem::GetState()
+{
+	return state;
+}
+
 void Subsystem::UpdateOutput(const double& t, const double& current_stepsize)
 {
 	OutputEquation(t+ current_stepsize, state, solver_buffer_input_temp, output);

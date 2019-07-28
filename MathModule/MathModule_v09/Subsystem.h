@@ -10,6 +10,7 @@
 #define INTEGRATOR 2
 #define RIGIDBODY 3
 #define Gain 4
+#define Signal_Generator 5
 // A template for a subsystem used for schecduling.
 using namespace std;
 using namespace Eigen;
@@ -47,10 +48,10 @@ public:
 	virtual void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& temp_derivative) = 0;// differential equation for the system
 	virtual void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output)=0;// output of the sub system
 	virtual void IncrementState() = 0;
-	virtual VectorXd GetState() = 0;
 	virtual void DisplayParameters() = 0;
 	virtual void DisplayInitialCondition() = 0;
 	/**------------------------------------*/
+	VectorXd GetState();
     void UpdateOutput(const double& t, const double& current_stepsize);
 	VectorXd GetOutput();
 	void SetInputConnection(const MatrixX2i& connection);
