@@ -150,7 +150,10 @@ int SimController::Run_Update(const VectorXd& extern_input)
 			}
 			// update k1
 			subsystem_list[i]->Solver_PreturbState(0, butchertableau);
-			subsystem_list[i]->Solver_UpdateKiBuffer(0, cycle_time, current_stepsize, butchertableau);
+			if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
+			{
+				subsystem_list[i]->Solver_UpdateKiBuffer(0, cycle_time, current_stepsize, butchertableau);
+			}
 		}
 		// k2-kn
 		for (int index_ki = 1; index_ki < solver_config.num_of_k; index_ki++)
@@ -158,7 +161,10 @@ int SimController::Run_Update(const VectorXd& extern_input)
 			// Preturb states
 			for (int i = 0; i < num_of_subsystems; i++)
 			{
-				subsystem_list[i]->Solver_PreturbState(index_ki, butchertableau);
+				if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
+				{
+					subsystem_list[i]->Solver_PreturbState(index_ki, butchertableau);
+				}
 			}
 			// reset these indexes:
 			from_system = 0;
@@ -201,7 +207,10 @@ int SimController::Run_Update(const VectorXd& extern_input)
 			// update the ki
 			for (int i = 0; i < num_of_subsystems; i++)
 			{
-				subsystem_list[i]->Solver_UpdateKiBuffer(index_ki, cycle_time, current_stepsize, butchertableau);//
+				if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
+				{
+					subsystem_list[i]->Solver_UpdateKiBuffer(index_ki, cycle_time, current_stepsize, butchertableau);//
+				}
 			}
 		}
 		/*------ki calculation is complete, now calculate state increment------------------------*/

@@ -1,4 +1,6 @@
-﻿  LTIsystem.cpp
+﻿  stdafx.cpp
+  DynamicQuaternion.cpp
+  LTIsystem.cpp
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\ltisystem.cpp(24): warning C4244: '=': conversion from 'Eigen::EigenBase<Derived>::Index' to 'unsigned int', possible loss of data
           with
           [
@@ -44,7 +46,10 @@ c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\math_gain.c
               Derived=Eigen::Matrix<double,-1,-1,0,-1,-1>
           ]
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\math_gain.cpp(49): warning C4018: '<': signed/unsigned mismatch
+  OdeSolver.cpp
+  Quaternion2.cpp
   RigidBody.cpp
+  RungeKuttaFamily.cpp
   SimController.cpp
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\math_gain.h(4): warning C4005: 'READYTOGO': macro redefinition
   c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\ltisystem.h(4): note: see previous definition of 'READYTOGO'
@@ -54,45 +59,56 @@ c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroll
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(83): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(139): warning C4018: '<': signed/unsigned mismatch
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(141): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(156): warning C4018: '<': signed/unsigned mismatch
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(159): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(167): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(172): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(189): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(202): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(213): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(162): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(173): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(178): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(195): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(208): warning C4018: '<': signed/unsigned mismatch
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(222): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(233): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(237): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(239): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(271): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(304): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(314): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(324): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(337): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(343): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(408): warning C4018: '>=': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(418): warning C4018: '>=': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(460): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(467): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(231): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(242): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(246): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(248): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(280): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(313): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(323): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(333): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(346): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(352): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(417): warning C4018: '>=': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(427): warning C4018: '>=': signed/unsigned mismatch
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(469): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(506): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(510): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(525): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(570): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(572): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(574): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(578): warning C4018: '<': signed/unsigned mismatch
-c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(629): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(476): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(478): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(515): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(519): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(534): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(579): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(581): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(583): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(587): warning C4018: '<': signed/unsigned mismatch
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\simcontroller.cpp(638): warning C4018: '<': signed/unsigned mismatch
   Source_SignalGenerator.cpp
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\source_signalgenerator.cpp(30): warning C4018: '<': signed/unsigned mismatch
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\source_signalgenerator.cpp(36): warning C4018: '<': signed/unsigned mismatch
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\source_signalgenerator.cpp(52): warning C4018: '<': signed/unsigned mismatch
   Subsystem.cpp
 c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\subsystem.cpp(126): warning C4018: '<': signed/unsigned mismatch
+  TopologyAnalysis.cpp
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\topologyanalysis.cpp(12): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\topologyanalysis.cpp(63): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\topologyanalysis.cpp(108): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\topologyanalysis.cpp(101): warning C4101: 'unscanned_index': unreferenced local variable
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\topologyanalysis.cpp(145): warning C4244: '=': conversion from 'Eigen::EigenBase<Derived>::Index' to 'int', possible loss of data
+          with
+          [
+              Derived=Eigen::Matrix<int,-1,-1,0,-1,-1>
+          ]
+  UtilityFunctions.cpp
+  util_Recorder.cpp
+c:\users\arthus\documents\simulationsolver\mathmodule\mathmodule_v09\util_recorder.cpp(31): warning C4018: '<': signed/unsigned mismatch
   Generating code
-  13 of 1915 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    41 functions had inline decision re-evaluated but remain unchanged
+  All 1915 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   MathModule_v09.vcxproj -> C:\Users\arthus\Documents\SimulationSolver\MathModule\x64\Release\MathModule_v09.exe
