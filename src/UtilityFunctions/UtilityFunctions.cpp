@@ -128,8 +128,7 @@ Matrix<double, 3, 4> mathauxiliary::GetRmatrixFromQuaterion(const Vector4d & qua
 Matrix3d mathauxiliary::GetR_IBFromQuaterion(const Vector4d & quaterion)
 {
 	// pose[1].R * pose[1].L.transpose();
-	Matrix3d R_IB;
-	R_IB = GetRmatrixFromQuaterion(quaterion)  *  GetLmatrixFromQuaterion(quaterion).transpose();
+	Matrix3d R_IB = GetRmatrixFromQuaterion(quaterion)  *  GetLmatrixFromQuaterion(quaterion).transpose();
 	return R_IB;
 }
 
