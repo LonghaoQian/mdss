@@ -151,3 +151,58 @@ Matrix<double, 3, 3> mathauxiliary::ConvertVectorToRotationMatrix(const Matrix<d
 	return R;
 }
 
+mathauxiliary::Lookup::Lookup(void)
+{
+
+}
+
+mathauxiliary::Lookup::~Lookup(void)
+{
+
+}
+
+mathauxiliary::Lookup_1D::Lookup_1D(VectorXd& _input_1, VectorXd& _data, bool extrapolation)
+{
+	isextrapolation = extrapolation;
+	num_of_inputs = _input_1.size();
+	input_1.resize(num_of_inputs);
+	data.resize(num_of_inputs);
+	input_1 = _input_1;
+	data = _data;
+	Preprocess();// sort the data in ascending order
+}
+
+mathauxiliary::Lookup_1D::~Lookup_1D(void)
+{
+	
+}
+
+void mathauxiliary::Lookup_1D::GetOutput(double& output,double& reference)
+{
+	
+	if (reference > input_1(num_of_inputs - 1)) {
+		if (isextrapolation) {
+
+		}
+		else {
+		}
+
+	}
+	else if (reference < input_1(0)) {
+		if (isextrapolation) {
+
+		}
+		else {
+		}
+	}
+	else {
+
+	}
+}
+
+void mathauxiliary::Lookup_1D::Preprocess()
+{
+	// sort the data in ascending order
+
+}
+

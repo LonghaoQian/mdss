@@ -29,24 +29,28 @@ namespace mathauxiliary {
 		public Lookup 
 	{
 	private:
+		int num_of_inputs;
 		VectorXd input_1;
 		VectorXd data;
 		void Preprocess();
 	public:
-		Lookup_1D(VectorXd& input_1, VectorXd& data, bool extrapolation);
-		void GetOutput(double& output);
+		Lookup_1D(VectorXd& _input_1, VectorXd& _data, bool extrapolation);
+		void GetOutput(double& output, double& reference);
 		~Lookup_1D();
 	};
 	class Lookup_2D {
 	private:
+		int num_of_inputs1;
+		int num_of_inputs2;
 		VectorXd input_1;
 		VectorXd input_2;
 		MatrixXd data;
 	public:
-		Lookup_2D(VectorXd& input_1, VectorXd input_2, MatrixXd& data, bool extrapolation);
+		Lookup_2D(VectorXd& _input_1, VectorXd _input_2, MatrixXd& data, bool extrapolation);
 		void GetOutput(double& output);
 		~Lookup_2D();
 	};
+	/*
 	class Lookup_3D {
 	private:
 	public:
@@ -54,5 +58,5 @@ namespace mathauxiliary {
 		void GetOutput(double& output, bool extrapolation);
 		~Lookup_3D();
 	};
-	// TO DO n-D look up
+	// TO DO n-D look up*/
 }
