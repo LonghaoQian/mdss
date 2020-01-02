@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\main">
+      <UniqueIdentifier>{8b63277a-47da-4d18-bdc2-8f9d364971bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Core">
+      <UniqueIdentifier>{c237e30c-c5b1-4638-a1ac-fd7cffde3470}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Subsystems">
+      <UniqueIdentifier>{3c1809f0-d189-4b6a-bc20-fae404dbb897}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Aerodynamics">
+      <UniqueIdentifier>{e0908796-dae0-464c-ad7e-47eb5f093e10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UtilityFunctions">
+      <UniqueIdentifier>{ee425192-3010-47d1-a2c4-3326af98abe2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MathBlocks">
+      <UniqueIdentifier>{31f124c5-4bfc-46bc-83a3-ac57c1c8bae5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Core">
+      <UniqueIdentifier>{aa4c463c-df03-4bbc-b27f-3c89300058d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Aerodynamics">
+      <UniqueIdentifier>{75eee8b5-0d9d-4642-88c5-a0c2a101f215}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Subsystems">
+      <UniqueIdentifier>{eb4272aa-f3c2-4245-b161-5f1fd27be1fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\MathBlocks">
+      <UniqueIdentifier>{74d8dd22-6390-44ab-952f-04e6f984c8c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UtilityFunctions">
+      <UniqueIdentifier>{50a20097-8b6c-4835-bcf3-d8634f629539}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SimulationSolver\src\pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\SolverCore\OdeSolver.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\SolverCore\RungeKuttaFamily.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\SolverCore\SimController.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\SolverCore\TopologyAnalysis.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\SolverCore\Subsystem.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\ContinuousTimeSystems\LTIsystem.h">
+      <Filter>Header Files\Subsystems</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\SignalSource\Source_SignalGenerator.h">
+      <Filter>Header Files\Subsystems</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\ContinuousTimeSystems\RigidBody.h">
+      <Filter>Header Files\Subsystems</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\UtilityFunctions\DynamicQuaternion.h">
+      <Filter>Header Files\MathBlocks</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\UtilityFunctions\Quaternion2.h">
+      <Filter>Header Files\MathBlocks</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\UtilityFunctions\UtilityFunctions.h">
+      <Filter>Header Files\UtilityFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\UtilityFunctions\util_Recorder.h">
+      <Filter>Header Files\UtilityFunctions</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationSolver\src\MathBlocks\Math_Gain.h">
+      <Filter>Header Files\Subsystems</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SimulationSolver\src\pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\solver_test.cpp">
+      <Filter>Source Files\main</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\SolverCore\TopologyAnalysis.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\SolverCore\RungeKuttaFamily.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\SolverCore\SimController.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\UtilityFunctions\UtilityFunctions.cpp">
+      <Filter>Source Files\UtilityFunctions</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\UtilityFunctions\util_Recorder.cpp">
+      <Filter>Source Files\UtilityFunctions</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\ContinuousTimeSystems\LTIsystem.cpp">
+      <Filter>Source Files\Subsystems</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\SolverCore\OdeSolver.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\UtilityFunctions\Quaternion2.cpp">
+      <Filter>Source Files\MathBlocks</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\ContinuousTimeSystems\RigidBody.cpp">
+      <Filter>Source Files\Subsystems</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\MathBlocks\Math_Gain.cpp">
+      <Filter>Source Files\Subsystems</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\SignalSource\Source_SignalGenerator.cpp">
+      <Filter>Source Files\Subsystems</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\UtilityFunctions\DynamicQuaternion.cpp">
+      <Filter>Source Files\MathBlocks</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationSolver\src\SolverCore\Subsystem.cpp">
+      <Filter>Header Files\Subsystems</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
