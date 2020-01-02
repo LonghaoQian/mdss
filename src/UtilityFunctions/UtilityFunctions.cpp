@@ -161,7 +161,7 @@ mathauxiliary::Lookup::~Lookup(void)
 
 }
 
-mathauxiliary::Lookup_1D::Lookup_1D(VectorXd& _input_1, VectorXd& _data, bool extrapolation)
+mathauxiliary::Lookup_1D::Lookup_1D(ArrayXd& _input_1, ArrayXd& _data, bool extrapolation)
 {
 	isextrapolation = extrapolation;
 	num_of_inputs = _input_1.size();
@@ -203,6 +203,6 @@ void mathauxiliary::Lookup_1D::GetOutput(double& output,double& reference)
 void mathauxiliary::Lookup_1D::Preprocess()
 {
 	// sort the data in ascending order
-
+	//std::sort(input_1.b, input_1.end());
 }
 

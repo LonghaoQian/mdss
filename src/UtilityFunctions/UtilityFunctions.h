@@ -30,11 +30,11 @@ namespace mathauxiliary {
 	{
 	private:
 		int num_of_inputs;
-		VectorXd input_1;
-		VectorXd data;
+		ArrayXd input_1;
+		ArrayXd data;
 		void Preprocess();
 	public:
-		Lookup_1D(VectorXd& _input_1, VectorXd& _data, bool extrapolation);
+		Lookup_1D(ArrayXd& _input_1, ArrayXd& _data, bool extrapolation);
 		void GetOutput(double& output, double& reference);
 		~Lookup_1D();
 	};
@@ -42,8 +42,8 @@ namespace mathauxiliary {
 	private:
 		int num_of_inputs1;
 		int num_of_inputs2;
-		VectorXd input_1;
-		VectorXd input_2;
+		ArrayXd input_1;
+		ArrayXd input_2;
 		MatrixXd data;
 	public:
 		Lookup_2D(VectorXd& _input_1, VectorXd _input_2, MatrixXd& data, bool extrapolation);
