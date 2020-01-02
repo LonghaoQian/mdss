@@ -151,22 +151,114 @@ Matrix<double, 3, 3> mathauxiliary::ConvertVectorToRotationMatrix(const Matrix<d
 	return R;
 }
 
-mathauxiliary::Lookup::Lookup(void)
+Vector2i mathauxiliary::BinarySearchVector(bool isascending, 
+										   const VectorXd& p, 
+										   double& target) {
+	// 
+	Vector2i indexarray;
+	// initialize index array
+	indexarray << 0,
+				  p.size() - 1;
+	// Corner cases 
+	if (isascending) {
+		if (target <= p(0)) {
+			indexarray << 0,
+				0;
+			return indexarray;
+		}
+		if (target >= p(p.size() - 1)) {
+			indexarray << p.size() - 1,
+				p.size() - 1;
+			return indexarray;
+		}
+	}
+	else {
+		if (target >= p(0)) {
+			indexarray << 0,
+				0;
+			return indexarray;
+		}
+		if (target <= p(p.size() - 1)) {
+			indexarray << p.size() - 1,
+				p.size() - 1;
+			return indexarray;
+		}
+	}
+
+	// Doing binary search 
+	int mid = 0;
+
+	if (isascending) {
+		while (indexarray(0) < indexarray(1) - 1) {
+			mid = (indexarray(0) + indexarray(1)) / 2;
+
+			if (p(mid) <= target) {
+				indexarray(0) = mid;
+			}
+			else {
+				indexarray(1) = mid;
+			}
+		}
+	}
+	else {
+		while (indexarray(0) < indexarray(1) - 1) {
+			mid = (indexarray(0) + indexarray(1)) / 2;
+
+			if (p(mid) >= target) {
+				indexarray(0) = mid;
+			}
+			else {
+				indexarray(1) = mid;
+			}
+		}
+	}
+
+	return indexarray;
+}
+
+double mathauxiliary::LinearInterpolation1D(const VectorXd& data, 
+										    int index1, 
+											int index2, 
+											const VectorXd& reference,
+											double& target) {
+	return data(index1) + (data(index2) - data(index1)) * (target - reference(index1))/(reference(index2) - reference(index1));
+}
+
+double mathauxiliary::LinearInterpolation2D(const MatrixXd & data, 
+											const Vector2i & index_1d, 
+											const Vector2i & index_2d, 
+											const VectorXd & reference_1d, 
+											const VectorXd & reference_2d,
+											double & target) {
+	// bilinear interpolation
+	double temp_1, temp_2;
+	temp_1 = LinearInterpolation1D(data.col(index_2d(0)), index_1d(0), index_1d(1), reference_1d, target);
+	temp_2 = LinearInterpolation1D(data.col(index_2d(1)), index_1d(0), index_1d(1), reference_1d, target);
+
+	VectorXd temp_3;
+	temp_3 << temp_1,
+			  temp_2;
+
+	return LinearInterpolation1D(temp_3, index_2d(0), index_2d(1), reference_2d, target);
+}
+
+mathauxiliary::LookupInterface::LookupInterface(void)
 {
 
 }
 
-mathauxiliary::Lookup::~Lookup(void)
+mathauxiliary::LookupInterface::~LookupInterface(void)
 {
 
 }
 
-mathauxiliary::Lookup_1D::Lookup_1D(ArrayXd& _input_1, ArrayXd& _data, bool extrapolation)
-{
+mathauxiliary::Lookup_1D::Lookup_1D(const VectorXd& reference_1d,
+									const VectorXd& _data, 
+									bool extrapolation) {
 	isextrapolation = extrapolation;
-	num_of_inputs = _input_1.size();
-	input_1.resize(num_of_inputs);
-	data.resize(num_of_inputs);
+	num_of_references_ = reference_1d.size();
+	reference_1d_.resize(num_of_references_);
+	table_data_.resize(num_of_inputs);
 	input_1 = _input_1;
 	data = _data;
 	Preprocess();// sort the data in ascending order
@@ -177,27 +269,12 @@ mathauxiliary::Lookup_1D::~Lookup_1D(void)
 	
 }
 
-void mathauxiliary::Lookup_1D::GetOutput(double& output,double& reference)
+void mathauxiliary::Lookup_1D::GetOutput(double& output,double& target)
 {
-	
-	if (reference > input_1(num_of_inputs - 1)) {
-		if (isextrapolation) {
-
-		}
-		else {
-		}
-
-	}
-	else if (reference < input_1(0)) {
-		if (isextrapolation) {
-
-		}
-		else {
-		}
-	}
-	else {
-
-	}
+	index_squence_ = BinarySearchVector(true,
+		const VectorXd& p,
+		double& target)
+	output = 
 }
 
 void mathauxiliary::Lookup_1D::Preprocess()
