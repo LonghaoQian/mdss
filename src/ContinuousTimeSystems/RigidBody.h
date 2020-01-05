@@ -2,6 +2,7 @@
 #include "Subsystem.h"
 #include <iostream>
 #include "UtilityFunctions.h"
+
 struct RigidBodyParameter {
 	Matrix3d J;
 	double m;

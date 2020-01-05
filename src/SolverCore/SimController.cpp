@@ -91,10 +91,27 @@ bool SimController::AddSubsystem(const SignalGeneratorparameter& parameters)
 	return flag;
 }
 
+bool SimController::AddSubsystem(const StandardAtmosphereParameter& parameters) {
+	bool flag;
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new StandardAtmosphere(parameters));
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	if (system_info.system_parameter_ok == true)
+	{
+		flag = true;
+	}
+	else {
+		flag = false;
+	}
+	return flag;
+}
+
+
 bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping)
 {
 	// parse the connection mapping 
-	// the connection mapping is defined in a Xx3 matrix
+	// the connection mapping is defined in a Xx2 matrix
 	// index of the input port, system ID of the output, index of the output 
 	bool flag = false;
 	if (system_ID > num_of_subsystems)

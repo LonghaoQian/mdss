@@ -5,7 +5,9 @@
 #include <iostream>
 #include "SimController.h"
 #include "util_Recorder.h"
+#include "MatlabIO.h"
 using std::iostream;
+
 int main()
 {
 	SolverConfig config1;
@@ -21,6 +23,12 @@ int main()
 	double Data_input[4];
 
 	// add a LTI system into the subsystem chain
+
+	StandardAtmosphereParameter atm_block_para;
+
+	atm_block_para.atmoshpere_name_ = "atmosphere_data.mat";
+
+
 	MatrixXd A(3, 3), B(3, 1), C(3, 3), D(3, 1);
 	LTIParameter LTI0, LTI1;
 
@@ -78,7 +86,9 @@ int main()
 	SimInstance1.AddSubSystem(Gain1);
 	SimInstance1.AddSubSystem(LTI1, LTI1IC);
 	SimInstance1.AddSubSystem(Gain2);
-	MatrixX2i LTI0connection, Gain1connection, LTI1connection, Gain2connection;
+	SimInstance1.AddSubsystem(atm_block_para);
+	// define subsystem connections
+	SIMCONNECTION LTI0connection, Gain1connection, LTI1connection, Gain2connection, Atmoconnection;
 
 	LTI0connection.resize(1, 2);
 	LTI0connection(0, 0) = 3;
@@ -107,24 +117,45 @@ int main()
 
 	SimInstance1.MakeConnection(3, Gain2connection);
 
-	SimInstance1.PreRunProcess();
-	// print the system info
-	VectorXd extern_input(1);
-	extern_input(0) = 1;
-	for (int i = 0; i < 1000; i++)
-	{
-		SimInstance1.Run_Update(extern_input);
-		Data_input[0] = SimInstance1.Run_GetSystemTime();
-		for (int j = 0; j < 3; j++)
+	Atmoconnection.resize(1, 2);
+	Atmoconnection(0, 0) = -1;
+	Atmoconnection(0, 1) = 0;
+
+	SimInstance1.MakeConnection(4, Atmoconnection);
+
+	bool flag = SimInstance1.PreRunProcess();
+	if (flag) { // if successful, run updates
+		// print the system info
+		VectorXd extern_input;
+		extern_input.resize(1);
+
+		for (int i = 0; i < 1000; i++)
 		{
-			Data_input[j + 1] = SimInstance1.Run_GetSubsystemOuput(0)(j);
+			extern_input(0) = i * 5-10;
+			SimInstance1.Run_Update(extern_input);
+			Data_input[0] = SimInstance1.Run_GetSystemTime();
+			for (int j = 0; j < 3; j++)
+			{
+				Data_input[j + 1] = SimInstance1.Run_GetSubsystemOuput(0)(j);
+			}
+			Recorder1.Record(Data_input);
+			if (i % 10 == 0)
+			{
+				cout << " Height (m) : " << extern_input(0)
+					<< " T (K) : " << SimInstance1.Run_GetSubsystemOuput(4)(0)
+					<< " a (m/s) : " << SimInstance1.Run_GetSubsystemOuput(4)(1)
+					<< " Pressure (10^5 Pa) : " << SimInstance1.Run_GetSubsystemOuput(4)(2)
+					<< " Density (kg/m^3) : " << SimInstance1.Run_GetSubsystemOuput(4)(3) << endl;
+			}
+			//cout << "t= " << SimInstance1.Run_GetSystemTime() << endl;
+			//cout << " Output = " << SimInstance1.Run_GetSubsystemOuput(0) << endl;
 		}
-		Recorder1.Record(Data_input);
-		//cout << "t= " << SimInstance1.Run_GetSystemTime() << endl;
-		//cout << " Output = " << SimInstance1.Run_GetSubsystemOuput(0) << endl;
+		cout << "t= " << SimInstance1.Run_GetSystemTime() << endl;
+		cout << " Output = " << SimInstance1.Run_GetSubsystemOuput(0) << endl;
 	}
-	cout << "t= " << SimInstance1.Run_GetSystemTime() << endl;
-	cout << " Output = " << SimInstance1.Run_GetSubsystemOuput(0) << endl;
+	// test the atmopshere subsystem
+
+
 	getchar();
 	return 0;
 }

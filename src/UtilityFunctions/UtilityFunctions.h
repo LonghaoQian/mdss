@@ -22,20 +22,20 @@ namespace mathauxiliary {
 	/*--------- topology --------------*/
 	Vector2i BinarySearchVector(bool isascending,
 								const VectorXd& p, 
-								double& target);
+								const double& target);
 
 	double   LinearInterpolation1D(const VectorXd& data, 
 								   int index1, 
 								   int index2, 
 								   const VectorXd& reference, 
-								   double& target);
+								   const double& target);
 
 	double   LinearInterpolation2D(const MatrixXd& data, 
 								   const Vector2i& index_1d, 
 								   const Vector2i& index_2d, 
 								   const VectorXd& reference_1d,
 								   const VectorXd& reference_2d, 
-								   double& target);
+								   const double& target);
 
 	/*---------------- lookup methods --------------------------*/
 	// base class: 
@@ -43,10 +43,9 @@ namespace mathauxiliary {
 		// input must be sorted array.
 	protected:
 		bool isextrapolation; // determine whether extrapolation is used
-		vector<bool> isascending;     // flag showing 
 		virtual void Preprocess() = 0;
 	public:
-		virtual void GetOutput() = 0;
+		virtual void GetOutput(double& output, const double& target) = 0;
 		LookupInterface();
 		~LookupInterface();
 	};
@@ -55,27 +54,42 @@ namespace mathauxiliary {
 	{
 	private:
 		int num_of_references_;
+		int num_of_data_arrays;
+		bool ismulti_;
 		VectorXd reference_1d_;
 		VectorXd table_data_;
-		Vector2i index_squence_;
+		MatrixXd table_data_multi_;
+		Vector2i index_sequence_;
 		void Preprocess();
 	public:
-		Lookup_1D(const VectorXd& reference_1d,
-			      const VectorXd& _data, 
-				  bool extrapolation);
-		void GetOutput(double& output, double& target);
+		Lookup_1D();
+		void GetOutput(double& output, const double& target);
+		void GetOutput(VectorXd& output, const double& target);
+		void LoadTableData(const VectorXd& reference_1d,
+						   const MatrixXd& _data,
+						   bool extrapolation);
 		~Lookup_1D();
 	};
-	class Lookup_2D {
+	class Lookup_2D :
+	public LookupInterface {
 	private:
-		int num_of_inputs1;
-		int num_of_inputs2;
-		VectorXd input_1;
-		VectorXd input_2;
-		MatrixXd data;
+		int num_of_references_1d_;
+		int num_of_references_2d_;
+		VectorXd reference_1d_;
+		VectorXd reference_2d_;
+		Matrix2i index_sequence_;
+		MatrixXd table_data_;
+		void Preprocess();
 	public:
-		Lookup_2D(const VectorXd& _input_1, const VectorXd _input_2, const MatrixXd& data, bool extrapolation);
-		void GetOutput(double& output);
+		Lookup_2D(const VectorXd& reference_1d, 
+				  const VectorXd& reference_2d, 
+				  const MatrixXd& table_data_, 
+				  bool extrapolation);
+		void GetOutput(double& output, const double& target);
+		void LoadTableData(const VectorXd& reference_1d,
+						   const VectorXd& reference_2d,
+						   const MatrixXd& table_data_,
+						   bool extrapolation);
 		~Lookup_2D();
 	};
 	/*
@@ -87,4 +101,5 @@ namespace mathauxiliary {
 		~Lookup_3D();
 	};
 	// TO DO n-D look up*/
+
 }

@@ -70,18 +70,18 @@ void RigidBody::OutputEquation(const double& t, const VectorXd & state_temp, con
 
 void RigidBody::DisplayParameters()
 {
-	cout << "---------------------" << endl;
-	cout << "rigidbody parameter:" << endl;
-	cout << "J = " <<endl << J << endl;
-	cout << "m = " <<endl << m << endl;
+	std::cout << "---------------------" << std::endl;
+	std::cout << "rigidbody parameter:" << std::endl;
+	std::cout << "J = " << std::endl << J << std::endl;
+	std::cout << "m = " << std::endl << m << std::endl;
 }
 
 void RigidBody::DisplayInitialCondition()
 {
-	cout << "---------------------" << endl;
-	cout << "Rigidbody initial condition X_0:" << endl;
-	cout << "The initial condition is:  " << endl;
-	cout << state << endl;
+	std::cout << "---------------------" << std::endl;
+	std::cout << "Rigidbody initial condition X_0:" << std::endl;
+	std::cout << "The initial condition is:  " << std::endl;
+	std::cout << state << std::endl;
 }
 
 void RigidBody::IncrementState()

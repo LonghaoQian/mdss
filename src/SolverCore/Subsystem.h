@@ -4,15 +4,20 @@
 // connection type
 #define NOCONNECTION -1
 #define EXTERNAL -2
-// 
-#define GENERIC 0
-#define LTI 1
-#define INTEGRATOR 2
-#define RIGIDBODY 3
-#define Gain 4
-#define Signal_Generator 5
+// TO DO: better indexing for subsystems
+#define GENERIC			 0x00
+#define LTI				 0x01
+#define INTEGRATOR		 0x02
+#define RIGIDBODY		 0x03
+#define VARIABLMASS_0    0x04
+#define Gain			 0x10
+#define Saturation       0x11
+#define Signal_Generator 0x20
+#define ATOMSPHERE		 0x30
+#define AROANGLE         0x31
+#define AeroForceMoment  0x32
 // A template for a subsystem used for schecduling.
-using namespace std;
+using std::vector;
 using namespace Eigen;
 typedef Matrix<int, Dynamic, 2> MatrixX2i;
 struct subsystem_info {
@@ -45,8 +50,14 @@ protected:
 	MatrixXd solver_buffer_k_sequence;
 public:
 	/*----------SystemSetUp--------------*/
-	virtual void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& temp_derivative) = 0;// differential equation for the system
-	virtual void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output)=0;// output of the sub system
+	virtual void DifferentialEquation(const double& t, 
+									  const VectorXd& state,
+									  const VectorXd& input,
+									  VectorXd& temp_derivative) = 0;// differential equation for the system
+	virtual void OutputEquation(const double& t,
+								const VectorXd& state, 
+								const VectorXd& input, 
+								VectorXd& output)=0;// output of the sub system
 	virtual void IncrementState() = 0;
 	virtual void DisplayParameters() = 0;
 	virtual void DisplayInitialCondition() = 0;
@@ -59,14 +70,21 @@ public:
 	subsystem_info GetSystemInfo();
 	/**-----------SolverRelated--------*/
 	void Solver_InitSolverBuffer(unsigned int num_of_kn);// Solver Init Function
-	void Solver_UpdateKiBuffer(int index, double& current_time, double& stepsize, const MatrixXd& butchertableau);
+	void Solver_UpdateKiBuffer(int index, 
+							   double& current_time, 
+							   double& stepsize, 
+							   const MatrixXd& butchertableau);
 	void Solver_UpdateInputTemp(int index, double input_temp_i);
 	void Solver_PreturbState(int index, const MatrixXd& butchertableau);
 	VectorXd Solver_GetOuputTemp();
 	void Solver_CalculateIncrement(const VectorXd& updatecoefficients);
-	double Solver_CalculateIncrement(const VectorXd& updatecoefficients1, const VectorXd& updatecoefficients2);// two coefficiet overload
+	double Solver_CalculateIncrement(const VectorXd& updatecoefficients1, 
+									 const VectorXd& updatecoefficients2);// two coefficiet overload
 	VectorXd Solver_GetInputTemp();
-    void Solver_PreturbOutput(int index, double& current_time, double& stepsize, const MatrixXd& butchertableau);
+    void Solver_PreturbOutput(int index,
+							  double& current_time, 
+							  double& stepsize, 
+							  const MatrixXd& butchertableau);
 	Subsystem();
 	~Subsystem();
 };
