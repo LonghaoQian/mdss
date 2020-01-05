@@ -242,6 +242,18 @@ double mathauxiliary::LinearInterpolation2D(const MatrixXd & data,
 	return LinearInterpolation1D(temp_3, index_2d(0), index_2d(1), reference_2d, target);
 }
 
+void mathauxiliary::SaturationElementalWise(VectorXd & output, const VectorXd & upper_limit_, const VectorXd & lower_limit_)
+{
+	for (int i = 0; i < output.size(); i++) {
+		
+	}
+}
+
+void mathauxiliary::SaturationVector(VectorXd & output, const double & upper_limit, const double & lower_limit_)
+{
+
+}
+
 mathauxiliary::LookupInterface::LookupInterface(void)
 {
 
@@ -284,7 +296,7 @@ void mathauxiliary::Lookup_1D::GetOutput(VectorXd & output, const double & targe
 	index_sequence_ = BinarySearchVector(true, reference_1d_, target);
 	if (ismulti_) {
 		if (output.size() != num_of_data_arrays) {
-			output.resize(num_of_data_arrays);
+			output.resize(num_of_data_arrays);// slow, try to predefine dimensions before running the GetOutput function.
 		}
 		if (index_sequence_(0) == index_sequence_(1)) {
 			if (isextrapolation) {

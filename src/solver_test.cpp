@@ -139,14 +139,14 @@ int main()
 				Data_input[j + 1] = SimInstance1.Run_GetSubsystemOuput(0)(j);
 			}
 			Recorder1.Record(Data_input);
-			if (i % 10 == 0)
+			/*if (i % 10 == 0)
 			{
 				cout << " Height (m) : " << extern_input(0)
 					<< " T (K) : " << SimInstance1.Run_GetSubsystemOuput(4)(0)
 					<< " a (m/s) : " << SimInstance1.Run_GetSubsystemOuput(4)(1)
 					<< " Pressure (10^5 Pa) : " << SimInstance1.Run_GetSubsystemOuput(4)(2)
 					<< " Density (kg/m^3) : " << SimInstance1.Run_GetSubsystemOuput(4)(3) << endl;
-			}
+			}*/
 			//cout << "t= " << SimInstance1.Run_GetSystemTime() << endl;
 			//cout << " Output = " << SimInstance1.Run_GetSubsystemOuput(0) << endl;
 		}

@@ -101,5 +101,7 @@ namespace mathauxiliary {
 		~Lookup_3D();
 	};
 	// TO DO n-D look up*/
-
+	/*---------- saturation function -----------------*/
+	inline void SaturationElementalWise(VectorXd& output, const VectorXd& upper_limit_, const VectorXd& lower_limit_);
+	inline void SaturationVector(VectorXd& output, const double& upper_limit, const double& lower_limit_);
 }
