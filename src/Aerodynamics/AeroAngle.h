@@ -27,13 +27,14 @@ output :
 7 p_bar
 8 q_bar
 9 r_bar
-10 
+10 - 18 R_BW
 
 
 */
 #pragma once
 #include "Subsystem.h"
-
+#include <iostream>
+#include "UtilityFunctions.h"
 namespace aero {
 	struct AeroAngleParameter {
 		double min_airspeed_;
@@ -44,7 +45,13 @@ namespace aero {
 		public Subsystem
 	{
 	private:
-
+		AeroAngleParameter param_;
+		Matrix3d R_WB;
+		Matrix3d R_BI;
+		Vector3d omega_b;
+		Vector3d Vb_dot;
+		Vector3d Vb;
+		void CalculateR_BW(const double& alpha_,const double& beta_);
 	public:
 		AeroAngle(const AeroAngleParameter& parameter);
 		void DifferentialEquation(const double& t,

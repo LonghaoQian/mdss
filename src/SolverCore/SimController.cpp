@@ -331,7 +331,8 @@ void SimController::DisplayTopology()
 	{
 		cout << "+++++++++++++++++++++++++++++++++++++++++++" << endl;
 		system_info = subsystem_list[i]->GetSystemInfo();
-		cout << " Subsystem # " << i << " is of type " << system_info.system_type << endl;
+
+		cout << " Subsystem # " << i << " is of type " << GetSystemTypeFromID(system_info.system_type)<< endl;
 	// display system parameters
 		subsystem_list[i]->DisplayParameters();
 	// display system initial condition
@@ -642,6 +643,63 @@ bool SimController::RunTopologyAnalysis()
 	
 
 	return isAlegraricloopexist;
+}
+
+string SimController::GetSystemTypeFromID(int sys_ID_)
+{
+/*
+#define GENERIC			 0x00
+#define LTI				 0x01
+#define INTEGRATOR		 0x02
+#define RIGIDBODY		 0x03
+#define VARIABLMASS_0    0x04
+#define Gain			 0x10
+#define Saturation       0x11
+#define Signal_Generator 0x20
+#define ATOMSPHERE		 0x30
+#define AROANGLE         0x31
+#define AeroForceMoment  0x32
+*/
+	string name;
+	switch (sys_ID_) {
+		case GENERIC: 
+			name = "Generic";
+			break;
+		case LTI:
+			name = "LTI";
+			break;
+		case INTEGRATOR:
+			name = "Integrator";
+			break;
+		case RIGIDBODY:
+			name = "Rigid body";
+			break;
+		case VARIABLMASS_0:
+			name = "Variable mass body v0";
+			break;
+		case Gain:
+			name = "Gain block ";
+			break;
+		case Saturation:
+			name = "Satruation block";
+			break;
+		case Signal_Generator:
+			name = "Signal Generator ";
+			break;
+		case ATOMSPHERE:
+			name = "Standard atmopshere ";
+			break;
+		case AROANGLE:
+			name = "Aero angles block";
+			break;
+		case AeroForceMoment:
+			name = "Aerodynamics Forces and Moments";
+			break;
+		default: 
+			name = " Unidentified system type ";
+			break;
+	}
+	return name;
 }
 
 bool SimController::GetExternalInputs(const VectorXd & extern_input)

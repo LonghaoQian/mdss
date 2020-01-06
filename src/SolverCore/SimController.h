@@ -52,6 +52,7 @@ private:
 	int num_of_cycles_per_step;
 	int num_of_closed_loops;
 	bool RunTopologyAnalysis();
+	string GetSystemTypeFromID(int sys_ID_);
 public:
 	/*overloads of AddSubsystems to suit for every pre-defined type of model*/
 	bool AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC); // input all system info to the sim control object

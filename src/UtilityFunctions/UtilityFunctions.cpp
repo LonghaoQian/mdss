@@ -245,13 +245,43 @@ double mathauxiliary::LinearInterpolation2D(const MatrixXd & data,
 void mathauxiliary::SaturationElementalWise(VectorXd & output, const VectorXd & upper_limit_, const VectorXd & lower_limit_)
 {
 	for (int i = 0; i < output.size(); i++) {
-		
+		if (output(i) >= upper_limit_(i)){
+			output(i) = upper_limit_(i);
+		} else if (output(i) < lower_limit_(i) ) {
+			output(i) = lower_limit_(i);
+		}
+	}
+}
+
+void mathauxiliary::SaturationElementalWise(VectorXd & output, const double & upper_limit_, const double & lower_limit_)
+{
+	for (int i = 0; i < output.size(); i++) {
+		if (output(i) >= upper_limit_) {
+			output(i) = upper_limit_;
+		}
+		else if (output(i) < lower_limit_) {
+			output(i) = lower_limit_;
+		}
+	}
+}
+
+void mathauxiliary::SaturationElementalWise(double & output, const double & upper_limit_, const double & lower_limit_)
+{
+	if (output >= upper_limit_) {
+		output = upper_limit_;
+	}
+	else if (output < lower_limit_) {
+		output = lower_limit_;
 	}
 }
 
 void mathauxiliary::SaturationVector(VectorXd & output, const double & upper_limit, const double & lower_limit_)
 {
-
+	if (output.norm() >= upper_limit) {
+		output = upper_limit * output.normalized().eval();
+	} else if (output.norm() < lower_limit_) {
+		output = lower_limit_ *output.normalized().eval();
+	}
 }
 
 mathauxiliary::LookupInterface::LookupInterface(void)

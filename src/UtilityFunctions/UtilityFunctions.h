@@ -102,6 +102,8 @@ namespace mathauxiliary {
 	};
 	// TO DO n-D look up*/
 	/*---------- saturation function -----------------*/
-	inline void SaturationElementalWise(VectorXd& output, const VectorXd& upper_limit_, const VectorXd& lower_limit_);
-	inline void SaturationVector(VectorXd& output, const double& upper_limit, const double& lower_limit_);
+	void SaturationElementalWise(VectorXd& output, const VectorXd& upper_limit_, const VectorXd& lower_limit_);
+	void SaturationElementalWise(VectorXd& output, const double& upper_limit_, const double& lower_limit_);
+	void SaturationElementalWise(double& output, const double& upper_limit_, const double& lower_limit_);
+	void SaturationVector(VectorXd& output, const double& upper_limit, const double& lower_limit_);
 }
