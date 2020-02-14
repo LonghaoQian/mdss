@@ -20,6 +20,7 @@ int main()
 	SimController SimInstance1(config1);
 
 	util_Recorder Recorder1("LTIsimulation.txt", 4);
+	MatlabIO Recorder;
 	double Data_input[4];
 
 	// add a LTI system into the subsystem chain
@@ -128,17 +129,22 @@ int main()
 		// print the system info
 		VectorXd extern_input;
 		extern_input.resize(1);
-
+		MatrixXd matdata;
+		matdata.resize(1000, 4);
+		matdata.setZero();
 		for (int i = 0; i < 1000; i++)
 		{
 			extern_input(0) = i * 5-10;
 			SimInstance1.Run_Update(extern_input);
 			Data_input[0] = SimInstance1.Run_GetSystemTime();
+			matdata(i, 0) = Data_input[0];
 			for (int j = 0; j < 3; j++)
 			{
 				Data_input[j + 1] = SimInstance1.Run_GetSubsystemOuput(0)(j);
+				matdata(i, j + 1) = Data_input[j + 1];
 			}
 			Recorder1.Record(Data_input);
+			
 			/*if (i % 10 == 0)
 			{
 				cout << " Height (m) : " << extern_input(0)
@@ -152,9 +158,16 @@ int main()
 		}
 		cout << "t= " << SimInstance1.Run_GetSystemTime() << endl;
 		cout << " Output = " << SimInstance1.Run_GetSubsystemOuput(0) << endl;
+		// test the atmopshere subsystem
+		//cout << A << endl;
+		
+		if (Recorder.SaveToMatFile(matdata, "recorded_state.mat", "A")) {
+			cout << "successfuly save the data" << endl;
+		}
+		else {
+			cout << " failed save the data" << endl;
+		}
 	}
-	// test the atmopshere subsystem
-
 
 	getchar();
 	return 0;

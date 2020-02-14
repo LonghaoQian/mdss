@@ -229,17 +229,18 @@ double mathauxiliary::LinearInterpolation2D(const MatrixXd & data,
 											const Vector2i & index_2d, 
 											const VectorXd & reference_1d, 
 											const VectorXd & reference_2d,
-											const double & target) {
+											const double& target1,
+											const double& target2) {
 	// bilinear interpolation
 	double temp_1, temp_2;
-	temp_1 = LinearInterpolation1D(data.col(index_2d(0)), index_1d(0), index_1d(1), reference_1d, target);
-	temp_2 = LinearInterpolation1D(data.col(index_2d(1)), index_1d(0), index_1d(1), reference_1d, target);
+	temp_1 = LinearInterpolation1D(data.col(index_2d(0)), index_1d(0), index_1d(1), reference_1d, target1);
+	temp_2 = LinearInterpolation1D(data.col(index_2d(1)), index_1d(0), index_1d(1), reference_1d, target1);
 
 	VectorXd temp_3;
 	temp_3 << temp_1,
 			  temp_2;
 
-	return LinearInterpolation1D(temp_3, index_2d(0), index_2d(1), reference_2d, target);
+	return LinearInterpolation1D(temp_3, index_2d(0), index_2d(1), reference_2d, target2);
 }
 
 void mathauxiliary::SaturationElementalWise(VectorXd & output, const VectorXd & upper_limit_, const VectorXd & lower_limit_)
@@ -283,19 +284,43 @@ void mathauxiliary::SaturationVector(VectorXd & output, const double & upper_lim
 		output = lower_limit_ *output.normalized().eval();
 	}
 }
-
-mathauxiliary::LookupInterface::LookupInterface(void)
+// Lookup Interface
+mathauxiliary::LookupInterface::LookupInterface(bool extrapolation)
 {
+	isextrapolation = extrapolation;
+}
 
+mathauxiliary::LookupInterface::LookupInterface()
+{
+	// default constructor
 }
 
 mathauxiliary::LookupInterface::~LookupInterface(void)
 {
 
 }
-
+// 
 mathauxiliary::Lookup_1D::Lookup_1D() {
 
+}
+
+mathauxiliary::Lookup_1D::Lookup_1D(const VectorXd & reference_1d, const MatrixXd & _data, bool extrapolation) 
+	: LookupInterface(extrapolation),
+	  num_of_data_arrays(_data.cols()),
+	  num_of_references_(reference_1d.size()),
+	  reference_1d_(reference_1d)
+{
+	if (num_of_data_arrays == 1)
+	{
+		table_data_.resize(num_of_references_);
+		table_data_ = _data;
+	}
+	else {
+		table_data_multi_.resize(_data.rows(), _data.cols());
+		table_data_multi_ = _data;
+	}
+
+	Preprocess();// sort the data in ascending order
 }
 
 mathauxiliary::Lookup_1D::~Lookup_1D(void)
@@ -324,6 +349,7 @@ void mathauxiliary::Lookup_1D::GetOutput(double& output, const double& target)
 void mathauxiliary::Lookup_1D::GetOutput(VectorXd & output, const double & target)
 {
 	index_sequence_ = BinarySearchVector(true, reference_1d_, target);
+	// TO DO: resizing is dangerous, modify to other kind of stafty procedure
 	if (ismulti_) {
 		if (output.size() != num_of_data_arrays) {
 			output.resize(num_of_data_arrays);// slow, try to predefine dimensions before running the GetOutput function.
@@ -341,6 +367,24 @@ void mathauxiliary::Lookup_1D::GetOutput(VectorXd & output, const double & targe
 			for (int i = 0; i < num_of_data_arrays; i++) {
 				output(i) = LinearInterpolation1D(table_data_multi_.col(i), index_sequence_(0), index_sequence_(1), reference_1d_, target);
 			}
+		}
+	}
+}
+
+double mathauxiliary::Lookup_1D::GetOutput(const double & target)
+{
+	index_sequence_ = BinarySearchVector(true, reference_1d_, target);
+	if (!ismulti_) {
+		if (index_sequence_(0) == index_sequence_(1)) {
+			if (isextrapolation) {
+
+			}
+			else {
+				return table_data_(index_sequence_(0));
+			}
+		}
+		else {
+			return LinearInterpolation1D(table_data_, index_sequence_(0), index_sequence_(1), reference_1d_, target);
 		}
 	}
 }
@@ -377,6 +421,7 @@ void mathauxiliary::Lookup_1D::Preprocess()
 	}
 }
 
+// 2D lookup block
 mathauxiliary::Lookup_2D::Lookup_2D(const VectorXd& reference_1d,
 	const VectorXd& reference_2d,
 	const MatrixXd& table_data_,
@@ -387,11 +432,22 @@ mathauxiliary::Lookup_2D::Lookup_2D(const VectorXd& reference_1d,
 	Preprocess();
 }
 
-void mathauxiliary::Lookup_2D::GetOutput(double& output,const double& target) {
+void mathauxiliary::Lookup_2D::GetOutput(double& output, const double& target1, const double& target2) {
 
-	index_sequence_.col(0) = BinarySearchVector(true, reference_1d_, target);
-	index_sequence_.col(1) = BinarySearchVector(true, reference_2d_, target);
-	output = LinearInterpolation2D(table_data_, index_sequence_.col(0), index_sequence_.col(1), reference_1d_, reference_2d_, target);
+	index_sequence_.col(0) = BinarySearchVector(true, reference_1d_, target1);
+	index_sequence_.col(1) = BinarySearchVector(true, reference_2d_, target2);
+	output = LinearInterpolation2D(table_data_, index_sequence_.col(0), index_sequence_.col(1), reference_1d_, reference_2d_, target1,target2);
+}
+
+double mathauxiliary::Lookup_2D::GetOutput(const double& target1, const double& target2)
+{
+	index_sequence_.col(0) = BinarySearchVector(true, reference_1d_, target1);
+	index_sequence_.col(1) = BinarySearchVector(true, reference_2d_, target2);
+	return LinearInterpolation2D(table_data_, index_sequence_.col(0), index_sequence_.col(1), reference_1d_, reference_2d_,target1,target2);
+}
+
+void mathauxiliary::Lookup_2D::LoadTableData(const VectorXd & reference_1d, const VectorXd & reference_2d, const MatrixXd & table_data_, bool extrapolation)
+{
 }
 
 void mathauxiliary::Lookup_2D::Preprocess() {
@@ -404,4 +460,57 @@ void mathauxiliary::Lookup_2D::Preprocess() {
 mathauxiliary::Lookup_2D::~Lookup_2D() {
 
 
+}
+
+
+// linear block 
+void mathauxiliary::Linear::Preprocess()
+{
+}
+
+void mathauxiliary::Linear::GetOutput(double & output, const double & target)
+{
+	output = slop_ * target;
+}
+
+double mathauxiliary::Linear::GetOutput(const double & target)
+{
+	return  slop_ * target;
+}
+
+mathauxiliary::Linear::Linear()
+{
+}
+
+mathauxiliary::Linear::Linear(double & slop)
+{
+	isextrapolation = false;
+	slop_ = slop;
+}
+
+mathauxiliary::Linear::~Linear()
+{
+}
+
+
+// constant block 
+void mathauxiliary::Constant::Preprocess()
+{
+}
+
+void mathauxiliary::Constant::GetOutput(double & output, const double & target)
+{
+}
+
+double mathauxiliary::Constant::GetOutput(const double & target)
+{
+	return  value_;
+}
+
+mathauxiliary::Constant::Constant(double & value)
+{
+}
+
+mathauxiliary::Constant::~Constant()
+{
 }

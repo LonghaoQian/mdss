@@ -93,5 +93,20 @@ bool  MatlabIO::SaveToMatFile(const Eigen::MatrixXd& variable_,
 	if (pmat_ == NULL) {
 		return false;
 	}
+	int rows = variable_.rows();
+	int cols = variable_.cols();
+	const double* eigen_pointer = variable_.data();
+	mxArray *A;
+	A = mxCreateDoubleMatrix(rows, cols, mxREAL);
+
+	memcpy(mxGetPr(A), eigen_pointer, variable_.size() * sizeof(double));
+
+	// write to file
+	if (matPutVariable(pmat_, variable_name, A) != 0) {
+		std::cerr << "matPutVariable: ERROR" << std::endl;
+	}
+
+	mxDestroyArray(A);
+	matClose(pmat_);
 	return true;
 }

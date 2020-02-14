@@ -46,12 +46,10 @@ namespace aero {
 	{
 	private:
 		AeroAngleParameter param_;
-		Matrix3d R_WB;
 		Matrix3d R_BI;
 		Vector3d omega_b;
 		Vector3d Vb_dot;
 		Vector3d Vb;
-		void CalculateR_BW(const double& alpha_,const double& beta_);
 	public:
 		AeroAngle(const AeroAngleParameter& parameter);
 		void DifferentialEquation(const double& t,

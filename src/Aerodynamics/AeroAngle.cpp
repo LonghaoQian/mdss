@@ -11,7 +11,7 @@ aero::AeroAngle::AeroAngle(const AeroAngleParameter& parameter)
 	system_info.NO_CONTINUOUS_STATE = true;
 	system_info.num_of_continuous_states = 0;
 	system_info.num_of_inputs = 22;
-	system_info.num_of_outputs = 18;
+	system_info.num_of_outputs = 10;
 
 	system_info.system_parameter_ok = 0;
 	ready_to_run = true;
@@ -22,27 +22,8 @@ aero::AeroAngle::AeroAngle(const AeroAngleParameter& parameter)
 
 void aero::AeroAngle::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
 {
+	// NO differential euqation for direct feed through 
 }
-
-void aero::AeroAngle::CalculateR_BW(const double & alpha_,const double & beta_)
-{
-	double sinalpha = sin(alpha_);
-	double sinbeta = sin(beta_);
-	double cosalpha = cos(alpha_);
-	double cosbeta = cos(beta_);
-	R_WB(0, 0) = cosalpha*cosbeta;
-	R_WB(0, 1) = sinbeta;
-	R_WB(0, 2) = sinalpha * cosbeta;
-	R_WB(1, 0) = -sinbeta * cosalpha;
-	R_WB(1, 1) = cosbeta;
-	R_WB(1, 2) = -sinalpha * sinbeta;
-	R_WB(2, 0) = -sinalpha;
-	R_WB(2, 1) = 0;
-	R_WB(2, 2) = cosalpha;
-
-	
-}
-
 
 void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 {
@@ -77,14 +58,12 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 	7 p_bar
 	8 q_bar
 	9 r_bar
-	10 - 18 R_BW
 	*/
 	output(0) = input.segment(2, 3).norm();
 	mathauxiliary::SaturationElementalWise(output(0), 10000000.0, param_.min_airspeed_); // TAS 
 	output(1) = output(0) / input(1); // mach number
 	output(2) = atan2(input(4), input(2));
 	output(3) = asin(input(3) / output(0));
-	CalculateR_BW(output(2), output(3));// calculate rotation matrix
 	output(4) = 0.5* input(0) * output(0) * output(0);
 	double lon_normalizer = param_.c_bar_ / (2 * output(0));
 	double lat_normalizer = param_.b_ / (2 * output(0));
@@ -104,7 +83,6 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 	output(7) = lat_normalizer * input(5);
 	output(8) = lon_normalizer * input(6);
 	output(9) = lat_normalizer * input(7);
-	output.segment(10,9) = mathauxiliary::ConvertRotationMatrixToVector(R_WB);
 }
 
 void aero::AeroAngle::IncrementState()

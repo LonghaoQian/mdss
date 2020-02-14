@@ -35,7 +35,8 @@ namespace mathauxiliary {
 								   const Vector2i& index_2d, 
 								   const VectorXd& reference_1d,
 								   const VectorXd& reference_2d, 
-								   const double& target);
+								   const double& target1,
+								   const double& target2);
 
 	/*---------------- lookup methods --------------------------*/
 	// base class: 
@@ -45,10 +46,38 @@ namespace mathauxiliary {
 		bool isextrapolation; // determine whether extrapolation is used
 		virtual void Preprocess() = 0;
 	public:
-		virtual void GetOutput(double& output, const double& target) = 0;
+		LookupInterface(bool extrapolation);
 		LookupInterface();
 		~LookupInterface();
 	};
+
+	class Constant :
+		public LookupInterface {
+	private:
+		void Preprocess();
+		double value_;
+	public:
+		void GetOutput(double& output, const double& target);
+		double GetOutput(const double& target);
+		Constant(double& value);
+		~Constant();
+	};
+
+	class Linear : 
+		public LookupInterface
+	{
+	private: 
+		void Preprocess();
+		double slop_;
+	public:
+		void GetOutput(double& output, const double& target);
+		double GetOutput(const double& target);
+		Linear();
+		Linear(double& slop);
+		~Linear();
+
+	};
+
 	class Lookup_1D : 
 		public LookupInterface
 	{
@@ -63,8 +92,12 @@ namespace mathauxiliary {
 		void Preprocess();
 	public:
 		Lookup_1D();
+		Lookup_1D(const VectorXd& reference_1d,
+			const MatrixXd& _data,
+			bool extrapolation);
 		void GetOutput(double& output, const double& target);
 		void GetOutput(VectorXd& output, const double& target);
+		double GetOutput(const double& target);
 		void LoadTableData(const VectorXd& reference_1d,
 						   const MatrixXd& _data,
 						   bool extrapolation);
@@ -75,6 +108,7 @@ namespace mathauxiliary {
 	private:
 		int num_of_references_1d_;
 		int num_of_references_2d_;
+		int num_of_tables_;
 		VectorXd reference_1d_;
 		VectorXd reference_2d_;
 		Matrix2i index_sequence_;
@@ -85,7 +119,8 @@ namespace mathauxiliary {
 				  const VectorXd& reference_2d, 
 				  const MatrixXd& table_data_, 
 				  bool extrapolation);
-		void GetOutput(double& output, const double& target);
+		void GetOutput(double& output, const double& target1, const double& target2);
+		double GetOutput(const double& target1,const double& target2);
 		void LoadTableData(const VectorXd& reference_1d,
 						   const VectorXd& reference_2d,
 						   const MatrixXd& table_data_,
@@ -102,8 +137,19 @@ namespace mathauxiliary {
 	};
 	// TO DO n-D look up*/
 	/*---------- saturation function -----------------*/
-	void SaturationElementalWise(VectorXd& output, const VectorXd& upper_limit_, const VectorXd& lower_limit_);
-	void SaturationElementalWise(VectorXd& output, const double& upper_limit_, const double& lower_limit_);
-	void SaturationElementalWise(double& output, const double& upper_limit_, const double& lower_limit_);
-	void SaturationVector(VectorXd& output, const double& upper_limit, const double& lower_limit_);
+	void SaturationElementalWise(VectorXd& output, 
+								 const VectorXd& upper_limit_,
+								 const VectorXd& lower_limit_);
+
+	void SaturationElementalWise(VectorXd& output,
+								 const double& upper_limit_,
+								 const double& lower_limit_);
+
+	void SaturationElementalWise(double& output, 
+								 const double& upper_limit_,
+							     const double& lower_limit_);
+
+	void SaturationVector(VectorXd& output, 
+						  const double& upper_limit, 
+						  const double& lower_limit_);
 }
