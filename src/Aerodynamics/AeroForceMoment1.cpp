@@ -10,6 +10,7 @@ aero::AeroForceMoment1::AeroForceMoment1(const AerosForceParameter& param)
 {
 	// set output dimensions
 	system_info.system_type = AeroForceMoment;
+	system_info.type = aero_AROFORCEMENT_1;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;
 	system_info.num_of_continuous_states = 0;
@@ -59,12 +60,31 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 	// calculate R_WB
 	CalculateR_BW(input(1), input(2));
 	// calculate CL
+	CL_ = param_.aeroparam_.CL0_ 
+		+ param_.aeroparam_.CLadot_*input(6)
+		+ param_.aeroparam_.CL_alpha_* input(1)
+		+ param_.aeroparam_.CLq_ * input(4)
+		+ param_.aeroparam_.CLde_ * input(12);
+
+	CD_ = param_.aeroparam_.CD0_ 
+		+ param_.aeroparam_.CDbeta_ * abs(input(2))
+		+ param_.aeroparam_.CDde_ * abs(input(12))
+		+ param_.aeroparam_.CDDf_*input(8)
+		+ param_.aeroparam_.CD_alpha_*input(1);
+
+	CY_ = param_.aeroparam_.CYb_ *  input(2)
+		+ param_.aeroparam_.CYda_ * input(11)
+		+ param_.aeroparam_.CYdr_ * input(13)
+		+ param_.aeroparam_.CYp_ *  input(3)
+		+ param_.aeroparam_.CYr_*   input(5);
+
+/*
 	CL_ = param_.aeroparam_.CL0_
 		+ param_.aeroparam_.CL_alpha_beta.GetOutput(input(1), input(2)) * input(1) // CLalpha * alpha
 		+ param_.aeroparam_.CLadot_.GetOutput(input(6))                            // CLalphadot * alpha _dot 
 		+ param_.aeroparam_.CLde_.GetOutput(input(12))                             // CLde * de                  
 		+ param_.aeroparam_.CLDf_.GetOutput(input(8))							  // CLDf * flap
-		+ param_.aeroparam_.CL_M.GetOutput(input(14));                             // CL_M*mach
+		+ param_.aeroparam_.CL_M.GetOutput(input(14))                            // CL_M*mach
 		+param_.aeroparam_.CLground_.GetOutput(relative_height_);
 
 	CD_ = param_.aeroparam_.CD0_
@@ -79,6 +99,7 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 		+ param_.aeroparam_.CYdr_.GetOutput(input(13))
 		+ param_.aeroparam_.CYp_.GetOutput(input(3))
 		+ param_.aeroparam_.CYr_.GetOutput(input(5));
+*/
 	/*
 	Output:
 	0-2:
@@ -87,28 +108,28 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 	M_B
 	*/
 	F_W(0) = -(QS * CD_); // Drag
-	F_W(1) = -(QS * CY_); //  Side
+	F_W(1) = QS * CY_; //  Side
 	F_W(2) = -(QS * CL_); // lift
 
 
-	Cl_ = param_.aeroparam_.Clb_.GetOutput(input(2))
-		+ param_.aeroparam_.Clda_.GetOutput(input(11))
-		+ param_.aeroparam_.Cldr_.GetOutput(input(13))
-		+ param_.aeroparam_.Clp_.GetOutput(input(3))
-		+ param_.aeroparam_.Clr_alpha_.GetOutput(input(1)) * input(5);
+	Cl_ = param_.aeroparam_.Clb_ * input(2) 
+		+ param_.aeroparam_.Clda_* input(11)
+		+ param_.aeroparam_.Cldr_* input(13)
+		+ param_.aeroparam_.Clp_*  input(3)
+		+ param_.aeroparam_.Clr_ * input(5);
 
-	Cm_ = param_.aeroparam_.Cmq_.GetOutput(input(4))
+	Cm_ = param_.aeroparam_.Cmq_*input(4)
 		+ param_.aeroparam_.Cm0_
-		+ param_.aeroparam_.Cmadot_.GetOutput(input(6))
-		+ param_.aeroparam_.Cmalpha_.GetOutput(input(1))
-		+ param_.aeroparam_.Cmde_.GetOutput(input(12))
-		+ param_.aeroparam_.CmDf_.GetOutput(input(8));
+		+ param_.aeroparam_.Cmadot_  * input(6)
+		+ param_.aeroparam_.Cmalpha_ * input(1)
+		+ param_.aeroparam_.Cmde_ * input(12)
+		+ param_.aeroparam_.CmDf_ * input(8);
 
-	Cn_ = param_.aeroparam_.Cnb_.GetOutput(input(2))
-		+ param_.aeroparam_.Cnda_.GetOutput(input(11))
-		+ param_.aeroparam_.Cndr_.GetOutput(input(13))
-		+ param_.aeroparam_.Cnp_.GetOutput(input(3))
-		+ param_.aeroparam_.Cnr_.GetOutput(input(5));
+	Cn_ = param_.aeroparam_.Cnb_  * input(2)
+		+ param_.aeroparam_.Cnda_ * input(11)
+		+ param_.aeroparam_.Cndr_ * input(13)
+		+ param_.aeroparam_.Cnp_  * input(3)
+		+ param_.aeroparam_.Cnr_ * input(5);
 
 	output.segment(0, 3) = R_WB.transpose() * F_W;
 
@@ -131,17 +152,22 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 
 void aero::AeroForceMoment1::IncrementState()
 {
+	// No increment state for aero force lib
 }
 
 void aero::AeroForceMoment1::DisplayParameters()
 {
 	// display aeroparameters
 	
+	std::cout << "S : " << param_.S << " m^2. Cbar : " << param_.c_bar_ <<" m. b : " << param_.b_<<" m " << std::endl;
+	std::cout << "offset : " << param_.aero_reference_point_(0) << " m " << param_.aero_reference_point_(1) << " m "
+		<<param_.aero_reference_point_(2) << " m " << std::endl;
+
 }
 
 void aero::AeroForceMoment1::DisplayInitialCondition()
 {
-
+	std::cout << "No Initial Condition for aero force and moment block" << std::endl;
 }
 void aero::AeroForceMoment1::CalculateR_BW(const double & alpha_, const double & beta_)
 {

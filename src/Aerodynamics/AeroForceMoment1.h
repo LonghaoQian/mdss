@@ -23,7 +23,6 @@ F_B
 M_B
 -------------------------------------------------------
 */
-#include <iostream>
 #include "Subsystem.h"
 #include "UtilityFunctions.h"
 namespace aero {
@@ -40,11 +39,48 @@ namespace aero {
 		spoiler,
 		airbreak
 	};
+	struct Aeroparameter{
+		double CL0_;
+		double CL_alpha_;
+		double CLde_;
+		double CLadot_;
+		double CLq_;
 
-	struct AeroDerivative {
+		double CD0_;
+		double CD_alpha_;
+		double CDde_;
+		double CDDf_;
+		double CDbeta_;
+		double CDground_;
 
+		double CYb_;
+		double CYda_;
+		double CYdr_;
+		double CYp_;
+		double CYr_;
+
+		double Cmalpha_;
+		double CmDf_;
+		double Cmq_;
+		double Cmadot_;
+		double Cm0_;
+		double Cmde_;
+
+		double  Clb_;
+		double  Clp_;
+		double  Clr_;
+		double  Clda_;
+		double  Cldr_;
+
+		double Cnb_;
+		double Cnp_;
+		double Cnr_;
+		double Cnda_;
+		double Cndr_;
 	};
 
+
+	/*
 	struct Aeroparameter{
 		double CL0_;
 		mathauxiliary::Lookup_2D  CL_alpha_beta;
@@ -86,7 +122,7 @@ namespace aero {
 		mathauxiliary::Linear     Cnda_;
 		mathauxiliary::Linear     Cndr_;
 	};
-	
+	*/
 	struct AerosForceParameter {
 		double S;
 		double b_;

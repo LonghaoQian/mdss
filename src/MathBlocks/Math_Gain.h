@@ -1,6 +1,5 @@
 #pragma once
 #include "Subsystem.h"
-#include <iostream>
 #define READYTOGO 0
 #define GAIN_MATRIX 1 
 #define GAIN_ElEMENT_WISE 2

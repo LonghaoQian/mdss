@@ -421,6 +421,10 @@ void mathauxiliary::Lookup_1D::Preprocess()
 	}
 }
 
+mathauxiliary::Lookup_2D::Lookup_2D()
+{
+}
+
 // 2D lookup block
 mathauxiliary::Lookup_2D::Lookup_2D(const VectorXd& reference_1d,
 	const VectorXd& reference_2d,
@@ -482,7 +486,13 @@ mathauxiliary::Linear::Linear()
 {
 }
 
-mathauxiliary::Linear::Linear(double & slop)
+mathauxiliary::Linear::Linear(double slop)
+{
+	isextrapolation = false;
+	slop_ = slop;
+}
+
+void mathauxiliary::Linear::LoadData(double slop)
 {
 	isextrapolation = false;
 	slop_ = slop;

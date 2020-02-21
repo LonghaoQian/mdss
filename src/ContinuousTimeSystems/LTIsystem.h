@@ -1,6 +1,5 @@
 #pragma once
 #include "Subsystem.h"
-#include <iostream>
 #define READYTOGO 0;
 #define STATE_INPUT_MISMATCH 1;
 #define STATE_OUTPUT_MISMATCH 2;

@@ -1,7 +1,4 @@
 #pragma once
-#include <Eigen\Dense>
-#include <iostream>
-#include <vector>
 using namespace Eigen;
 using namespace std;
 class TopologyAnalysis

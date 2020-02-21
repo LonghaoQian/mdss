@@ -28,12 +28,9 @@ output :
 8 q_bar
 9 r_bar
 10 - 18 R_BW
-
-
 */
 #pragma once
 #include "Subsystem.h"
-#include <iostream>
 #include "UtilityFunctions.h"
 namespace aero {
 	struct AeroAngleParameter {

@@ -10,5 +10,10 @@
 #define PCH_H
 
 // TODO: add headers that you want to pre-compile here
-
+#include <iostream>
+#include <Eigen\Dense>
+#include <vector>
+#define _USE_MATH_DEFINES // for C++
+#include <math.h>
+#include <string.h>
 #endif //PCH_H

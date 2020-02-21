@@ -73,7 +73,8 @@ namespace mathauxiliary {
 		void GetOutput(double& output, const double& target);
 		double GetOutput(const double& target);
 		Linear();
-		Linear(double& slop);
+		Linear(double slop);
+		void LoadData(double slop);
 		~Linear();
 
 	};
@@ -115,6 +116,7 @@ namespace mathauxiliary {
 		MatrixXd table_data_;
 		void Preprocess();
 	public:
+		Lookup_2D();
 		Lookup_2D(const VectorXd& reference_1d, 
 				  const VectorXd& reference_2d, 
 				  const MatrixXd& table_data_, 

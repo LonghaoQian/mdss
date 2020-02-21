@@ -7,10 +7,11 @@ aero::AeroAngle::AeroAngle(const AeroAngleParameter& parameter)
 {
 	param_ = parameter;
 	system_info.system_type = AROANGLE;
+	system_info.type = aero_AROANGLE;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;
 	system_info.num_of_continuous_states = 0;
-	system_info.num_of_inputs = 22;
+	system_info.num_of_inputs = 11;
 	system_info.num_of_outputs = 10;
 
 	system_info.system_parameter_ok = 0;
@@ -42,6 +43,9 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 	8 Ab_x // Find veloity derivative in body fixed frame :Vb_dot=Ab-wXVb
 	9 Ab_y // 
 	10 Ab_z // 
+
+
+	//TO DO
 	11 - 19 R_BI
 	20 Vw_x
 	21 Vw_y

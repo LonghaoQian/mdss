@@ -1,6 +1,5 @@
 #pragma once
 #include "Subsystem.h"
-#include <iostream>
 #include "UtilityFunctions.h"
 
 struct RigidBodyParameter {
@@ -28,7 +27,6 @@ public:
 	void DisplayParameters();
 	void DisplayInitialCondition();
 	void IncrementState();
-	VectorXd GetState();
 	RigidBody();
 	RigidBody(const RigidBodyParameter& parameter, const RigidBodyCondition& IC);
 	~RigidBody();

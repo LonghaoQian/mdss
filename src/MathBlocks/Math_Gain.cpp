@@ -4,7 +4,7 @@
 
 Math_Gain::Math_Gain(const Gainparameter& _gainparameter)
 {
-	system_info.system_type = Gain;
+	system_info.system_type = GAIN;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;
 	system_info.num_of_continuous_states = 0;

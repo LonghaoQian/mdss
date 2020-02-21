@@ -12,7 +12,7 @@ SimController::SimController(const SolverConfig& config)
 
 
 
-bool SimController::AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC)
+subsystem_handle SimController::AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC)
 {
 	/* Logic:
 	1. push a pointer into subsystem_list
@@ -21,90 +21,118 @@ bool SimController::AddSubSystem(const LTIParameter& parameters, const  LTIIniti
 	4. check the connectivity
 	5. update the connnectivity matrix
 	*/
-	int flag;
 	subsystem_info system_info;
 	subsystem_list.emplace_back(new LTIsystem(parameters, IC));
 	system_info = subsystem_list.back()->GetSystemInfo();
 	// update number of subsystems
 	num_of_subsystems = subsystem_list.size();
-	if (system_info.system_parameter_ok == true)
-	{
-		flag = true;
-	}
-	else {
-		flag = false;
-	}
-	return flag;
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
 }
 
-bool SimController::AddSubSystem(const RigidBodyParameter & parameters, const RigidBodyCondition & IC)
+subsystem_handle SimController::AddSubSystem(const RigidBodyParameter & parameters, const RigidBodyCondition & IC)
 {
-	bool flag;
 	subsystem_info system_info;
 	subsystem_list.emplace_back(new RigidBody(parameters, IC));
 	system_info = subsystem_list.back()->GetSystemInfo();
 	// update number of subsystems
 	num_of_subsystems = subsystem_list.size();
-	if (system_info.system_parameter_ok == true)
-	{
-		flag = true;
-	}
-	else {
-		flag = false;
-	}
-	return flag;
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
 }
 
-bool SimController::AddSubSystem(const Gainparameter & parameters)
+subsystem_handle SimController::AddSubSystem(const mathblocks::GainParameter& parameters)
 {
-	bool flag;
 	subsystem_info system_info;
-	subsystem_list.emplace_back(new Math_Gain(parameters));
+	subsystem_list.emplace_back(new mathblocks::Gain(parameters));
 	system_info = subsystem_list.back()->GetSystemInfo();
 	// update number of subsystems
 	num_of_subsystems = subsystem_list.size();
-	if (system_info.system_parameter_ok == true)
-	{
-		flag = true;
-	}
-	else {
-		flag = false;
-	}
-	return flag;
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
 }
 
-bool SimController::AddSubsystem(const SignalGeneratorparameter& parameters)
+subsystem_handle SimController::AddSubSystem(const mathblocks::ConstantParameter & parameters)
 {
-	bool flag;
 	subsystem_info system_info;
-	subsystem_list.emplace_back(new Source_SignalGenerator(parameters));
+	subsystem_list.emplace_back(new mathblocks::Constant(parameters));
 	system_info = subsystem_list.back()->GetSystemInfo();
 	// update number of subsystems
 	num_of_subsystems = subsystem_list.size();
-	if (system_info.system_parameter_ok == true)
-	{
-		flag = true;
-	}
-	else {
-		flag = false;
-	}
-	return flag;
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
 }
 
-bool SimController::AddSubsystem(const StandardAtmosphereParameter& parameters) {
-	bool flag;
+subsystem_handle SimController::AddSubSystem(const mathblocks::SumParameter & parameters)
+{
 	subsystem_info system_info;
-	subsystem_list.emplace_back(new StandardAtmosphere(parameters));
+	subsystem_list.emplace_back(new mathblocks::Sum(parameters));
+	system_info = subsystem_list.back()->GetSystemInfo();
 	// update number of subsystems
 	num_of_subsystems = subsystem_list.size();
-	if (system_info.system_parameter_ok == true)
-	{
-		flag = true;
-	}
-	else {
-		flag = false;
-	}
-	return flag;
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
+}
+
+subsystem_handle SimController::AddSubSystem(const mathblocks::MultiplicationParam & parameters)
+{
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new mathblocks::Multiplication(parameters));
+	system_info = subsystem_list.back()->GetSystemInfo();
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
+}
+
+subsystem_handle SimController::AddSubSystem(const  source_sink::SignalGeneratorparameter& parameters) {
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new  source_sink::Source_SignalGenerator(parameters));
+	system_info = subsystem_list.back()->GetSystemInfo();
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
+}
+
+subsystem_handle SimController::AddSubSystem(const geographic::StandardAtmosphereParameter& parameters) {
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new geographic::StandardAtmosphere(parameters));
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
+}
+
+subsystem_handle SimController::AddSubSystem(const geographic::GravityModelParameter & parameters)
+{
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new geographic::Gravity(parameters));
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
+}
+
+subsystem_handle SimController::AddSubSystem(const aero::AerosForceParameter& parameters)
+{
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new aero::AeroForceMoment1(parameters));
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
+}
+
+subsystem_handle SimController::AddSubSystem(const aero::AeroAngleParameter & parameters)
+{
+	subsystem_info system_info;
+	subsystem_list.emplace_back(new aero::AeroAngle(parameters));
+	system_info = subsystem_list.back()->GetSystemInfo();
+	// update number of subsystems
+	num_of_subsystems = subsystem_list.size();
+	// returen subystem handle
+	return CreateSystemHandle(system_info, subsystem_list);
 }
 
 
@@ -113,6 +141,7 @@ bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& conn
 	// parse the connection mapping 
 	// the connection mapping is defined in a Xx2 matrix
 	// index of the input port, system ID of the output, index of the output 
+	// TO DO: add unconnected to port
 	bool flag = false;
 	if (system_ID > num_of_subsystems)
 	{
@@ -120,11 +149,10 @@ bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& conn
 		cout << " while the input system ID is (system_ID<number of subsystem)" << system_ID << endl;
 	}
 	else {
-		if(connection_mapping.rows()== subsystem_list[system_ID]->GetSystemInfo().num_of_inputs)
-		{	
+		if(connection_mapping.rows()== subsystem_list[system_ID]->GetSystemInfo().num_of_inputs) {	
 			subsystem_list[system_ID]->SetInputConnection(connection_mapping);
 			flag = true;
-		   }
+		}
 		else {
 			cout << "CONNECTION ERROR: The connection mapping matrix does not match the number of inputs of system # " << system_ID << endl;
 		}
@@ -376,12 +404,13 @@ void SimController::DisplayTopology()
 bool SimController::PreRunProcess()
 {
 	bool flag = true;
-	/* Logic:
+	// TO DO: add a function to distribute blocks in subsystem groups
+	/* Logic: 
 	1. Parsing the external input mappiing
 	a. for each subsystem, find the row index associated with -1 in the 1st colume and determine the total number of external inputs
 	b. assign the external_mapping with subsystem_ID and port number
 	2. Update the connectivity matirx
-	3. Determine the algebraic loop (in progress)
+	3. Determine the algebraic loop
 	*/
 	// step 1 determine the external input mapping
 	num_of_external_inputs = 0;// total amount of external inputs
@@ -677,17 +706,29 @@ string SimController::GetSystemTypeFromID(int sys_ID_)
 		case VARIABLMASS_0:
 			name = "Variable mass body v0";
 			break;
-		case Gain:
+		case GAIN:
 			name = "Gain block ";
 			break;
-		case Saturation:
+		case CONSTANT:
+			name = "Constant block";
+			break;
+		case SUM:
+			name = "Summation block";
+			break;
+		case SATURATION:
 			name = "Satruation block";
+			break;
+		case MULTIPLICATION:
+			name = "Multiplication block";
 			break;
 		case Signal_Generator:
 			name = "Signal Generator ";
 			break;
 		case ATOMSPHERE:
 			name = "Standard atmopshere ";
+			break;
+		case GRAVITY:
+			name = "Gravity block";
 			break;
 		case AROANGLE:
 			name = "Aero angles block";
@@ -696,10 +737,20 @@ string SimController::GetSystemTypeFromID(int sys_ID_)
 			name = "Aerodynamics Forces and Moments";
 			break;
 		default: 
-			name = " Unidentified system type ";
+			name = " Unidentified system type ... Did you forget to list the name of the system in SimController? ";
 			break;
 	}
 	return name;
+}
+
+subsystem_handle SimController::CreateSystemHandle(const subsystem_info & info, const vector<unique_ptr<Subsystem>>& subsystem_list)
+{
+	subsystem_handle handle;
+	handle.isParameterOK = info.system_parameter_ok;
+	handle.label_ = info.label_;
+	handle.type = info.type;
+	handle.ID = subsystem_list.size() - 1;
+	return  handle;
 }
 
 bool SimController::GetExternalInputs(const VectorXd & extern_input)
