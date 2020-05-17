@@ -4,7 +4,6 @@
 namespace geographic {
 	StandardAtmosphere::StandardAtmosphere(const StandardAtmosphereParameter& parameter)
 	{
-		system_info.system_type = ATOMSPHERE;
 		system_info.type = geographic_ATOMSPHERE;
 		system_info.DIRECT_FEED_THROUGH = true;
 		system_info.NO_CONTINUOUS_STATE = true;
@@ -76,7 +75,6 @@ namespace geographic {
 	*/
 	Gravity::Gravity(const GravityModelParameter& parameter)
 	{
-		system_info.system_type = GRAVITY;
 		system_info.type = geographic_GRAVITY;
 		param_ = parameter;	
 		switch (param_.Mode) {

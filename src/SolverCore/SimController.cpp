@@ -6,7 +6,7 @@ SimController::SimController(const SolverConfig& config)
 {
 	solver_config = config;// load the solver information
 	current_stepsize = solver_config.frame_step;
-	num_of_cycles_per_step = 1;
+	num_of_cycles_per_step = 1; // set the number of cycles per step to 1 as initial condition
 	current_time = solver_config.start_time;
 }
 
@@ -196,7 +196,7 @@ int SimController::Run_Update(const VectorXd& extern_input)
 			// update k1
 			subsystem_list[i]->Solver_PreturbState(0, butchertableau);
 			if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
-			{
+			{			
 				subsystem_list[i]->Solver_UpdateKiBuffer(0, cycle_time, current_stepsize, butchertableau);
 			}
 		}
@@ -263,7 +263,7 @@ int SimController::Run_Update(const VectorXd& extern_input)
 		error_cycle = 0;
 		switch (solver_config.solver_type)
 		{
-		case DORMANDPRINCE:
+		case RungeKuttaFamily::DORMANDPRINCE: // for dormand prince, it has 2 update formulars 
 			for (int i = 0; i < num_of_subsystems; i++)
 			{
 				if (!subsystem_list[i]->GetSystemInfo().NO_CONTINUOUS_STATE)
@@ -272,13 +272,23 @@ int SimController::Run_Update(const VectorXd& extern_input)
 				}
 			}
 			break;
-		case RUNGKUTTA45:
+		case RungeKuttaFamily::RUNGKUTTA45: // for other rungkutta method, there is only one update formular
+			for (int i = 0; i < num_of_subsystems; i++)
+			{
+				subsystem_list[i]->Solver_CalculateIncrement(updatecoefficient1);
+			}
+			break;
+		case RungeKuttaFamily::EULER1ST:
 			for (int i = 0; i < num_of_subsystems; i++)
 			{
 				subsystem_list[i]->Solver_CalculateIncrement(updatecoefficient1);
 			}
 			break;
 		default:
+			for (int i = 0; i < num_of_subsystems; i++)
+			{
+				subsystem_list[i]->Solver_CalculateIncrement(updatecoefficient1);
+			}
 			break;
 		}
 		// update outputs according to new state
@@ -360,7 +370,7 @@ void SimController::DisplayTopology()
 		cout << "+++++++++++++++++++++++++++++++++++++++++++" << endl;
 		system_info = subsystem_list[i]->GetSystemInfo();
 
-		cout << " Subsystem # " << i << " is of type " << GetSystemTypeFromID(system_info.system_type)<< endl;
+		cout << " Subsystem # " << i << " is of type " << GetSystemTypeFromID(system_info.type)<< endl;
 	// display system parameters
 		subsystem_list[i]->DisplayParameters();
 	// display system initial condition
@@ -399,6 +409,12 @@ void SimController::DisplayTopology()
 	{
 		cout << "from system # " << i <<"|"<<connectivity.block(i, 0, 1, num_of_subsystems) << endl;
 	}
+}
+
+void SimController::ReshapeExternalInputVector(VectorXd& extern_input)
+{
+	extern_input.resize(num_of_external_inputs);
+	extern_input.setZero();
 }
 
 bool SimController::PreRunProcess()
@@ -487,32 +503,17 @@ bool SimController::PreRunProcess()
 		}	
 	}
 	DisplayTopology();
-	bool isalgebraricloop = RunTopologyAnalysis();
+	bool isalgebraricloop = RunTopologyAnalysis(); // Do the algebraric loop check before loading the butcher tabeleau
+	// if no algebraric loop discovered, load the table according to the solver choice
 	if (flag == true&& isalgebraricloop==false)
 	{
-		cout << "PARSING IS SUCESSFUL, READY TO RUN! " << endl;
-		switch (solver_config.solver_type)
-		{
-		case DORMANDPRINCE:
-			butchertableau = RungeKuttaFamily::InitbutchertableauDORMANDPRINCE();// update butcher tableau
-			updatecoefficient1.resize(7);
-			updatecoefficient2.resize(7);
-
-			for (int i = 0; i < 7; i++)
-			{
-				updatecoefficient1(i) = butchertableau(7,i);
-				updatecoefficient2(i) = butchertableau(8,i);
-			}
-			// reference: http://depa.fquim.unam.mx/amyd/archivero/DormandPrince_19856.pdf
-			solver_config.num_of_k = 7;
-			break;
-			//case RUNGKUTTA45:
-				//break;
-		default:
-			cout << "WARNING: INCORRECT SOLVER SETTING. THE DEFAULT SOLVER DORMANDPRINCE IS USED" << endl;
-			break;
-		}
-		// allocate temp buffer of k_1,...,k_7
+		cout << "PARSING IS SUCESSFUL! LOADING BUTCHERTABLEAU... " << endl;
+		RungeKuttaFamily::LoadButcherTableau(solver_config.solver_type,
+											 butchertableau,
+											 updatecoefficient1,
+											 updatecoefficient2,
+											 solver_config.num_of_k);
+		// allocate temp buffer of k_1,...,k_j
 		for (int i = 0; i < num_of_subsystems; i++)
 		{
 			subsystem_list[i]->Solver_InitSolverBuffer(solver_config.num_of_k);
@@ -674,73 +675,16 @@ bool SimController::RunTopologyAnalysis()
 	return isAlegraricloopexist;
 }
 
-string SimController::GetSystemTypeFromID(int sys_ID_)
+string SimController::GetSystemTypeFromID(subsystem_type type)
 {
-/*
-#define GENERIC			 0x00
-#define LTI				 0x01
-#define INTEGRATOR		 0x02
-#define RIGIDBODY		 0x03
-#define VARIABLMASS_0    0x04
-#define Gain			 0x10
-#define Saturation       0x11
-#define Signal_Generator 0x20
-#define ATOMSPHERE		 0x30
-#define AROANGLE         0x31
-#define AeroForceMoment  0x32
-*/
-	string name;
-	switch (sys_ID_) {
-		case GENERIC: 
-			name = "Generic";
-			break;
-		case LTI:
-			name = "LTI";
-			break;
-		case INTEGRATOR:
-			name = "Integrator";
-			break;
-		case RIGIDBODY:
-			name = "Rigid body";
-			break;
-		case VARIABLMASS_0:
-			name = "Variable mass body v0";
-			break;
-		case GAIN:
-			name = "Gain block ";
-			break;
-		case CONSTANT:
-			name = "Constant block";
-			break;
-		case SUM:
-			name = "Summation block";
-			break;
-		case SATURATION:
-			name = "Satruation block";
-			break;
-		case MULTIPLICATION:
-			name = "Multiplication block";
-			break;
-		case Signal_Generator:
-			name = "Signal Generator ";
-			break;
-		case ATOMSPHERE:
-			name = "Standard atmopshere ";
-			break;
-		case GRAVITY:
-			name = "Gravity block";
-			break;
-		case AROANGLE:
-			name = "Aero angles block";
-			break;
-		case AeroForceMoment:
-			name = "Aerodynamics Forces and Moments";
-			break;
-		default: 
-			name = " Unidentified system type ... Did you forget to list the name of the system in SimController? ";
-			break;
+	auto name = subsystem_type_list.find(type);
+	if (name != subsystem_type_list.end()) {
+		return name->second;
 	}
-	return name;
+	else {
+		return "Unknown type";
+
+	}
 }
 
 subsystem_handle SimController::CreateSystemHandle(const subsystem_info & info, const vector<unique_ptr<Subsystem>>& subsystem_list)

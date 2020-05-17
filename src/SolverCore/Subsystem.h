@@ -2,30 +2,12 @@
 // connection type
 #define NOCONNECTION -1
 #define EXTERNAL -2
-// TO DO: better indexing for subsystems
-#define GENERIC			 0x00
-#define LTI				 0x01
-#define INTEGRATOR		 0x02
-#define RIGIDBODY		 0x03
-#define VARIABLMASS_0    0x04
-#define GAIN			 0x10
-#define SATURATION       0x11
-#define CONSTANT         0x12
-#define MULTIPLICATION   0x13
-#define SUM              0x14
-#define Signal_Generator 0x20
-#define ATOMSPHERE		 0x30
-#define GRAVITY          0x31
-#define AROANGLE         0x41
-#define AeroForceMoment  0x42
 // A template for a subsystem used for schecduling.
 using std::vector;
 using namespace Eigen;
 typedef Matrix<int, Dynamic, 2> MatrixX2i;
 
 enum subsystem_type {
-	// alphabic order
-	system_group, // system group is a special type of subsystem
 	aero_AROANGLE,
 	aero_AROFORCEMENT_1,
 	continous_INTEGRATOR,
@@ -42,7 +24,23 @@ enum subsystem_type {
 	math_SUM,
 	source_SINGALGENERATOR,
 };
-
+static const std::map<subsystem_type, std::string> subsystem_type_list{
+	{aero_AROANGLE, "Aero angles block"},
+	{aero_AROFORCEMENT_1, "Aerodynamics Forces and Moments"},
+	{continous_INTEGRATOR, "Integrator"},
+	{continous_LTI, "LTI"},
+	{continous_RIGIDBODY,"Rigid body"},
+	{continous_VARIABLEMASS, "Variable mass body"},
+	{geographic_ATOMSPHERE, "Standard atmopshere "},
+	{geographic_GRAVITY, "Gravity block"},
+	{math_CONSTANT, "Constant block"},
+	{math_CROSSPRODUCT, "Cross product block"},
+	{math_GAIN, "Gain block "},
+	{math_PRODUCT, "Product block"},
+	{math_SATURATION, "Satruation block"},
+	{math_SUM, "Summation block"},
+	{source_SINGALGENERATOR, "Signal Generator "}
+};
 struct subsystem_handle {
 	subsystem_type type;
 	int Layer;// determine 
@@ -56,7 +54,6 @@ struct subsystem_info {
 	unsigned int num_of_inputs;
 	unsigned int num_of_external_inputs;
 	unsigned int num_of_outputs;
-	unsigned int system_type;
 	bool system_parameter_ok;
 	MatrixX2i input_connection;
 	bool NO_CONTINUOUS_STATE;

@@ -16,4 +16,5 @@
 #define _USE_MATH_DEFINES // for C++
 #include <math.h>
 #include <string.h>
+#include <map>
 #endif //PCH_H

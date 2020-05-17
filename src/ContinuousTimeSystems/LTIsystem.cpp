@@ -7,7 +7,6 @@ LTIsystem::LTIsystem()
 LTIsystem::LTIsystem(const LTIParameter& parameter, const LTIInitialCondition& IC)
 {
 	state = IC.X_0;// assign the initial condition to the state
-	system_info.system_type = LTI;
 	system_info.type = continous_LTI;
 	A = parameter.A;
 	B = parameter.B;

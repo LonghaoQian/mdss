@@ -9,7 +9,6 @@ aero::AeroForceMoment1::AeroForceMoment1(const AerosForceParameter& param)
 	CY_(0.0)
 {
 	// set output dimensions
-	system_info.system_type = AeroForceMoment;
 	system_info.type = aero_AROFORCEMENT_1;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;

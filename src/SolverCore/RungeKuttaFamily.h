@@ -1,12 +1,19 @@
 #pragma once
-///求解方法的名称
-#define DORMANDPRINCE   0x10
-#define RUNGKUTTA45     0x11
-#define GEARSMETHOD115  0x12
-#define LINEARMULTISTEP 0x13
 using namespace Eigen;
 namespace RungeKuttaFamily {
-	// Butchertableau DORMANDPRINCE;
+	enum SolverType {
+		DORMANDPRINCE,
+		RUNGKUTTA45,
+		EULER1ST
+	};
+	// Load Butchertableau for different methods
 	Matrix<double, 9, 8>  InitbutchertableauDORMANDPRINCE();
+	Matrix<double, 5, 5>  InitbutchertableauRK4();
+	Matrix<double, 2, 2>  InitbutchertableauEuler1();
+	void LoadButcherTableau(const SolverType& solver, 
+							MatrixXd& table, 
+							VectorXd& updatecoefficient1, 
+							VectorXd& updatecoefficient2,
+							unsigned int& num_of_k);
 }
 

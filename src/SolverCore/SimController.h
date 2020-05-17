@@ -23,19 +23,17 @@ typedef MatrixX2i SIMCONNECTION;
 struct SolverConfig {      
 	double mim_step;
 	double frame_step;// step_size according to the frame
-	int solver_type;
+	RungeKuttaFamily::SolverType solver_type;
 	double eposilon;
 	unsigned int num_of_k;
 	bool adaptive_step;
 	double start_time;
 };
-
+// the handle for assigned subsystems
 struct SubsystemGroupHandle {
 	int num_of_inputs;
 	int num_of_ouputs;
 	int num_of_blocks;
-
-
 };
 
 class SimController
@@ -68,9 +66,8 @@ private:
 	int num_of_cycles_per_step;
 	int num_of_closed_loops;
 	bool RunTopologyAnalysis();
-	string GetSystemTypeFromID(int sys_ID_);
+	string GetSystemTypeFromID(subsystem_type type);
 	subsystem_handle CreateSystemHandle(const subsystem_info& info, const vector<unique_ptr<Subsystem>>& subsystem_list);
-	// TO DO: add parse system group function to preprocess
 public:
 	/*overloads of AddSubsystems to suit for every pre-defined type of model*/
 	// continuous state
@@ -98,6 +95,7 @@ public:
 	/*------------------------PreRunProcess of the Connected Subystems--------------*/
 	bool PreRunProcess();// check and parse the system connection relationship.
 	void DisplayTopology();
+	void ReshapeExternalInputVector(VectorXd& extern_input);
 	/*------------------------Run Time Function -------------------------------------*/
 	int Run_Update(const VectorXd& extern_input);
 	double Run_GetSystemTime();

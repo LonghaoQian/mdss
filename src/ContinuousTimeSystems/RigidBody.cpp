@@ -9,8 +9,6 @@ RigidBody::RigidBody()
 
 RigidBody::RigidBody(const RigidBodyParameter & parameter, const RigidBodyCondition & IC)
 {
-	
-	system_info.system_type = RIGIDBODY;
 	system_info.type = continous_RIGIDBODY;
 	system_info.num_of_continuous_states = 13;// 3 for V_I, 3 for Omega_BI, 3 for X_I, 4 for q
 	system_info.num_of_inputs = 6;// 0-2 F_B 3-6 M_B

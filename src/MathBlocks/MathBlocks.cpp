@@ -6,7 +6,6 @@ namespace mathblocks {
 // Constant Block 
 Constant::Constant(const ConstantParameter& param)
 {
-	system_info.system_type = CONSTANT;
 	system_info.type = math_CONSTANT;
 	system_info.DIRECT_FEED_THROUGH = false;
 	system_info.NO_CONTINUOUS_STATE = true;
@@ -60,7 +59,6 @@ Constant::~Constant()
 
 Multiplication::Multiplication(const  MultiplicationParam& _multiparameter)
 {
-	system_info.system_type = MULTIPLICATION;
 	system_info.type = math_PRODUCT;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;
@@ -197,7 +195,6 @@ Multiplication::~Multiplication()
 
 Gain::Gain(const GainParameter& _gainparameter)
 {
-	system_info.system_type = GAIN;
 	system_info.type = math_GAIN;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;
@@ -297,7 +294,6 @@ Gain::~Gain()
 
 Sum::Sum(const SumParameter & param)
 {
-	system_info.system_type = SUM;
 	system_info.type = math_SUM;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;

@@ -101,3 +101,93 @@ Matrix<double, 9, 8> RungeKuttaFamily::InitbutchertableauDORMANDPRINCE()
 	return DORMANDPRINCE_butchertableau;
 
 }
+
+Matrix<double, 5, 5> RungeKuttaFamily::InitbutchertableauRK4()
+{
+	Matrix<double, 5, 5> butchertableau;
+	butchertableau.setZero();
+
+	butchertableau(1, 0) = 0.5;
+	butchertableau(2, 0) = 0.5;
+	butchertableau(3, 0) = 1.0;
+
+	butchertableau(1, 1) = 0.5;
+	butchertableau(2, 1) = 0.0;
+	butchertableau(3, 1) = 0.0;
+	butchertableau(4, 1) = 1.0 / 6.0;
+
+	butchertableau(2, 2) = 0.5;
+	butchertableau(3, 2) = 0.0;
+	butchertableau(4, 2) = 1.0/3.0;
+
+	butchertableau(3, 3) = 1.0;
+	butchertableau(4, 3) = 1.0 / 3.0;
+
+	butchertableau(4, 4) = 1.0 / 6.0;
+
+	return butchertableau;
+}
+
+Matrix<double, 2, 2> RungeKuttaFamily::InitbutchertableauEuler1()
+{
+	Matrix<double, 2, 2> butchertableau;
+	butchertableau.setZero();
+
+	butchertableau(1, 1) = 1;
+
+	return butchertableau;
+}
+
+void RungeKuttaFamily::LoadButcherTableau(const SolverType & solver, 
+										  MatrixXd & table, 
+										  VectorXd & updatecoefficient1, 
+										  VectorXd & updatecoefficient2,
+										  unsigned int& num_of_k){
+	switch (solver)
+	{
+	case DORMANDPRINCE:
+		std::cout << " ----DORMANDPRINCE---- " << std::endl;
+		table.resize(9, 8);
+		table.setZero();
+		table = RungeKuttaFamily::InitbutchertableauDORMANDPRINCE();// update butcher tableau
+		num_of_k = 7;
+		updatecoefficient1.resize(num_of_k);
+		updatecoefficient2.resize(num_of_k);
+		for (int i = 0; i < num_of_k; i++)
+		{
+			updatecoefficient1(i) = table(7, i+1);
+			updatecoefficient2(i) = table(8, i+1);
+		}
+		// reference: http://depa.fquim.unam.mx/amyd/archivero/DormandPrince_19856.pdf
+		
+		break;
+	case RUNGKUTTA45:
+		std::cout << " ----RUNGKUTTA45---- " <<std::endl;
+		table.resize(5, 5);
+		table.setZero();
+		table = RungeKuttaFamily::InitbutchertableauRK4();// update butcher tableau
+		num_of_k = 4;
+		updatecoefficient1.resize(num_of_k);
+		for (int i = 0; i < num_of_k; i++) {
+			updatecoefficient1(i) = table(4, i+1);
+		}
+		break;
+
+	case EULER1ST:
+		std::cout << " ----1ST ORDER EULER---- " << std::endl;
+		table.resize(2, 2);
+		table.setZero();
+		table = RungeKuttaFamily::InitbutchertableauEuler1();// update butcher tableau
+		num_of_k = 1;
+		updatecoefficient1.resize(num_of_k);
+		updatecoefficient1(0) = table(1, 1);
+		num_of_k = 1;
+		break;
+	default:
+		std::cout << "WARNING: INCORRECT SOLVER SETTING. THE DEFAULT SOLVER DORMANDPRINCE IS USED" << std::endl;
+		break;
+	}
+	std::cout << table << std::endl;
+	std::cout << updatecoefficient1 << std::endl;
+
+}

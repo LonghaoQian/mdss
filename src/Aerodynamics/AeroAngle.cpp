@@ -6,7 +6,6 @@
 aero::AeroAngle::AeroAngle(const AeroAngleParameter& parameter)
 {
 	param_ = parameter;
-	system_info.system_type = AROANGLE;
 	system_info.type = aero_AROANGLE;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;

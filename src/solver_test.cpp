@@ -8,21 +8,22 @@
 using std::iostream;
 
 #define DEBUG_RIGID_BODY
+//#define DEBUG_LINEAR
+//#define DEBUG_STIFF_MODEL
 //#define DEBUG_DISP
-//#define DEBUG_ALL
 int main()
 {
 	SolverConfig config1;
 	config1.eposilon = 0.00001;
-	config1.adaptive_step = true;
+	config1.adaptive_step = false;
 	config1.frame_step = 0.02;
 	config1.mim_step = 0.005;
 	config1.start_time = 0.0;
-	config1.solver_type = DORMANDPRINCE;
+	config1.solver_type = RungeKuttaFamily::RUNGKUTTA45;
 	SimController SimInstance1(config1);
 
 #ifdef DEBUG_RIGID_BODY
-	///////////////////////////DEFINE SUBSYSTEMS//////////////////////////////////////
+	// debug using rigid body
 	RigidBodyParameter rigid_1;
 	RigidBodyCondition rigid_1_IC;
 	rigid_1.J << 1, 0, 0,
@@ -36,18 +37,19 @@ int main()
 	rigid_1_IC.V_I << 0, 0, 0;
 	rigid_1_IC.X_I << 0, 0, 0;
 
-	aero::AeroAngleParameter aero_angle;
-
-	aero_angle.b_    = 10.9728;
-	aero_angle.c_bar_ = 1.4935;
-	aero_angle.min_airspeed_ = 1;
+	source_sink::SignalGeneratorparameter para_sinewave_1;
+	para_sinewave_1.amplitude = 1.0;
+	para_sinewave_1.frequency = 0.5;
+	para_sinewave_1.num_of_channels = 3;
+	para_sinewave_1.phase_shift = 0.0;
+	para_sinewave_1.waveshape = source_sink::SINE;
 
 	subsystem_handle rigid_body_1 = SimInstance1.AddSubSystem(rigid_1, rigid_1_IC); //0
-	subsystem_handle aero_angle_1 = SimInstance1.AddSubSystem(aero_angle);          //1 
+	subsystem_handle sinewave_1 = SimInstance1.AddSubSystem(para_sinewave_1);
 	std::cout << rigid_body_1.ID << std::endl;
-	std::cout << aero_angle_1.ID << std::endl;
+	std::cout << sinewave_1.ID << std::endl;
 	//////////////////////////MAKE CONNECTIONs///////////////////////////////////////
-	SIMCONNECTION Connection_Rigidbody, Connection_AeroForce, Connection_AeroAngle;
+	SIMCONNECTION Connection_Rigidbody;
 
 	Connection_Rigidbody.resize(6, 2);
 	Connection_Rigidbody(0, 0) = EXTERNAL_INPUT;
@@ -59,153 +61,17 @@ int main()
 	Connection_Rigidbody(2, 0) = EXTERNAL_INPUT;
 	Connection_Rigidbody(2, 1) = 0;
 
-	Connection_Rigidbody(3, 0) = EXTERNAL_INPUT;
+	Connection_Rigidbody(3, 0) = sinewave_1.ID;
 	Connection_Rigidbody(3, 1) = 0;
 
-	Connection_Rigidbody(4, 0) = EXTERNAL_INPUT;
-	Connection_Rigidbody(4, 1) = 0;
+	Connection_Rigidbody(4, 0) = sinewave_1.ID;
+	Connection_Rigidbody(4, 1) = 1;
 
-	Connection_Rigidbody(5, 0) = EXTERNAL_INPUT;
-	Connection_Rigidbody(5, 1) = 0;
+	Connection_Rigidbody(5, 0) = sinewave_1.ID;
+	Connection_Rigidbody(5, 1) = 2;
+
 
 	SimInstance1.MakeConnection(rigid_body_1.ID, Connection_Rigidbody);
-
-	Connection_AeroAngle.resize(11, 2);
-	Connection_AeroAngle(0, 0) = EXTERNAL_INPUT;
-	Connection_AeroAngle(0, 1) = 0;
-
-	Connection_AeroAngle(1, 0) = EXTERNAL_INPUT;
-	Connection_AeroAngle(1, 1) = 0;
-
-	Connection_AeroAngle(2, 0) = rigid_body_1.ID;
-	Connection_AeroAngle(2, 1) = 18;
-
-	Connection_AeroAngle(3, 0) = rigid_body_1.ID;
-	Connection_AeroAngle(3, 1) = 19;
-
-	Connection_AeroAngle(4, 0) = rigid_body_1.ID;
-	Connection_AeroAngle(4, 1) = 20;
-
-	Connection_AeroAngle(5, 0) = rigid_body_1.ID;
-	Connection_AeroAngle(5, 1) = 3;
-
-	Connection_AeroAngle(6, 0) = rigid_body_1.ID;
-	Connection_AeroAngle(6, 1) = 4;
-
-	Connection_AeroAngle(7, 0) = rigid_body_1.ID;
-	Connection_AeroAngle(7, 1) = 5;
-
-	Connection_AeroAngle(8, 0) = EXTERNAL_INPUT;
-	Connection_AeroAngle(8, 1) = 0;
-
-	Connection_AeroAngle(9, 0) = EXTERNAL_INPUT;
-	Connection_AeroAngle(9, 1) = 0;
-
-	Connection_AeroAngle(10, 0) = EXTERNAL_INPUT;
-	Connection_AeroAngle(10, 1) = 0;
-
-	SimInstance1.MakeConnection(aero_angle_1.ID, Connection_AeroAngle);
-
-
-	/**
-	aero::AerosForceParameter AERO1;
-	AERO1.S = 16.16; //m^2
-	AERO1.b_ = 10.9728;//m
-	AERO1.c_bar_ = 1.4935;//m
-	AERO1.aero_reference_point_ << 0, 0, -0.1829;
-	AERO1.aeroparam_.CL0_ = 0.27;
-	AERO1.aeroparam_.CLadot_ = 1.7;
-	AERO1.aeroparam_.CLq_ = 3.9;
-	AERO1.aeroparam_.CLde_ = -0.24;
-	AERO1.aeroparam_.CL_alpha_ = 4.66;
-
-	AERO1.aeroparam_.CD0_ = 0.032;
-	AERO1.aeroparam_.CDbeta_ = 0.17;
-	AERO1.aeroparam_.CDde_ = 0.06;
-	AERO1.aeroparam_.CDDf_ = 0.0007;
-	AERO1.aeroparam_.CD_alpha_ = 0.0051894;
-
-	AERO1.aeroparam_.CYb_ = -0.3095;
-	AERO1.aeroparam_.CYda_ = -0.05;
-	AERO1.aeroparam_.CYdr_ = 0.098;
-	AERO1.aeroparam_.CYp_ = -0.037;
-	AERO1.aeroparam_.CYr_ = 0.21;
-
-	AERO1.aeroparam_.Clb_ = -0.0891;
-	AERO1.aeroparam_.Clda_ = 0.23;
-	AERO1.aeroparam_.Clp_ = -0.47;
-	AERO1.aeroparam_.Clr_ = 0.12;
-	AERO1.aeroparam_.Cldr_ = 0.0147;
-
-	AERO1.aeroparam_.Cm0_ = 0.12;
-	AERO1.aeroparam_.Cmadot_ = -5.2;
-	AERO1.aeroparam_.Cmalpha_ = -1.8;
-	AERO1.aeroparam_.Cmde_ = -1.18;
-	AERO1.aeroparam_.CmDf_ = -0.03;
-	AERO1.aeroparam_.Cmq_ = -12.4;
-
-	AERO1.aeroparam_.Cnb_ = 0.0650;
-	AERO1.aeroparam_.Cnda_ = 0.0053;
-	AERO1.aeroparam_.Cndr_ = -0.043;
-	AERO1.aeroparam_.Cnp_ = -0.03;
-	AERO1.aeroparam_.Cnr_ = -0.099;
-
-	Connection_AeroForce.resize(16, 2);
-	Connection_AeroForce(0, 0) = -1;
-	Connection_AeroForce(0, 1) = 0;
-
-	Connection_AeroForce(1, 0) = -1;
-	Connection_AeroForce(1, 1) = 0;
-
-	Connection_AeroForce(2, 0) = -1;
-	Connection_AeroForce(2, 1) = 0;
-
-	Connection_AeroForce(3, 0) = -1;
-	Connection_AeroForce(3, 1) = 0;
-
-	Connection_AeroForce(4, 0) = -1;
-	Connection_AeroForce(4, 1) = 0;
-
-	Connection_AeroForce(5, 0) = -1;
-	Connection_AeroForce(5, 1) = 0;
-
-	Connection_AeroForce(6, 0) = -1;
-	Connection_AeroForce(6, 1) = 0;
-
-	Connection_AeroForce(7, 0) = -1;
-	Connection_AeroForce(7, 1) = 0;
-
-	Connection_AeroForce(8, 0) = -1;
-	Connection_AeroForce(8, 1) = 0;
-
-	Connection_AeroForce(9, 0) = -1;
-	Connection_AeroForce(9, 1) = 0;
-
-	Connection_AeroForce(10, 0) = -1;
-	Connection_AeroForce(10, 1) = 0;
-
-	Connection_AeroForce(11, 0) = -1;
-	Connection_AeroForce(11, 1) = 0;
-
-	Connection_AeroForce(12, 0) = -1;
-	Connection_AeroForce(12, 1) = 0;
-
-	Connection_AeroForce(13, 0) = -1;
-	Connection_AeroForce(13, 1) = 0;
-
-	Connection_AeroForce(14, 0) = -1;
-	Connection_AeroForce(14, 1) = 0;
-
-	Connection_AeroForce(15, 0) = -1;
-	Connection_AeroForce(15, 1) = 0;
-	
-
-	SimInstance1.AddSubSystem(AERO1);	      // 1 subsystem 
-	SimInstance1.MakeConnection(1, Connection_AeroForce); */
-
-
-
-
 
 	bool flag = SimInstance1.PreRunProcess(); 
 	MatlabIO Recorder;
@@ -216,62 +82,39 @@ int main()
 	matdata.setZero();// reset the buffer to zero
 
 	if (flag) { // if successful, run updates
-	//print the system info
+	
 		VectorXd extern_input;
-		extern_input.resize(11);
-		extern_input.setZero();
-		extern_input(0) = 0; // Fb_x = 1 N
-		extern_input(1) = 0; // Fb_x = 1 N
-		extern_input(2) = 0; // Fb_x = 1 N
-		extern_input(6) = 1.225;
-		extern_input(7) = 340;
+		SimInstance1.ReshapeExternalInputVector(extern_input);
 		for (int i = 0; i < N_steps; i++)
 		{
-			//extern_input(3) = sin(M_PI*(double)(i*0.02)); // Fb_x = 1 N
-			//extern_input(3) = 1;
-			//extern_input(4) = 500*cos(M_PI*(double)(i*0.02)); // Fb_x = 1 N
-			//extern_input(5) = 900*sin(M_PI*(double)(i*0.02)); // Fb_x = 1 N
-#ifdef DEBUG_DISP
-			std::cout << "t= " << SimInstance1.Run_GetSystemTime() << " s "<< std::endl;
-			std::cout << "VI_x = " << SimInstance1.Run_GetSubsystemOuput(0)(0) << " m/s, VI_y = "
-				<< SimInstance1.Run_GetSubsystemOuput(0)(1) << " m/s, VI_z = "
-				<< SimInstance1.Run_GetSubsystemOuput(0)(2) << std::endl;
-			std::cout << " X = " << SimInstance1.Run_GetSubsystemOuput(0)(6) << " m, Y =  " 
-					<< SimInstance1.Run_GetSubsystemOuput(0)(7) << " m, Z =  " << SimInstance1.Run_GetSubsystemOuput(0)(0) << " m "
-				<< endl;
-			std::cout << " AOA = " << 57.3*SimInstance1.Run_GetSubsystemOuput(1)(2) << " DEG, BETA =  "
-				<< 57.3* SimInstance1.Run_GetSubsystemOuput(1)(3) << " DEG, TAS =  " << SimInstance1.Run_GetSubsystemOuput(1)(0) << " m/s "
-				<< endl;
-			std::cout << "----------------------------------------------" << std::endl;
-#endif		
 			matdata(i, 0) = SimInstance1.Run_GetSystemTime();
+			// save F_B
+			matdata(i, 22) = extern_input(0);
+			matdata(i, 23) = extern_input(1);
+			matdata(i, 24) = extern_input(2);
+			// save M_B
+			matdata(i, 25) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(0);
+			matdata(i, 26) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(1);
+			matdata(i, 27) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(2);
 			for (int j = 0; j < 21; j++) {
 				matdata(i, j + 1) = SimInstance1.Run_GetSubsystemOuput(0)(j);
 			}
-			for (int j = 22; j < 28; j++) {
-				matdata(i, j) = extern_input(j - 22);
-			}
-			extern_input(3) = sin(M_PI*(double)((i+1)*0.02)); // Fb_x = 1 N
-			/*
-			std::cout << "TAS = " << matdata(i, 1) << " m/s" << std::endl;
 
-			
-			std::cout << "Altitude  = " << matdata(i, 2) << "m" << std::endl;
-			std::cout << "Alpha = " << 57.3*matdata(i, 3) << " DEG " << std::endl;
-			std::cout << "Beta = " << 57.3*SimInstance1.Run_GetSubsystemOuput(2)(3) << " DEG " << std::endl;
-			std::cout << "Dynamic Pressure = " << 57.3*SimInstance1.Run_GetSubsystemOuput(2)(4) << " Pa " << std::endl;
-			std::cout << "rho = " << SimInstance1.Run_GetSubsystemOuput(0)(3) << " kg/m^3, a = " << SimInstance1.Run_GetSubsystemOuput(0)(1) << " m/s " << endl;*/
-			//std::cout << "Dynamic Pressure = " << 57.3*SimInstance1.Run_GetSubsystemOuput(2)(4) << " Pa " << std::endl;
 			SimInstance1.Run_Update(extern_input);
-
 		}
 		matdata(N_steps, 0) = SimInstance1.Run_GetSystemTime();
 		for (int j = 0; j < 21; j++) {
 			matdata(N_steps, j + 1) = SimInstance1.Run_GetSubsystemOuput(0)(j);
 		}
-		for (int j = 22; j < 28; j++) {
-			matdata(N_steps, j) = extern_input(j - 22);
-		}
+
+		// save F_B
+		matdata(N_steps, 22) = extern_input(0);
+		matdata(N_steps, 23) = extern_input(1);
+		matdata(N_steps, 24) = extern_input(2);
+		// save M_B
+		matdata(N_steps, 25) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(0);
+		matdata(N_steps, 26) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(1);
+		matdata(N_steps, 27) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(2);
 
 		if (Recorder.SaveToMatFile(matdata, "rigid_body_state.mat", "A")) {
 			std::cout << "successfuly save the data" << std::endl;
