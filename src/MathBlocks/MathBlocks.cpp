@@ -324,7 +324,8 @@ void Sum::DifferentialEquation(const double & t, const VectorXd & state, const V
 
 void Sum::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 {
-	// 
+	// reset the output to zero
+	output.setZero();
 	for (int i = 0; i < param_.num_of_inputs; i++) {
 		output += param_.sign_list(i)*input.segment(i*param_.input_dimensions, param_.input_dimensions);
 	}

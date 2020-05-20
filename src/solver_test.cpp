@@ -19,7 +19,7 @@ int main()
 	config1.frame_step = 0.02;
 	config1.mim_step = 0.005;
 	config1.start_time = 0.0;
-	config1.solver_type = RungeKuttaFamily::DORMANDPRINCE;
+	config1.solver_type = RungeKuttaFamily::RUNGKUTTA45;
 	simulationcontrol::SimController SimInstance1(config1);
 
 #ifdef DEBUG_RIGID_BODY
@@ -158,6 +158,7 @@ int main()
 	lti_1.D.setZero();
 	lti_1_IC.X_0.resize(4, 1);
 	lti_1_IC.X_0.setZero();
+	lti_1_IC.X_0(1) = 1.0;
 
 	source_sink::PeriodicWaveparameter para_sinewave_1;
 	para_sinewave_1.amplitude = 1.0;
@@ -199,8 +200,8 @@ int main()
 	Connection_Sum_1(1, simulationcontrol::outputportID) = 3;
 
 	Connection_Gain_1.resize(1, 2);
-	Connection_Gain_1(0, simulationcontrol::subsystemID) = Sum_1.ID;
-	Connection_Gain_1(0, simulationcontrol::outputportID) = 0;
+	Connection_Gain_1(0, simulationcontrol::subsystemID)  = LTI_1.ID;  //=Sum_1.ID;
+	Connection_Gain_1(0, simulationcontrol::outputportID) = 3;
 
 	SimInstance1.MakeConnection(LTI_1.ID, Connection_LTI_1);
 	SimInstance1.MakeConnection(Gain_1.ID, Connection_Gain_1);
@@ -211,7 +212,7 @@ int main()
 	int N_steps = 500;
 
 	MatrixXd matdata;
-	matdata.resize(N_steps + 1, 7); // TIME 0 input  v alpha theta q 
+	matdata.resize(N_steps + 1, 7); // TIME 0 input 1  v 2 alpha 3 theta 4 q 5 sum 6
 	matdata.setZero();// reset the buffer to zero
 
 	if (flag) { // if successful, run updates
@@ -222,25 +223,23 @@ int main()
 		{
 			matdata(i, 0) = SimInstance1.Run_GetSystemTime();
 			// save v alpha theta q
-			matdata(i, 25) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(0);
-			matdata(i, 26) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(1);
-			matdata(i, 27) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(2);
-			for (int j = 0; j < 21; j++) {
-				matdata(i, j + 1) = SimInstance1.Run_GetSubsystemOuput(0)(j);
-			}
-
+			matdata(i, 1) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(0);
+			matdata(i, 2) = SimInstance1.Run_GetSubsystemOuput(LTI_1.ID)(0);
+			matdata(i, 3) = SimInstance1.Run_GetSubsystemOuput(LTI_1.ID)(1);
+			matdata(i, 4) = SimInstance1.Run_GetSubsystemOuput(LTI_1.ID)(2);
+			matdata(i, 5) = SimInstance1.Run_GetSubsystemOuput(LTI_1.ID)(3);
+			matdata(i, 6) = SimInstance1.Run_GetSubsystemOuput(Sum_1.ID)(0);
+			//std::cout << "Sum block output: " << SimInstance1.Run_GetSubsystemOuput(Sum_1.ID)(0) << " \n ";
 			SimInstance1.Run_Update(extern_input);
 		}
 		matdata(N_steps, 0) = SimInstance1.Run_GetSystemTime();
-		for (int j = 0; j < 21; j++) {
-			matdata(N_steps, j + 1) = SimInstance1.Run_GetSubsystemOuput(0)(j);
-		}
-		// save v alpha theta q
-		matdata(N_steps, 25) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(0);
-		matdata(N_steps, 26) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(1);
-		matdata(N_steps, 27) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(2);
-
-		if (Recorder.SaveToMatFile(matdata, "linear_system_state.mat", "A")) {
+		matdata(N_steps, 1) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(0);
+		matdata(N_steps, 2) = SimInstance1.Run_GetSubsystemOuput(LTI_1.ID)(0);
+		matdata(N_steps, 3) = SimInstance1.Run_GetSubsystemOuput(LTI_1.ID)(1);
+		matdata(N_steps, 4) = SimInstance1.Run_GetSubsystemOuput(LTI_1.ID)(2);
+		matdata(N_steps, 5) = SimInstance1.Run_GetSubsystemOuput(LTI_1.ID)(3);
+		matdata(N_steps, 6) = SimInstance1.Run_GetSubsystemOuput(Sum_1.ID)(0);
+		if (Recorder.SaveToMatFile(matdata, "linear_system_state.mat", "Data")) {
 			std::cout << "successfuly save the data" << std::endl;
 		}
 		else {
