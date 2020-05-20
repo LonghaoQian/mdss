@@ -306,6 +306,15 @@ Sum::Sum(const SumParameter & param)
 	system_info.num_of_outputs = param_.input_dimensions;
 	output.resize(system_info.num_of_outputs);
 	output.setZero();
+	for (int i = 0; i < param_.num_of_inputs; i++) {
+		if (param_.sign_list(i) > 0) {
+			param_.sign_list(i) = 1.0;
+		}
+		else {
+			param_.sign_list(i) = -1.0;
+		}
+	}
+
 }
 
 void Sum::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
@@ -317,7 +326,7 @@ void Sum::OutputEquation(const double & t, const VectorXd & state, const VectorX
 {
 	// 
 	for (int i = 0; i < param_.num_of_inputs; i++) {
-		output += input.segment(i*param_.input_dimensions, param_.input_dimensions);
+		output += param_.sign_list(i)*input.segment(i*param_.input_dimensions, param_.input_dimensions);
 	}
 }
 
@@ -328,8 +337,18 @@ void Sum::IncrementState()
 
 void Sum::DisplayParameters()
 {
-	std::cout << "Input dimension is : " << param_.input_dimensions << std::endl;
-	std::cout << "Number of inputs is : " << param_.num_of_inputs << std::endl;
+	std::cout << "Input dimension is : " << param_.input_dimensions << '\n';
+	std::cout << "Number of inputs is : " << param_.num_of_inputs << '\n';
+	std::cout << "The sign list is : " << '\n';
+	for (int i = 0; i < param_.num_of_inputs; i++) {
+		std::cout << " Input # " << i << " is ";
+		if (param_.sign_list(i) > 0) {
+			std::cout << " + \n";
+		}
+		else {
+			std::cout << " - \n";
+		}
+	}
 }
 
 void Sum::DisplayInitialCondition()

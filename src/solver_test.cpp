@@ -7,20 +7,20 @@
 #include "MatlabIO.h"
 using std::iostream;
 
-#define DEBUG_RIGID_BODY
-//#define DEBUG_LINEAR
+//#define DEBUG_RIGID_BODY
+#define DEBUG_LINEAR
 //#define DEBUG_STIFF_MODEL
 //#define DEBUG_DISP
 int main()
 {
-	SolverConfig config1;
+	simulationcontrol::SolverConfig config1;
 	config1.eposilon = 0.00001;
 	config1.adaptive_step = false;
 	config1.frame_step = 0.02;
 	config1.mim_step = 0.005;
 	config1.start_time = 0.0;
-	config1.solver_type = RungeKuttaFamily::RUNGKUTTA45;
-	SimController SimInstance1(config1);
+	config1.solver_type = RungeKuttaFamily::DORMANDPRINCE;
+	simulationcontrol::SimController SimInstance1(config1);
 
 #ifdef DEBUG_RIGID_BODY
 	// debug using rigid body
@@ -37,7 +37,7 @@ int main()
 	rigid_1_IC.V_I << 0, 0, 0;
 	rigid_1_IC.X_I << 0, 0, 0;
 
-	source_sink::SignalGeneratorparameter para_sinewave_1;
+	source_sink::PeriodicWaveparameter para_sinewave_1;
 	para_sinewave_1.amplitude = 1.0;
 	para_sinewave_1.frequency = 0.5;
 	para_sinewave_1.num_of_channels = 3;
@@ -129,6 +129,128 @@ int main()
 
 
 #endif // DEBUG_RIGID_BODY
+
+
+#ifdef DEBUG_LINEAR
+
+	/*
+	A = [-3.8916 * 10 ^ -2 18.9920 - 32.139 0.0000;
+	-1.0285 * 10 ^ -3 - 0.64537 5.62290 * 10 ^ -3 1.0000;
+	0.0000 0.0000 0.0000 1.0000;
+	8.08470 * 10 ^ -5 - 0.77287 - 8.0979 * 10 ^ -4 - 0.52900];
+	B = [0; 0; 0; 0.010992*57.3];	
+	*/
+	LTIParameter lti_1;
+	LTIInitialCondition lti_1_IC;
+	lti_1.A.resize(4, 4);
+	lti_1.B.resize(4, 1);
+	lti_1.C.resize(4, 4);
+	lti_1.D.resize(4, 1);
+	lti_1.A << -3.8916 * pow(10, -2), 18.9920, -32.139, 0.0000,
+		-1.0285 * pow(10, -3), -0.64537, 5.62290 * pow(10, -3), 1.0000,
+		0.0000, 0.0000, 0.0000, 1.0000,
+		8.08470 * pow(10,-5), - 0.77287, - 8.0979 * pow(10,-4), - 0.52900;
+	lti_1.B << 0.0,
+		0.0,
+		0.0,
+		0.010992*57.3;
+	lti_1.C.setIdentity();
+	lti_1.D.setZero();
+	lti_1_IC.X_0.resize(4, 1);
+	lti_1_IC.X_0.setZero();
+
+	source_sink::PeriodicWaveparameter para_sinewave_1;
+	para_sinewave_1.amplitude = 1.0;
+	para_sinewave_1.frequency = 0.5;
+	para_sinewave_1.num_of_channels = 1;
+	para_sinewave_1.phase_shift = 0.0;
+	para_sinewave_1.waveshape = source_sink::SINE;
+
+	mathblocks::GainParameter gain_1_para;
+	gain_1_para.Mode = mathblocks::ElementWise;
+	gain_1_para.K.resize(1, 1);
+	gain_1_para.K(0, 0) = 2.0;
+	gain_1_para.num_of_inputs = 1;
+
+	mathblocks::SumParameter sum_1_para;
+
+	sum_1_para.input_dimensions = 1;
+	sum_1_para.num_of_inputs = 2;
+	sum_1_para.sign_list.resize(2);
+	sum_1_para.sign_list(0) = 1.0;
+	sum_1_para.sign_list(1) = -1.0;
+	subsystem_handle sinewave_1 = SimInstance1.AddSubSystem(para_sinewave_1);
+	subsystem_handle LTI_1 = SimInstance1.AddSubSystem(lti_1, lti_1_IC);
+	subsystem_handle Gain_1 = SimInstance1.AddSubSystem(gain_1_para);
+	subsystem_handle Sum_1 = SimInstance1.AddSubSystem(sum_1_para);
+	simulationcontrol::SIMCONNECTION Connection_LTI_1, Connection_Gain_1, Connection_Sum_1;
+
+	Connection_LTI_1.resize(1, 2);
+	Connection_Gain_1.resize(2, 2);
+
+	Connection_LTI_1(0, simulationcontrol::subsystemID) = Gain_1.ID;
+	Connection_LTI_1(0, simulationcontrol::outputportID) = 0;
+
+	Connection_Sum_1.resize(2, 2);
+	Connection_Sum_1(0, simulationcontrol::subsystemID) = sinewave_1.ID;
+	Connection_Sum_1(0, simulationcontrol::outputportID) = 0;
+
+	Connection_Sum_1(1, simulationcontrol::subsystemID) = LTI_1.ID;
+	Connection_Sum_1(1, simulationcontrol::outputportID) = 3;
+
+	Connection_Gain_1.resize(1, 2);
+	Connection_Gain_1(0, simulationcontrol::subsystemID) = Sum_1.ID;
+	Connection_Gain_1(0, simulationcontrol::outputportID) = 0;
+
+	SimInstance1.MakeConnection(LTI_1.ID, Connection_LTI_1);
+	SimInstance1.MakeConnection(Gain_1.ID, Connection_Gain_1);
+	SimInstance1.MakeConnection(Sum_1.ID, Connection_Sum_1);
+
+	bool flag = SimInstance1.PreRunProcess();
+	MatlabIO Recorder;
+	int N_steps = 500;
+
+	MatrixXd matdata;
+	matdata.resize(N_steps + 1, 7); // TIME 0 input  v alpha theta q 
+	matdata.setZero();// reset the buffer to zero
+
+	if (flag) { // if successful, run updates
+
+		VectorXd extern_input;
+		SimInstance1.ReshapeExternalInputVector(extern_input);
+		for (int i = 0; i < N_steps; i++)
+		{
+			matdata(i, 0) = SimInstance1.Run_GetSystemTime();
+			// save v alpha theta q
+			matdata(i, 25) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(0);
+			matdata(i, 26) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(1);
+			matdata(i, 27) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(2);
+			for (int j = 0; j < 21; j++) {
+				matdata(i, j + 1) = SimInstance1.Run_GetSubsystemOuput(0)(j);
+			}
+
+			SimInstance1.Run_Update(extern_input);
+		}
+		matdata(N_steps, 0) = SimInstance1.Run_GetSystemTime();
+		for (int j = 0; j < 21; j++) {
+			matdata(N_steps, j + 1) = SimInstance1.Run_GetSubsystemOuput(0)(j);
+		}
+		// save v alpha theta q
+		matdata(N_steps, 25) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(0);
+		matdata(N_steps, 26) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(1);
+		matdata(N_steps, 27) = SimInstance1.Run_GetSubsystemOuput(sinewave_1.ID)(2);
+
+		if (Recorder.SaveToMatFile(matdata, "linear_system_state.mat", "A")) {
+			std::cout << "successfuly save the data" << std::endl;
+		}
+		else {
+			std::cout << " failed save the data" << std::endl;
+		}
+	}
+	else {
+		std::cout << "Initialization failed, check subsystem connections" << std::endl;
+	}
+#endif
 
 #ifdef DEBUG_ALL
 	geographic::StandardAtmosphereParameter atm_block_para;

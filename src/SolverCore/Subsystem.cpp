@@ -123,7 +123,7 @@ double Subsystem::Solver_CalculateIncrement(const VectorXd & updatecoefficients1
 		// calculate relative error
 		VectorXd relative_error;
 		relative_error.resize(system_info.num_of_continuous_states);
-		for (int i = 0; i < system_info.num_of_continuous_states; i++)
+		for (unsigned int i = 0; i < system_info.num_of_continuous_states; i++)
 		{
 			if (abs(state(i)) > 1)// if this state is greater than 1, then normalize it to 1;
 			{

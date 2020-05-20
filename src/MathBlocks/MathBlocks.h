@@ -103,6 +103,7 @@ namespace mathblocks {
 	struct SumParameter {
 		int num_of_inputs;
 		int input_dimensions;
+		VectorXd sign_list;
 	};
 
 	class Sum :

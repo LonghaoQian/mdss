@@ -23,7 +23,10 @@ enum subsystem_type {
 	math_SATURATION,
 	math_SUM,
 	source_SINGALGENERATOR,
+	source_STEP,
+	source_RAMP
 };
+
 static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{aero_AROANGLE, "Aero angles block"},
 	{aero_AROFORCEMENT_1, "Aerodynamics Forces and Moments"},
@@ -39,7 +42,9 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{math_PRODUCT, "Product block"},
 	{math_SATURATION, "Satruation block"},
 	{math_SUM, "Summation block"},
-	{source_SINGALGENERATOR, "Signal Generator "}
+	{source_SINGALGENERATOR, "Signal Generator "},
+	{source_STEP, "Step block"},
+	{source_RAMP, "Ramp block"}
 };
 struct subsystem_handle {
 	subsystem_type type;
