@@ -19,7 +19,7 @@ int main()
 	config1.frame_step = 0.02;
 	config1.mim_step = 0.005;
 	config1.start_time = 0.0;
-	config1.solver_type = RungeKuttaFamily::RUNGKUTTA45;
+	config1.solver_type = RungeKuttaFamily::DORMANDPRINCE;
 	simulationcontrol::SimController SimInstance1(config1);
 
 #ifdef DEBUG_RIGID_BODY
@@ -180,15 +180,21 @@ int main()
 	sum_1_para.sign_list.resize(2);
 	sum_1_para.sign_list(0) = 1.0;
 	sum_1_para.sign_list(1) = -1.0;
+
+	mathblocks::GainParameter gain_2_para;
+	gain_2_para.Mode = mathblocks::ElementWise;
+	gain_2_para.K.resize(1, 1);
+	gain_2_para.K(0, 0) = 1.0;
+	gain_2_para.num_of_inputs = 1;
+
 	subsystem_handle sinewave_1 = SimInstance1.AddSubSystem(para_sinewave_1);
 	subsystem_handle LTI_1 = SimInstance1.AddSubSystem(lti_1, lti_1_IC);
 	subsystem_handle Gain_1 = SimInstance1.AddSubSystem(gain_1_para);
+	subsystem_handle Gain_2 = SimInstance1.AddSubSystem(gain_2_para);
 	subsystem_handle Sum_1 = SimInstance1.AddSubSystem(sum_1_para);
-	simulationcontrol::SIMCONNECTION Connection_LTI_1, Connection_Gain_1, Connection_Sum_1;
+	simulationcontrol::SIMCONNECTION Connection_LTI_1, Connection_Gain_1, Connection_Sum_1, Connection_Gain_2;
 
 	Connection_LTI_1.resize(1, 2);
-	Connection_Gain_1.resize(2, 2);
-
 	Connection_LTI_1(0, simulationcontrol::subsystemID) = Gain_1.ID;
 	Connection_LTI_1(0, simulationcontrol::outputportID) = 0;
 
@@ -196,17 +202,21 @@ int main()
 	Connection_Sum_1(0, simulationcontrol::subsystemID) = sinewave_1.ID;
 	Connection_Sum_1(0, simulationcontrol::outputportID) = 0;
 
-	Connection_Sum_1(1, simulationcontrol::subsystemID) = LTI_1.ID;
-	Connection_Sum_1(1, simulationcontrol::outputportID) = 3;
+	Connection_Sum_1(1, simulationcontrol::subsystemID) = Gain_2.ID;
+	Connection_Sum_1(1, simulationcontrol::outputportID) = 0;
 
 	Connection_Gain_1.resize(1, 2);
-	Connection_Gain_1(0, simulationcontrol::subsystemID)  = LTI_1.ID;  //=Sum_1.ID;
-	Connection_Gain_1(0, simulationcontrol::outputportID) = 3;
+	Connection_Gain_1(0, simulationcontrol::subsystemID)  = Sum_1.ID;
+	Connection_Gain_1(0, simulationcontrol::outputportID) = 0;
+
+	Connection_Gain_2.resize(1, 2);
+	Connection_Gain_2(0, simulationcontrol::subsystemID) = LTI_1.ID; 
+	Connection_Gain_2(0, simulationcontrol::outputportID) = 3;
 
 	SimInstance1.MakeConnection(LTI_1.ID, Connection_LTI_1);
 	SimInstance1.MakeConnection(Gain_1.ID, Connection_Gain_1);
 	SimInstance1.MakeConnection(Sum_1.ID, Connection_Sum_1);
-
+	SimInstance1.MakeConnection(Gain_2.ID, Connection_Gain_2);
 	bool flag = SimInstance1.PreRunProcess();
 	MatlabIO Recorder;
 	int N_steps = 500;

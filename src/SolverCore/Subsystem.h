@@ -48,23 +48,24 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 };
 struct subsystem_handle {
 	subsystem_type type;
-	int Layer;// determine 
-	int ID;
+	int ID;			// the index this subsystem is assigned after the addsubsystem function
 	std::string label_;
 	bool isParameterOK;
 };
 // subsystem info for the solver
 struct subsystem_info {
-	unsigned int num_of_continuous_states;
-	unsigned int num_of_inputs;
-	unsigned int num_of_external_inputs;
-	unsigned int num_of_outputs;
-	bool system_parameter_ok;
-	MatrixX2i input_connection;
-	bool NO_CONTINUOUS_STATE;
-	bool DIRECT_FEED_THROUGH;
-	subsystem_type type;
-	std::string label_;
+	unsigned int num_of_continuous_states; // number of continunous states, for direct feed-through blocks, this should be 0
+	unsigned int num_of_inputs;            // number of inputs for the system
+	unsigned int num_of_external_inputs;   // number of external inputs for the system
+	unsigned int num_of_outputs;           // number of outputs for the system
+	bool system_parameter_ok;              // wether the system parameter has been correctly set
+	MatrixX2i input_connection;            // the input connection matrix, where each row represents 
+	bool NO_CONTINUOUS_STATE;              // a bool state repes wether continous state exsits
+	bool DIRECT_FEED_THROUGH;              // a bool state 
+	bool EXTERNAL_CONNECTION_ONLY;         // a bool state for we
+	subsystem_type type;                   // the type of the system, defined in subsystem_type
+	std::string label_;	                   // an optional name given to the subsystem. 
+	std::map<std::string, unsigned int> input_label; // an optional map to give each input a name
 };
 class Subsystem
 {

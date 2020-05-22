@@ -66,6 +66,7 @@ namespace simulationcontrol {
 		double current_time;
 		int num_of_steps_per_cycle;
 		/*--------------------------------System Topology------------------------------*/
+		vector<bool> temp_all_susystems;// the a list of whether the subsystem is ready for output update
 		vector<int> output_sequence;
 		vector<int> non_direct_feedthrough_index;
 		vector<VectorXi> algebraric_loops;
@@ -74,6 +75,8 @@ namespace simulationcontrol {
 		VectorXd updatecoefficient2;
 		int num_of_cycles_per_step;
 		int num_of_closed_loops;
+		int number_of_not_ready;// number of not ready subsystems for output sequence
+		bool DetermineOutputSequenceDFS(int level, unsigned int base_index);
 		bool RunTopologyAnalysis();
 		string GetSystemTypeFromID(subsystem_type type);
 		subsystem_handle CreateSystemHandle(const subsystem_info& info, const vector<unique_ptr<Subsystem>>& subsystem_list);

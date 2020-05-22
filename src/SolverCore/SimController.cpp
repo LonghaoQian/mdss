@@ -335,7 +335,7 @@ namespace simulationcontrol {
 				subsystem_list[output_sequence[i]]->UpdateOutput(cycle_time, current_stepsize);
 			}
 		}
-		if (solver_config.adaptive_step)
+		if (solver_config.adaptive_step && solver_config.solver_type == RungeKuttaFamily::DORMANDPRINCE)
 		{
 			double average_error = error_cycle / num_of_continuous_states;
 
@@ -571,51 +571,92 @@ namespace simulationcontrol {
 		}
 		return flag;
 	}
-
+	bool SimController::DetermineOutputSequenceDFS(int level, unsigned int index_now) {
+		if (level > number_of_not_ready) // if the layer goes beyond number of total 
+		{
+			cout << "PARSING ERROR EXISTS, UPDATE OUTPUT SEQUENCE FAILED!" << endl;
+				return false;
+		}
+		bool only_connected_to_ready_system = true;
+		int input_not_ready_system = 0;
+		for (int j = 0; j < num_of_subsystems; j++) {
+			if (connectivity(j, index_now) > 0) {
+				if (!temp_all_susystems[j]) {
+					only_connected_to_ready_system = false;// found a connection with false notation
+					input_not_ready_system = j;// and record the index of the not ready subsystem from which the input port is connected
+					break;
+				}
+			}
+		}
+		if (only_connected_to_ready_system) {
+			// if only connected to ready_system, them update the output sequence, and set the index on the templist to true
+			output_sequence.push_back(index_now);
+			temp_all_susystems[index_now] = true;
+			return true;
+		}
+		else {
+			// if there is connection to not_ready_system, 
+			DetermineOutputSequenceDFS(level + 1, input_not_ready_system);// then the input_not_ready_system is used as the index_now for the next layer
+		}
+	}
+	/*
+	The topology analysis function:
+	1. determine whether an algbraic loop exits in the system 
+	2. if no algbraic loop exits, determine the block output update sequence based on connection
+	*/
 	bool SimController::RunTopologyAnalysis()
 	{
 		bool isAlegraricloopexist = false;
 		// determine all the closed loops in the system
 		TopologyAnalysis system_topology(connectivity);
 		num_of_closed_loops = system_topology.RunSimulationTopologyAnalysis();// get the loop results from DFS
-		output_sequence.clear();
-		non_direct_feedthrough_index.clear();
-		vector<bool> temp_all_susystems;
-		for (int i = 0; i < num_of_subsystems; i++)
-		{
+		output_sequence.clear();				// the order on which the solver uploads the output of each subsystem
+		non_direct_feedthrough_index.clear();	// this stores all the indexes for non direct feedthrough blocks
+		temp_all_susystems.clear();		// this stores wether a subsystem in the output sequence is ready
+		number_of_not_ready = 0;
+		/*
+		step 1. if a direct feed-through block only gets external input, then override it to a non-direct feedthrough block
+		*/
+		for (int i = 0; i < num_of_subsystems; i++) {
 			temp_all_susystems.push_back(false);
 			bool inputconnected = false;
-			for (int j = 0; j < num_of_subsystems; j++)// override the direct feedback info if the system is not connected to any other systems
-			{
-				if (connectivity(j, i) > 0)// input is connected
+			/*
+			scan through the connectivity matrix to see if the block is unconnected
+			*/
+			for (int j = 0; j < num_of_subsystems; j++) {
+				if (connectivity(j, i) > 0)// if input is connected, then break the loop and 
 				{
-					inputconnected = true;
+					inputconnected = true; 
 					break;
 				}
-
 			}
-			if (!inputconnected)
+			if (!inputconnected) // if the system is unconnected, then all its inputs are external and is overritten to a non direct feed-through block
 			{
 				subsystem_list[i]->OverrideDirectFeedThroughFlag(false);// if not connected to any other subsystems, override the DIRECT_FEED_THROUGH to false
 			}
-
 		}
+		/*
+		step 2. set the first segement of output seqence to non non-direct feed-through block
+		*/
 		for (int i = 0; i < num_of_subsystems; i++)// first segement is the non-direct feed-through block
 		{
 			if (!subsystem_list[i]->GetSystemInfo().DIRECT_FEED_THROUGH)
 			{
 				output_sequence.push_back(i);
 				non_direct_feedthrough_index.push_back(i);
-				temp_all_susystems[i] = true;// set true if system is a non-direct feedback system
+				temp_all_susystems[i] = true;// set true if system is a non-direct feedback system (ready for outout sequence)
+			}
+			else {
+				number_of_not_ready++; // if the system is not ready, increment the counter by 1
 			}
 		}
-		/*--------------------------------determine the algebraric loop-----------------------------------------*/
+		/* step 3. determine whether an algebraric loop exits*/
 		algebraric_loops.clear();
 		if (num_of_closed_loops > 0)// check the existence of algebraric loops
 		{
 			for (int i = 0; i < num_of_closed_loops; i++)
 			{
-				// determine whether the ith closed loop 
+				// determine whether the ith closed loop  only contains direct feed-through blocks
 				bool isnondirectfeedthrough = false;
 				for (int j = 0; j < system_topology.GetLoopIndex(i).size(); j++)
 				{
@@ -640,59 +681,34 @@ namespace simulationcontrol {
 
 			}
 		}
-		/*----------------------------------------------------------------------------------------*/
+		/* step 4. if no algbraric loop exists, then determine the output update order*/
 		if (isAlegraricloopexist == false)// if no algebraric loop exists, then determine the output update sequence
 		{
 			if (output_sequence.size() < num_of_subsystems)// there are direct feed-through blocks
 			{
-				int node_left = num_of_subsystems - output_sequence.size();
 				int counter = 0;
-				while ((node_left > 0) && (counter < num_of_subsystems))
+				bool not_ready_subsystem_exists = true;
+				while (not_ready_subsystem_exists && (counter < num_of_subsystems))
 				{
-					for (int i = 0; i < num_of_subsystems; i++)
-					{
-						if (temp_all_susystems[i]) continue;
-						bool flag = true;
-						for (int j = 0; j < num_of_subsystems; j++)
-						{
-							if (connectivity(j, i) > 0)
-							{
-								if (temp_all_susystems[j])
-								{
-									continue; // found a connectioin with true notation
-								}
-								else {
-									flag = false;// found a connection with false notation
-								}
-							}
-
-
-						}
-						if (flag = false)
-						{
-							continue;
-						}
-						else {
-							output_sequence.push_back(i);// now the system receiving input is a non-direct feedback system
-							temp_all_susystems[i] = true;// now the system receiving input is a non-direct feedback system
-							node_left--;
-						}
-
-
+					auto it = find(temp_all_susystems.begin(), temp_all_susystems.end(), false); // scan the temp list for not-ready subsystem
+					if (it != temp_all_susystems.end()) {
+						// if there is not ready subsystem, them determine whether is it only connected to ready subsystem
+						int index_base = distance(temp_all_susystems.begin(), it); // then the index is used as the base for the DFS
+						DetermineOutputSequenceDFS(0, index_base);
+					}
+					else {
+						not_ready_subsystem_exists = false; // if all the subsystems are ready exit the while loop
 					}
 					counter++;
 				}
 			}
+			// after the output sequence is determined, show it. 
 			cout << "The output sequence is : " << endl;
-			for (int k = 0; k < output_sequence.size(); k++)
-			{
-				cout << output_sequence[k] << " -> ";
-
+			for (int k = 0; k < output_sequence.size(); k++) {
+				cout << output_sequence[k] << " -> "; // TO DO: display the output sequence
 			}
 			cout << "END" << endl;
 		}
-
-
 		return isAlegraricloopexist;
 	}
 
