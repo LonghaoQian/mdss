@@ -592,12 +592,12 @@ namespace simulationcontrol {
 			// if only connected to ready_system, them update the output sequence, and set the index on the templist to true
 			output_sequence.push_back(index_now);
 			temp_all_susystems[index_now] = true;
-			return true;
 		}
 		else {
 			// if there is connection to not_ready_system, 
 			DetermineOutputSequenceDFS(level + 1, input_not_ready_system);// then the input_not_ready_system is used as the index_now for the next layer
 		}
+		return true;
 	}
 	/*
 	The topology analysis function:
