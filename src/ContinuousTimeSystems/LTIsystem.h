@@ -61,6 +61,7 @@ namespace linearsystem {
 	private:
 		TransferFunctionParameter parameter;
 		MatrixXd A, B, C, D;
+		void SystemMatricesFormStrictlyProperTF(const VectorXd& Numerator, const VectorXd& Denomiator);
 	public:
 		TransferFunction();
 		TransferFunction(const TransferFunctionParameter& parameter);

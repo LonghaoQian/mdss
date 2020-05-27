@@ -7,10 +7,22 @@ using std::vector;
 using namespace Eigen;
 typedef Matrix<int, Dynamic, 2> MatrixX2i;
 
+enum subsystem_category {
+	aero = 0,
+	continous,
+	discontinous,
+	dynamics,
+	geographic,
+	math,
+	source,
+	utility,
+};
+
 enum subsystem_type {
 	aero_AROANGLE,
 	aero_AROFORCEMENT_1,
 	continous_INTEGRATOR,
+	continous_TRANSFERFUNCTION,
 	continous_LTI,
 	continous_RIGIDBODY,
 	continous_VARIABLEMASS,
@@ -26,6 +38,10 @@ enum subsystem_type {
 	source_STEP,
 	source_RAMP
 };
+
+
+static const std::map<subsystem_type, std::string> subsystems[7];
+
 
 static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{aero_AROANGLE, "Aero angles block"},
@@ -64,6 +80,7 @@ struct subsystem_info {
 	bool DIRECT_FEED_THROUGH;              // a bool state 
 	bool EXTERNAL_CONNECTION_ONLY;         // a bool state for we
 	subsystem_type type;                   // the type of the system, defined in subsystem_type
+	subsystem_category category;            // the category of the system. 
 	std::string label_;	                   // an optional name given to the subsystem. 
 	std::map<std::string, unsigned int> input_label; // an optional map to give each input a name
 };

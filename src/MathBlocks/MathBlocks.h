@@ -128,4 +128,10 @@ namespace mathblocks {
 
 
 
+	class Lookup1D :
+		public Subsystem 
+	{
+	private:
+	};
+
 }
