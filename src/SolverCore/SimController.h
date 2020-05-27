@@ -3,7 +3,7 @@
 #include "Subsystem.h"
 #include "TopologyAnalysis.h"
 // Include all subsystems
-#include "LTIsystem.h"
+#include "LinearSystem.h"
 #include "SignalGenerator.h"
 #include "RigidBody.h"
 #include "StandardAtmosphere.h"
@@ -27,6 +27,14 @@ namespace simulationcontrol {
 		external = -1,
 		subsystemID = 0,
 		outputportID = 1,
+	};
+
+	struct DataLogging {
+		bool uselogging;
+		string filename;
+		int max_time_step;
+		bool include_time_stamp;
+		Matrix<int, Eigen::Dynamic, 2> portlist;
 	};
 
 	struct SolverConfig {
@@ -82,8 +90,11 @@ namespace simulationcontrol {
 		subsystem_handle CreateSystemHandle(const subsystem_info& info, const vector<unique_ptr<Subsystem>>& subsystem_list);
 	public:
 		/* A list of all overloadings of AddSubsystem(...) for pre-defined types of models*/
-		// continuous state
-		subsystem_handle AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC);
+		// Linear system
+		subsystem_handle AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC);
+		subsystem_handle AddSubSystem(const linearsystem::IntegratorParameter& parameters, const linearsystem::IntegratorInitialCondition& IC);
+		subsystem_handle AddSubSystem(const linearsystem::TransferFunctionParameter& parameters);
+		// Dynamics 
 		subsystem_handle AddSubSystem(const RigidBodyParameter& parameters, const RigidBodyCondition& IC);
 		// math blocks
 		subsystem_handle AddSubSystem(const mathblocks::GainParameter& parameters);

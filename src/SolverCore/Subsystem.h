@@ -8,14 +8,14 @@ using namespace Eigen;
 typedef Matrix<int, Dynamic, 2> MatrixX2i;
 
 enum subsystem_category {
-	aero = 0,
-	continous,
-	discontinous,
-	dynamics,
-	geographic,
-	math,
-	source,
-	utility,
+	AERODYNAMICS = 0,
+	LINEARSYSTEM,
+	DISCONTINUOUS,
+	DYNAMICS,
+	GEOGRAPHIC,
+	MATH,
+	SOURCE,
+	UTILITY,
 };
 
 enum subsystem_type {

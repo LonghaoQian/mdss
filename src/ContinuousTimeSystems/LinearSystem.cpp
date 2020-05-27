@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "LTIsystem.h"
+#include "LinearSystem.h"
 namespace linearsystem {
 	LTIsystem::LTIsystem()
 	{}
@@ -118,7 +118,7 @@ namespace linearsystem {
 		state = IC.X_0;// assign the initial condition to the state
 		parameter = parameter_;
 		// sets the system type and category 
-		system_info.category = continous;
+		system_info.category = LINEARSYSTEM;
 		system_info.type = continous_INTEGRATOR;
 		// set ready_to_run to true since there is not parameter check for this subsystem
 		ready_to_run = true;
@@ -172,23 +172,44 @@ namespace linearsystem {
 	{
 	}
 
-	void TransferFunction::SystemMatricesFormStrictlyProperTF(const VectorXd& Numerator, const VectorXd& Denominator)
+	void TransferFunction::SystemMatricesFormStrictlyProperTF(const VectorXd& Numerator, 
+															  const VectorXd& Denominator)
 	{
-		// use the control canonical form. reference : https://paginas.fe.up.pt/~mprocha/CL/English%20CL-5.pdf
-		auto order_of_numerator = Numerator.size();
-		auto order_of_denominator = Denominator.size();
+		// use the controller  canonical form. reference : https://paginas.fe.up.pt/~mprocha/CL/English%20CL-5.pdf
+		// the order is number of elements - 1
+		int order_of_numerator = Numerator.size()-1;
+		int order_of_denominator = Denominator.size()-1;
+		cout << "order of numerator is :"<< order_of_numerator << endl;
+		cout <<  "order of denominator is :" << order_of_denominator << endl;
+
+		cout << Numerator << endl;
+		cout << Denominator << endl;
+
 		VectorXd alpha;
 		VectorXd beta;
-		alpha.resize(order_of_denominator - 1);
-		beta.resize(order_of_numerator);
-		for (int i = 0; i < order_of_denominator - 1; i++) {
-			A(0, i) = - alpha(order_of_denominator - 1 - i);
-			
+		alpha.resize(order_of_denominator);
+		beta.resize(order_of_denominator);
+		alpha.setZero();
+		beta.setZero();
+		for (int i = 0; i < order_of_denominator; i++) {
+			alpha(i) = Denominator(order_of_denominator - i) / Denominator(0);
 		}
-		A.block(1, 0, order_of_denominator - 1, order_of_denominator - 1) = MatrixXd::Identity(order_of_denominator - 1, order_of_denominator - 1);
+
+		for (int i = 0; i < order_of_numerator+1; i++) {
+			beta(i) = Numerator(order_of_numerator-i)/ Denominator(0);
+		}
+		cout << "-------" << endl;
+		cout << alpha << endl;
+		cout << "-------" << endl;
+		cout << beta << endl;
+
+		for (int i = 0; i < order_of_denominator; i++) {
+			A(0, i) = - alpha(order_of_denominator - i -1);
+		}
+		A.block(1, 0, order_of_denominator-1, order_of_denominator-1) = MatrixXd::Identity(order_of_denominator-1, order_of_denominator-1);
 		B(0, 0) = 1.0;
-		for (int i = 0; i < order_of_numerator; i++) {
-			C(0, i) = -beta(order_of_numerator - i);
+		for (int i = 0; i < order_of_denominator; i++) {
+			C(0, i) = beta(order_of_denominator - i -1);
 		}
 	}
 
@@ -202,26 +223,27 @@ namespace linearsystem {
 		system_info.EXTERNAL_CONNECTION_ONLY = false;
 		parameter = parameter_;
 		// use minial realization to get the state space model
-		auto order_of_numerator = parameter_.Numerator.size();
-		auto order_of_denominator  = parameter_.Denominator.size();
+		int order_of_numerator = parameter_.Numerator.size() - 1;
+		int order_of_denominator  = parameter_.Denominator.size() - 1;
 		if (order_of_numerator > order_of_denominator) {
 			// not proper 
 			ready_to_run = false;
 		}
 		else {
+			ready_to_run = true;
 			// resize the matrices first
-			A.resize(order_of_denominator - 1, order_of_denominator - 1);
-			B.resize(order_of_denominator - 1, 1);
-			C.resize(1, order_of_denominator - 1);
+			A.resize(order_of_denominator, order_of_denominator);
+			B.resize(order_of_denominator, 1);
+			C.resize(1, order_of_denominator);
 			D.resize(1, 1);
 			// initialize them as zero matrices
 			A.setZero();
 			B.setZero();
 			C.setZero();
 			D.setZero();
-			// if it it proper
+			// if it is proper
 			if (order_of_numerator < order_of_denominator) {
-				// if the order of the numerator is strictly less than the order of the denominator
+				// if the transfer function is strctly proper
 				SystemMatricesFormStrictlyProperTF(parameter_.Numerator, parameter_.Denominator);
 				system_info.DIRECT_FEED_THROUGH = false;
 			}
@@ -230,12 +252,11 @@ namespace linearsystem {
 				D(0, 0) = parameter_.Numerator(0) / parameter_.Denominator(0);
 				system_info.DIRECT_FEED_THROUGH = true;
 				VectorXd Num_Fac;//
-				Num_Fac.resize(parameter_.Numerator.size()-1);
+				Num_Fac.resize(order_of_denominator);
 
-				for (int i = 0; i < parameter_.Numerator.size() - 1; i++) {
-
+				for (int i = 0; i < order_of_denominator; i++) {
+					Num_Fac(i) = parameter_.Numerator(i+1) - D(0, 0) * parameter_.Denominator(i+1);
 				}
-
 				SystemMatricesFormStrictlyProperTF(Num_Fac, parameter_.Denominator);
 			}
 		}
@@ -261,7 +282,35 @@ namespace linearsystem {
 	void TransferFunction::DisplayParameters()
 	{
 		cout << "---------------------" << endl;
-		cout << "The transfer function is:" << endl;
+		cout << "The transfer function entered is: \n";
+
+		int num_1 = parameter.Numerator.size();
+		int dem_1 = parameter.Denominator.size();
+
+		for (int i = 0; i < num_1 -1; i++) {
+			cout << parameter.Numerator(i) << " s^(" << num_1 - 1 - i << ") + ";
+		}
+		cout << parameter.Numerator(num_1 - 1) << endl;
+		cout << "---------------------" << endl;
+		for (int j = 0; j < dem_1 - 1; j++) {
+			cout << parameter.Denominator(j) << " s^(" << dem_1 - 1 - j << ") + ";
+		}
+		cout << parameter.Denominator(dem_1 - 1) << endl;
+		if (ready_to_run) {
+			cout << " The cooresponding state space model is: " << endl;
+			cout << " A: " << endl;
+			cout << A << endl;
+			cout << " B: "<< endl;
+			cout << B << endl;
+			cout << " C: " << endl;
+			cout << C << endl;
+			cout << " D: " << endl;
+			cout << D << endl;
+		}
+		else {
+			cout << " Incorrect transfer function coefficients, check the numerator order \n ";
+		}
+
 	}
 
 	void TransferFunction::DisplayInitialCondition()

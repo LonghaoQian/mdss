@@ -140,8 +140,26 @@ int main()
 	8.08470 * 10 ^ -5 - 0.77287 - 8.0979 * 10 ^ -4 - 0.52900];
 	B = [0; 0; 0; 0.010992*57.3];	
 	*/
-	LTIParameter lti_1;
-	LTIInitialCondition lti_1_IC;
+	linearsystem::TransferFunctionParameter tf_1_para;
+
+	tf_1_para.Denominator.resize(6);
+	tf_1_para.Numerator.resize(6);
+	tf_1_para.Numerator(0) = 0.23;
+	tf_1_para.Numerator(1) = 0.35;
+	tf_1_para.Numerator(2) = 0.32;
+	tf_1_para.Numerator(3) = -0.45;
+	tf_1_para.Numerator(4) = 0.2;
+	tf_1_para.Numerator(5) = 1.0;
+
+	tf_1_para.Denominator(0) = 2.0;
+	tf_1_para.Denominator(1) = 0.29;
+	tf_1_para.Denominator(2) = -0.0082;
+	tf_1_para.Denominator(3) = 3.0;
+	tf_1_para.Denominator(4) = 26.0;
+	tf_1_para.Denominator(5) = 0.1;
+
+	linearsystem::LTIParameter lti_1;
+	linearsystem::LTIInitialCondition lti_1_IC;
 	lti_1.A.resize(4, 4);
 	lti_1.B.resize(4, 1);
 	lti_1.C.resize(4, 4);
@@ -186,7 +204,7 @@ int main()
 	gain_2_para.K.resize(1, 1);
 	gain_2_para.K(0, 0) = 1.0;
 	gain_2_para.num_of_inputs = 1;
-
+	subsystem_handle tf_1 = SimInstance1.AddSubSystem(tf_1_para);
 	subsystem_handle sinewave_1 = SimInstance1.AddSubSystem(para_sinewave_1);
 	subsystem_handle LTI_1 = SimInstance1.AddSubSystem(lti_1, lti_1_IC);
 	subsystem_handle Gain_1 = SimInstance1.AddSubSystem(gain_1_para);

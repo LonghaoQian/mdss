@@ -12,7 +12,7 @@ namespace simulationcontrol {
 
 
 
-	subsystem_handle SimController::AddSubSystem(const LTIParameter& parameters, const  LTIInitialCondition& IC)
+	subsystem_handle SimController::AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC)
 	{
 		/* Logic:
 		1. push a pointer into subsystem_list
@@ -22,7 +22,29 @@ namespace simulationcontrol {
 		5. update the connnectivity matrix
 		*/
 		subsystem_info system_info;
-		subsystem_list.emplace_back(new LTIsystem(parameters, IC));
+		subsystem_list.emplace_back(new linearsystem::LTIsystem(parameters, IC));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	subsystem_handle SimController::AddSubSystem(const linearsystem::IntegratorParameter & parameters, const linearsystem::IntegratorInitialCondition & IC)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new linearsystem::Integrator(parameters, IC));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	subsystem_handle SimController::AddSubSystem(const linearsystem::TransferFunctionParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new linearsystem::TransferFunction(parameters));
 		system_info = subsystem_list.back()->GetSystemInfo();
 		// update number of subsystems
 		num_of_subsystems = subsystem_list.size();
