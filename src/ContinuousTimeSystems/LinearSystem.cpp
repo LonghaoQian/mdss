@@ -179,11 +179,6 @@ namespace linearsystem {
 		// the order is number of elements - 1
 		int order_of_numerator = Numerator.size()-1;
 		int order_of_denominator = Denominator.size()-1;
-		cout << "order of numerator is :"<< order_of_numerator << endl;
-		cout <<  "order of denominator is :" << order_of_denominator << endl;
-
-		cout << Numerator << endl;
-		cout << Denominator << endl;
 
 		VectorXd alpha;
 		VectorXd beta;
@@ -198,10 +193,6 @@ namespace linearsystem {
 		for (int i = 0; i < order_of_numerator+1; i++) {
 			beta(i) = Numerator(order_of_numerator-i)/ Denominator(0);
 		}
-		cout << "-------" << endl;
-		cout << alpha << endl;
-		cout << "-------" << endl;
-		cout << beta << endl;
 
 		for (int i = 0; i < order_of_denominator; i++) {
 			A(0, i) = - alpha(order_of_denominator - i -1);
@@ -219,6 +210,8 @@ namespace linearsystem {
 
 	TransferFunction::TransferFunction(const TransferFunctionParameter & parameter_)
 	{
+		system_info.category = LINEARSYSTEM;
+		system_info.type = continous_TRANSFERFUNCTION;
 		system_info.NO_CONTINUOUS_STATE = false;
 		system_info.EXTERNAL_CONNECTION_ONLY = false;
 		parameter = parameter_;
@@ -259,6 +252,16 @@ namespace linearsystem {
 				}
 				SystemMatricesFormStrictlyProperTF(Num_Fac, parameter_.Denominator);
 			}
+			state.resize(order_of_denominator);// assign the initial condition to the state
+			state.setZero();
+			// determine the size of the system
+			system_info.num_of_continuous_states = order_of_denominator;
+			system_info.num_of_inputs = 1;
+			system_info.num_of_outputs = 1;
+			// initialize state memeory
+			state.resize(system_info.num_of_continuous_states);
+			output.resize(system_info.num_of_outputs);
+			system_info.input_connection.resize(system_info.num_of_inputs, 2);
 		}
 	}
 

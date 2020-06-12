@@ -8,6 +8,9 @@ namespace simulationcontrol {
 		current_stepsize = solver_config.frame_step;
 		num_of_cycles_per_step = 1; // set the number of cycles per step to 1 as initial condition
 		current_time = solver_config.start_time;
+		if (solver_config.loggingconfig.uselogging) {
+			loggingdata.open(solver_config.loggingconfig.filename,std::ios::trunc);// overwrite exsiting file
+		}
 	}
 
 
@@ -207,6 +210,10 @@ namespace simulationcontrol {
 
 	int SimController::Run_Update(const VectorXd& extern_input)
 	{
+		/*------------ log data ---------------------------------------*/		
+		if (solver_config.loggingconfig.uselogging) {
+			LogRequestedData();
+		}
 		int flag = 0;
 		/*Logic
 		1. update the external input to the external_input butter
@@ -399,8 +406,42 @@ namespace simulationcontrol {
 		return subsystem_list[system_ID]->GetOutput();
 	}
 
+	bool SimController::DefineDataLogging(const unsigned int output_system_ID, const unsigned int output_port_ID, string tag)
+	{
+		bool flag = false;
+		if (output_system_ID > num_of_subsystems)
+		{
+			cout << " Logger defnition error: The total number of subsystem is: " << num_of_subsystems << endl;
+			cout << " while the output system ID is (system_ID<number of subsystem)" << output_system_ID << endl;
+		}
+		else {
+			if (output_port_ID < subsystem_list[output_system_ID]->GetSystemInfo().num_of_outputs) {
+				Matrix<int, 1, 2> temp_port;
+				temp_port(subsystemID)  = output_system_ID;
+				temp_port(outputportID) = output_port_ID;
+				logportlist.push_back(temp_port);
+				logtaglist.push_back(tag);
+				flag = true;
+			}
+			else {
+				cout << "Logger defnition error: The requested port ID #"<< output_port_ID <<" is larger than the number of outputs of the system # " << output_system_ID << endl;
+			}
+
+		}
+		return flag;
+	}
+
 	int SimController::PostRunProcess()
 	{
+		std::cout << "Calculationi Finished " << std::endl;
+		// display some logging info after simulation
+		if (solver_config.loggingconfig.uselogging) {
+			if (loggingdata.is_open()) {
+				LogRequestedData();// log the final frame of simulation
+				std::cout << "Data has been logged! " << std::endl;
+				loggingdata.close();
+			}
+		}// close file
 		return 0;
 	}
 
@@ -579,6 +620,17 @@ namespace simulationcontrol {
 				// then update output
 				subsystem_list[output_sequence[i]]->UpdateOutput(solver_config.start_time, 0);
 			}
+			// push the initial condition into the logger
+			if (solver_config.loggingconfig.uselogging) {
+				total_number_log = logportlist.size();
+				if (loggingdata.is_open()) {// insert tag as the first row
+					loggingdata << "t";
+					for (int i = 0; i < total_number_log; i++) {
+						loggingdata << "XX" << logtaglist[i];
+					}
+					loggingdata << "\n";
+				}
+			}
 		}
 		else {
 
@@ -752,7 +804,26 @@ namespace simulationcontrol {
 		handle.label_ = info.label_;
 		handle.type = info.type;
 		handle.ID = subsystem_list.size() - 1;
+		if (subsystem_list.back()->GetSystemInfo().num_of_inputs > 0)
+		{
+			handle.input_connection_list.resize(subsystem_list.back()->GetSystemInfo().num_of_inputs,2); // resize and initialize the coonection matrix
+			for (int i = 0; i < subsystem_list.back()->GetSystemInfo().num_of_inputs; i++) {
+				handle.input_connection_list(i, simulationcontrol::subsystemID) = simulationcontrol::external;
+				handle.input_connection_list(i, simulationcontrol::outputportID) = 0;
+			}
+		}
 		return  handle;
+	}
+
+	void SimController::LogRequestedData()
+	{
+		if (loggingdata.is_open()) {
+			loggingdata << Run_GetSystemTime();
+			for (int i = 0; i < total_number_log; i++) {
+				loggingdata << "XX" << Run_GetSubsystemOuput(logportlist[i](subsystemID))(logportlist[i](outputportID));
+			}
+			loggingdata << "\n";
+		}
 	}
 
 	bool SimController::GetExternalInputs(const VectorXd & extern_input)

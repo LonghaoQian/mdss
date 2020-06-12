@@ -33,6 +33,34 @@ output :
 #include "Subsystem.h"
 #include "UtilityFunctions.h"
 namespace aero {
+
+	enum AeroAngleInput {
+		rho = 0,
+		soundspeed,
+		Vbx,
+		Vby,
+		Vbz,
+		p,
+		q,
+		r,
+		Ab_x,
+		Ab_y, 
+		Ab_z 
+	};
+
+	enum AeroAngleOutput {
+		TAS = 0,
+		MachNumber,
+		alpha,
+		beta,
+		dynamic_pressure,
+		alpha_dot_bar,
+		beta_dot_bar,
+		p_bar,
+		q_bar,
+		r_bar
+	};
+
 	struct AeroAngleParameter {
 		double min_airspeed_;
 		double b_;

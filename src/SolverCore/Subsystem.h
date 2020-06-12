@@ -67,6 +67,7 @@ struct subsystem_handle {
 	int ID;			// the index this subsystem is assigned after the addsubsystem function
 	std::string label_;
 	bool isParameterOK;
+	MatrixX2i input_connection_list;
 };
 // subsystem info for the solver
 struct subsystem_info {

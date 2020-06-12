@@ -126,10 +126,76 @@ namespace mathblocks {
 		~Sum();
 	};
 
+	enum TrigonometryType{
+		sin = 0,
+		cos,
+		tan,
+		cot,
+		asin,
+		acos,
+		atan,
+		acot,
+		atan2
+	};
 
+	struct TrigonometryParameter {
+		int num_of_inputs;
+		TrigonometryType type;
+	};
+
+	class TrigonometricFunction :
+		public Subsystem
+	{
+	private:
+			TrigonometryParameter para_;
+	public:
+		TrigonometricFunction();
+		TrigonometricFunction(const TrigonometryParameter& param);
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~TrigonometricFunction();
+	};
+
+	enum SpecialFunctionType {
+		ln = 0,
+		log10,
+		exp,
+		pow
+	};
+
+	class SpecialFunction :
+		public Subsystem
+	{
+	private:
+	public:
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+	};
 
 	class Lookup1D :
 		public Subsystem 
+	{
+	private:
+	};
+
+	class Lookup2D :
+		public Subsystem
 	{
 	private:
 	};

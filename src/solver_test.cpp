@@ -20,6 +20,8 @@ int main()
 	config1.mim_step = 0.005;
 	config1.start_time = 0.0;
 	config1.solver_type = RungeKuttaFamily::DORMANDPRINCE;
+	config1.loggingconfig.filename = "datalog.txt";
+	config1.loggingconfig.uselogging = true;
 	simulationcontrol::SimController SimInstance1(config1);
 
 #ifdef DEBUG_RIGID_BODY
@@ -204,7 +206,7 @@ int main()
 	gain_2_para.K.resize(1, 1);
 	gain_2_para.K(0, 0) = 1.0;
 	gain_2_para.num_of_inputs = 1;
-	subsystem_handle tf_1 = SimInstance1.AddSubSystem(tf_1_para);
+	//subsystem_handle tf_1 = SimInstance1.AddSubSystem(tf_1_para);
 	subsystem_handle sinewave_1 = SimInstance1.AddSubSystem(para_sinewave_1);
 	subsystem_handle LTI_1 = SimInstance1.AddSubSystem(lti_1, lti_1_IC);
 	subsystem_handle Gain_1 = SimInstance1.AddSubSystem(gain_1_para);
@@ -235,6 +237,12 @@ int main()
 	SimInstance1.MakeConnection(Gain_1.ID, Connection_Gain_1);
 	SimInstance1.MakeConnection(Sum_1.ID, Connection_Sum_1);
 	SimInstance1.MakeConnection(Gain_2.ID, Connection_Gain_2);
+
+	SimInstance1.DefineDataLogging(LTI_1.ID, 0, "v");
+	SimInstance1.DefineDataLogging(LTI_1.ID, 1, "alpha");
+	SimInstance1.DefineDataLogging(LTI_1.ID, 2, "theta");
+	SimInstance1.DefineDataLogging(LTI_1.ID, 3, "q");
+
 	bool flag = SimInstance1.PreRunProcess();
 	MatlabIO Recorder;
 	int N_steps = 500;
@@ -639,7 +647,7 @@ int main()
 		std::cout << "Initialization failed, check subsystem connections" << std::endl;
 	}
 #endif 
-	std::cout << "Calculationi Finished " << std::endl;
+	SimInstance1.PostRunProcess();
 	getchar();
 	return 0;
 }

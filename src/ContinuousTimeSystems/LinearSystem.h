@@ -72,6 +72,28 @@ namespace linearsystem {
 		void DisplayInitialCondition();
 		~TransferFunction();
 	};
+
+	struct RateLimitedActuatorParameter {
+		double maximum_rate;
+		double time_constant;
+	};
+
+	class RateLimitedActuator :
+		public Subsystem
+	{
+	private:
+		RateLimitedActuatorParameter parameter;
+	public:
+		RateLimitedActuator();
+		RateLimitedActuator(const RateLimitedActuatorParameter& parameter);
+		void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
+		void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~RateLimitedActuator();
+	};
+
 }
 
 

@@ -15,13 +15,13 @@
 /* TO DO: 
 1. if external is not defined, keep them as -2 as unconnected and set to 0
 2. makeconnection ( from_ouput_ID, to_input,ID, )
-3. create group ()
+3. add batch simulation function
+4. batch add subsystem by ID 
 */
 using namespace Eigen;
 using namespace std;
 namespace simulationcontrol {
 	typedef MatrixX2i SIMCONNECTION;
-
 	enum signalrouting
 	{
 		external = -1,
@@ -30,11 +30,8 @@ namespace simulationcontrol {
 	};
 
 	struct DataLogging {
-		bool uselogging;
-		string filename;
-		int max_time_step;
-		bool include_time_stamp;
-		Matrix<int, Eigen::Dynamic, 2> portlist;
+		bool uselogging; // flag determine whether logging is on
+		string filename; // file name 
 	};
 
 	struct SolverConfig {
@@ -45,6 +42,7 @@ namespace simulationcontrol {
 		unsigned int num_of_k;
 		bool adaptive_step;
 		double start_time;
+		DataLogging loggingconfig;
 	};
 	// the handle for assigned subsystems
 	struct SubsystemGroupHandle {
@@ -88,12 +86,22 @@ namespace simulationcontrol {
 		bool RunTopologyAnalysis();
 		string GetSystemTypeFromID(subsystem_type type);
 		subsystem_handle CreateSystemHandle(const subsystem_info& info, const vector<unique_ptr<Subsystem>>& subsystem_list);
+		/*--------------------- Data logging -------------------------------------------*/
+		ofstream loggingdata;
+		std::vector<Matrix<int, 1, 2>> logportlist; // list containing the mapping of the subsystemID and map
+		std::vector<std::string> logtaglist;
+		int total_number_log = 0;
+		void LogRequestedData();
 	public:
 		/* A list of all overloadings of AddSubsystem(...) for pre-defined types of models*/
+		// Discontious
+		// TO DO: switch block, saturation block
+		// 
 		// Linear system
 		subsystem_handle AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC);
 		subsystem_handle AddSubSystem(const linearsystem::IntegratorParameter& parameters, const linearsystem::IntegratorInitialCondition& IC);
 		subsystem_handle AddSubSystem(const linearsystem::TransferFunctionParameter& parameters);
+		// To DO: rate limited 1st order system
 		// Dynamics 
 		subsystem_handle AddSubSystem(const RigidBodyParameter& parameters, const RigidBodyCondition& IC);
 		// math blocks
@@ -101,6 +109,7 @@ namespace simulationcontrol {
 		subsystem_handle AddSubSystem(const mathblocks::ConstantParameter& parameters);
 		subsystem_handle AddSubSystem(const mathblocks::SumParameter& parameters);
 		subsystem_handle AddSubSystem(const mathblocks::MultiplicationParam& parameters);
+		// TO DO: 1D look up, 2D look up block, power, ln, e^x,
 		// geographic libs
 		subsystem_handle AddSubSystem(const geographic::StandardAtmosphereParameter& parameters);
 		subsystem_handle AddSubSystem(const geographic::GravityModelParameter& parameters);
@@ -111,7 +120,18 @@ namespace simulationcontrol {
 		subsystem_handle AddSubSystem(const  source_sink::PeriodicWaveparameter& parameters);
 		subsystem_handle AddSubSystem(const  source_sink::Stepparameter& parameters);
 		subsystem_handle AddSubSystem(const  source_sink::Rampparamter& parameters);
+		// TO DO: utility blocks
+		// unit conversion, matrix to euler angles, matrix quaternion, quaternion euler angle
 		/*------------------------define connections between subsystems--------------------------------*/
+		bool ResetParameter(); // TO DO: reset subsystem parameter
+		bool ResetInitialCondition(); // TO DO: reset subsystem initial condition
+		bool BatchConnection(const unsigned int input_system_ID,
+							 const unsigned int input_start_index,
+							 const unsigned int input_length,
+							 const unsigned int output_system_ID,
+							 const unsigned int output_start_index);
+		bool VectorConcatenate(const unsigned int system_ID);
+		bool MatrixConcatenate();
 		bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);
 		/*------------------------PreRunProcess of the Connected Subystems--------------*/
 		bool PreRunProcess();// check and parse the system connection relationship.
@@ -121,6 +141,10 @@ namespace simulationcontrol {
 		int Run_Update(const VectorXd& extern_input);
 		double Run_GetSystemTime();
 		VectorXd Run_GetSubsystemOuput(const unsigned int system_ID);
+		/*------------------------Data logging--------------------------------------*/
+		bool DefineDataLogging(const unsigned int output_system_ID,
+							   const unsigned int output_port_ID,
+							   string tag);
 		/*-----------------------Post run process----------------------------------------*/
 		int PostRunProcess();
 		SimController(const SolverConfig& config);
