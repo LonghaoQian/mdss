@@ -76,6 +76,7 @@ namespace linearsystem {
 	struct RateLimitedActuatorParameter {
 		double maximum_rate;
 		double time_constant;
+		int num_of_channels;
 	};
 
 	class RateLimitedActuator :
