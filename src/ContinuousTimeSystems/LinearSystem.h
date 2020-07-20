@@ -1,6 +1,19 @@
 #pragma once
 #include "Subsystem.h"
+/*
+_________________________________
+Author: Longhao Qian
+Data:   2020 07 19
 
+linearsystem contains the following blocks:
+
+1. LTI system block
+2. Integrator block
+3. TransferFunction block
+4. RateLimitedActuator block
+5. PID block
+_________________________________
+*/
 namespace linearsystem {
 	struct LTIParameter{
 		MatrixXd A;

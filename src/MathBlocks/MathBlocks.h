@@ -2,20 +2,23 @@
 /*
 _________________________________
 Author: Longhao Qian
-Data:   2020 02 15
+Data:   2020 07 17
 
-Math blocks for simulation:
+Math blocks contains the following blocks:
 
 1. Constant block
 2. Muliplication block
 3. Gain block
 4. Summation block
-TO DO :
-5. Saturation
+5. Special Functions Block
+6. Trigonometry Functions Block
+7. 1D Lookup Table Block
+8. 2D Lookup Table Block
 _________________________________
 */
 
 #include "Subsystem.h"
+#include "UtilityFunctions.h"
 namespace mathblocks {
 
 	struct ConstantParameter {
@@ -76,7 +79,7 @@ namespace mathblocks {
 
 	};
 	// Gain Block
-
+	//-----------------------------------------------//
 	struct GainParameter {
 		MatrixXd K;
 		InputMode Mode;
@@ -99,7 +102,7 @@ namespace mathblocks {
 		void DisplayInitialCondition();
 		~Gain();
 	};
-
+	//-----------------------------------------------//
 	struct SumParameter {
 		int num_of_inputs;
 		int input_dimensions;
@@ -125,21 +128,46 @@ namespace mathblocks {
 		void DisplayInitialCondition();
 		~Sum();
 	};
-
+	//-----------------------------------------------//
 	enum TrigonometryType{
-		sin = 0,
-		cos,
-		tan,
-		cot,
-		asin,
-		acos,
-		atan,
-		acot,
-		atan2
+		SIN = 0,
+		COS,
+		TAN,
+		COT,
+		ASIN,
+		ACOS,
+		ATAN,
+		ACOT,
+		ATAN2
+	};
+
+	// function dispatch table for trigonometry functions (locally global variable)
+	// C++ math function table http://www.cplusplus.com/reference/cmath/
+	static std::map< const TrigonometryType, std::function<double(double)> > TrigFunctionSingleInput{
+	{TrigonometryType::SIN,[](double input) { return sin(input); } },
+	{TrigonometryType::COS,[](double input) { return cos(input); } },
+	{TrigonometryType::TAN,[](double input) { return tan(input); } },
+	{TrigonometryType::COT,[](double input) { return 1/tan(input); } },
+	{TrigonometryType::ASIN,[](double input) { return asin(input); } },
+	{TrigonometryType::ACOS,[](double input) { return acos(input); } },
+	{TrigonometryType::ATAN,[](double input) { return atan(input); } },
+	{TrigonometryType::ACOT,[](double input) { return M_PI/2 - atan(input); } }, // source: https://colalg.math.csusb.edu/~devel/IT/main/m06_inverse/src/s02_tanflip.html
+	};
+
+	static std::map<const TrigonometryType, std::string> TrigFunctionNameList{
+		{TrigonometryType::SIN,"sin"},
+		{TrigonometryType::COS,"cos"},
+		{TrigonometryType::TAN,"tan"},
+		{TrigonometryType::COT,"cot"},
+		{TrigonometryType::ASIN,"arcsin"},
+		{TrigonometryType::ACOS,"arccos"},
+		{TrigonometryType::ATAN,"arctan"},
+		{TrigonometryType::ACOT,"arccot"},
+		{TrigonometryType::ATAN2,"arctan2"},
 	};
 
 	struct TrigonometryParameter {
-		int num_of_inputs;
+		int num_of_channels;
 		TrigonometryType type;
 	};
 
@@ -147,7 +175,8 @@ namespace mathblocks {
 		public Subsystem
 	{
 	private:
-			TrigonometryParameter para_;
+			TrigonometryParameter param_;
+			std::map<const TrigonometryType, std::function<double(double)>>::iterator TargetFunction;
 	public:
 		TrigonometricFunction();
 		TrigonometricFunction(const TrigonometryParameter& param);
@@ -163,19 +192,27 @@ namespace mathblocks {
 		void DisplayInitialCondition();
 		~TrigonometricFunction();
 	};
-
+	//-----------------------------------------------//
 	enum SpecialFunctionType {
-		ln = 0,
-		log10,
-		exp,
-		pow
+		LN = 0,
+		LOG10,
+		EXP,
+		POW,
+		SQRT
+	};
+
+	struct SpecialFunctionParameter {
+		int num_of_channels;
+		SpecialFunctionType type;
 	};
 
 	class SpecialFunction :
 		public Subsystem
 	{
 	private:
+		SpecialFunctionParameter param_;
 	public:
+		SpecialFunction(const SpecialFunctionParameter param);
 		void DifferentialEquation(const double& t,
 			const VectorXd& state,
 			const VectorXd& input,
@@ -186,18 +223,67 @@ namespace mathblocks {
 		void IncrementState();
 		void DisplayParameters();
 		void DisplayInitialCondition();
+		~SpecialFunction();
 	};
 
+	struct Lookup1DParameter {
+		VectorXd reference;
+		VectorXd table;
+	};
+	//-----------------------------------------------//
 	class Lookup1D :
 		public Subsystem 
 	{
 	private:
+		Lookup1DParameter param_;
+		mathauxiliary::Lookup_1D table_;
+	public:
+		Lookup1D(const Lookup1DParameter param);
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~Lookup1D();
+	};
+	//-----------------------------------------------//
+	// 2-D lookup table input(0) = row input(1) = col
+	// https://itectec.com/matlab/matlab-how-exactly-does-simulink-perform-2-d-interpolation-when-using-the-2-d-lookup-table-block/
+	struct Lookup2DParameter {
+		VectorXd reference_row;
+		VectorXd reference_col;
+		MatrixXd table;
+	};
+
+	enum {
+		LOOKUP_INPUT_ROW = 0,
+		LOOKUP_INPUT_COL,
 	};
 
 	class Lookup2D :
 		public Subsystem
 	{
 	private:
+		Lookup2DParameter param_;
+		mathauxiliary::Lookup_2D table_;
+	public:
+		Lookup2D(const Lookup2DParameter param);
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~Lookup2D();
 	};
 
 }

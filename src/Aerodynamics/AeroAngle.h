@@ -35,30 +35,30 @@ output :
 namespace aero {
 
 	enum AeroAngleInput {
-		rho = 0,
-		soundspeed,
-		Vbx,
-		Vby,
-		Vbz,
-		p,
-		q,
-		r,
-		Ab_x,
-		Ab_y, 
-		Ab_z 
+		INPUT_RHO= 0,
+		INPUT_SOUNDSPEED,
+		INPUT_Vbx,
+		INPUT_Vby,
+		INPUT_Vbz,
+		INPUT_p,
+		INPUT_q,
+		INPUT_r,
+		INPUT_Ab_x,
+		INPUT_Ab_y,
+		INPUT_Ab_z
 	};
 
 	enum AeroAngleOutput {
-		TAS = 0,
-		MachNumber,
-		alpha,
-		beta,
-		dynamic_pressure,
-		alpha_dot_bar,
-		beta_dot_bar,
-		p_bar,
-		q_bar,
-		r_bar
+		OUTPUT_TAS = 0,
+		OUTPUT_MachNumber,
+		OUTPUT_alpha,
+		OUTPUT_beta,
+		OUTPUT_dynamic_pressure,
+		OUTPUT_alpha_dot_bar,
+		OUTPUT_beta_dot_bar,
+		OUTPUT_p_bar,
+		OUTPUT_q_bar,
+		OUTPUT_r_bar
 	};
 
 	struct AeroAngleParameter {

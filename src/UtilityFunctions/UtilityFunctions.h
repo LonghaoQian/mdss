@@ -100,7 +100,7 @@ namespace mathauxiliary {
 		void GetOutput(VectorXd& output, const double& target);
 		double GetOutput(const double& target);
 		void LoadTableData(const VectorXd& reference_1d,
-						   const MatrixXd& _data,
+						   const MatrixXd& _data,// accept multi cols for multiple ouputs
 						   bool extrapolation);
 		~Lookup_1D();
 	};
@@ -117,9 +117,9 @@ namespace mathauxiliary {
 		void Preprocess();
 	public:
 		Lookup_2D();
-		Lookup_2D(const VectorXd& reference_1d, 
-				  const VectorXd& reference_2d, 
-				  const MatrixXd& table_data_, 
+		Lookup_2D(const VectorXd& reference_1d, // row reference
+				  const VectorXd& reference_2d, // col reference
+				  const MatrixXd& table_data_,  // table
 				  bool extrapolation);
 		void GetOutput(double& output, const double& target1, const double& target2);
 		double GetOutput(const double& target1,const double& target2);
@@ -154,4 +154,7 @@ namespace mathauxiliary {
 	void SaturationVector(VectorXd& output, 
 						  const double& upper_limit, 
 						  const double& lower_limit_);
+	double SaturationElementalWise(const double& input,
+						 const double& upper_limit_,
+						 const double& lower_limit_);
 }

@@ -215,25 +215,25 @@ Vector2i mathauxiliary::BinarySearchVector(bool isascending,
 
 	return indexarray;
 }
-
-double mathauxiliary::LinearInterpolation1D(const VectorXd& data, 
-										    int index1, 
-											int index2, 
-											const VectorXd& reference,
-											const double& target) {
+// linear interpolation based on data table, target reference, and indexes
+double mathauxiliary::LinearInterpolation1D(const VectorXd& data, // data table
+										    int index1, // starting index
+											int index2, // end index
+											const VectorXd& reference, // reference data
+											const double& target) { // target reference value
 	return data(index1) + (data(index2) - data(index1)) * (target - reference(index1))/(reference(index2) - reference(index1));
 }
-
-double mathauxiliary::LinearInterpolation2D(const MatrixXd & data, 
-											const Vector2i & index_1d, 
-											const Vector2i & index_2d, 
-											const VectorXd & reference_1d, 
-											const VectorXd & reference_2d,
-											const double& target1,
-											const double& target2) {
+// bilineary interpolation based on data table
+double mathauxiliary::LinearInterpolation2D(const MatrixXd & data,  // data indexes
+											const Vector2i & index_1d, // row index
+											const Vector2i & index_2d, // col index
+											const VectorXd & reference_1d, // col reference
+											const VectorXd & reference_2d, // row reference
+											const double& target1, // col target
+											const double& target2) { // row target
 	// bilinear interpolation
 	double temp_1, temp_2;
-	temp_1 = LinearInterpolation1D(data.col(index_2d(0)), index_1d(0), index_1d(1), reference_1d, target1);
+	temp_1 = LinearInterpolation1D(data.col(index_2d(0)), index_1d(0), index_1d(1), reference_1d, target1);// 
 	temp_2 = LinearInterpolation1D(data.col(index_2d(1)), index_1d(0), index_1d(1), reference_1d, target1);
 
 	VectorXd temp_3;
@@ -284,6 +284,23 @@ void mathauxiliary::SaturationVector(VectorXd & output, const double & upper_lim
 		output = lower_limit_ *output.normalized().eval();
 	}
 }
+
+double mathauxiliary::SaturationElementalWise(const double& input,
+	const double& upper_limit_,
+	const double& lower_limit_) {
+	if (input >= upper_limit_) {
+		return upper_limit_;
+	}
+	else if (input < lower_limit_) {
+		return lower_limit_;
+	}
+	else
+	{
+		return input;
+	}
+}
+
+
 // Lookup Interface
 mathauxiliary::LookupInterface::LookupInterface(bool extrapolation)
 {
@@ -443,10 +460,11 @@ void mathauxiliary::Lookup_2D::GetOutput(double& output, const double& target1, 
 	output = LinearInterpolation2D(table_data_, index_sequence_.col(0), index_sequence_.col(1), reference_1d_, reference_2d_, target1,target2);
 }
 
-double mathauxiliary::Lookup_2D::GetOutput(const double& target1, const double& target2)
+double mathauxiliary::Lookup_2D::GetOutput(const double& target1, // row target
+											const double& target2) // col target
 {
-	index_sequence_.col(0) = BinarySearchVector(true, reference_1d_, target1);
-	index_sequence_.col(1) = BinarySearchVector(true, reference_2d_, target2);
+	index_sequence_.col(0) = BinarySearchVector(true, reference_1d_, target1);// row target
+	index_sequence_.col(1) = BinarySearchVector(true, reference_2d_, target2); // col target
 	return LinearInterpolation2D(table_data_, index_sequence_.col(0), index_sequence_.col(1), reference_1d_, reference_2d_,target1,target2);
 }
 

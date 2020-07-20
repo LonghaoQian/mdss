@@ -26,19 +26,23 @@ enum subsystem_type {
 	continous_LTI,
 	continous_RIGIDBODY,
 	continous_VARIABLEMASS,
+	discontinuous_SATURATION,
+	discontinuous_SWITCH,
 	geographic_ATOMSPHERE,
 	geographic_GRAVITY,
 	math_CONSTANT,
 	math_CROSSPRODUCT,
 	math_GAIN,
+	math_LOOKUP1D,
+	math_LOOKUP2D,
 	math_PRODUCT,
-	math_SATURATION,
+	math_SPECIALFUNCTION,
 	math_SUM,
+	math_TRIGONOMETRYFUNCTION,
 	source_SINGALGENERATOR,
 	source_STEP,
 	source_RAMP
 };
-
 
 static const std::map<subsystem_type, std::string> subsystems[7];
 
@@ -50,13 +54,18 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{continous_LTI, "LTI"},
 	{continous_RIGIDBODY,"Rigid body"},
 	{continous_VARIABLEMASS, "Variable mass body"},
+	{discontinuous_SATURATION, "Saturation"},
+	{discontinuous_SWITCH, "Switch"},
 	{geographic_ATOMSPHERE, "Standard atmopshere "},
 	{geographic_GRAVITY, "Gravity block"},
 	{math_CONSTANT, "Constant block"},
 	{math_CROSSPRODUCT, "Cross product block"},
 	{math_GAIN, "Gain block "},
+	{math_LOOKUP1D,"1D Lookup block"},
+	{math_LOOKUP2D,"2D Lookup block"},
 	{math_PRODUCT, "Product block"},
-	{math_SATURATION, "Satruation block"},
+	{math_SPECIALFUNCTION,"Special function block"},
+	{math_TRIGONOMETRYFUNCTION,"Special function block"},
 	{math_SUM, "Summation block"},
 	{source_SINGALGENERATOR, "Signal Generator "},
 	{source_STEP, "Step block"},
@@ -79,7 +88,7 @@ struct subsystem_info {
 	MatrixX2i input_connection;            // the input connection matrix, where each row represents 
 	bool NO_CONTINUOUS_STATE;              // a bool state repes wether continous state exsits
 	bool DIRECT_FEED_THROUGH;              // a bool state 
-	bool EXTERNAL_CONNECTION_ONLY;         // a bool state for we
+	bool EXTERNAL_CONNECTION_ONLY;         // a bool state for whether the system connection is pure external
 	subsystem_type type;                   // the type of the system, defined in subsystem_type
 	subsystem_category category;            // the category of the system. 
 	std::string label_;	                   // an optional name given to the subsystem. 

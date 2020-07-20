@@ -361,4 +361,218 @@ Sum::~Sum()
 {
 }
 
+Lookup1D::Lookup1D(const Lookup1DParameter param)
+{
+	system_info.type = math_LOOKUP1D;
+	system_info.category = MATH;
+	system_info.DIRECT_FEED_THROUGH = true;
+	system_info.NO_CONTINUOUS_STATE = true;
+	system_info.num_of_continuous_states = 0;
+
+	param_ = param;
+
+	auto NumofDataPoints = param_.reference.rows(); // number of data points
+	auto NumofDataChannels = param_.table.cols(); // number of output channels
+	auto NumofTableDataPoints = param_.table.rows();// number of data points of table
+
+	if (NumofDataPoints == NumofTableDataPoints) {
+		system_info.system_parameter_ok = 0;
+		ready_to_run = true;
+		table_.LoadTableData(param_.reference, param_.table, false);
+	}
+	else {
+		system_info.system_parameter_ok = 1;
+		ready_to_run = false;
+	}
+
+	system_info.num_of_inputs = 1;// number of total inputs 
+	system_info.num_of_outputs = NumofDataChannels;
+	output.resize(system_info.num_of_outputs);
+	output.setZero();
+}
+
+void Lookup1D::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+{
+	// No differential equations for lookup block
+}
+
+void Lookup1D::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+{
+	table_.GetOutput(output, input(0));
+}
+
+void Lookup1D::IncrementState()
+{
+	// No IncrementState for lookup block
+}
+
+void Lookup1D::DisplayParameters()
+{
+	if (system_info.system_parameter_ok == 0) {
+		std::cout << "The lookup reference data is:  " << std::endl;
+		std::cout << param_.reference << std::endl;
+		std::cout << "The table data is:  " << std::endl;
+		std::cout << param_.table << std::endl;
+	}else{
+		std::cout << "Incorrect Table File!  " << std::endl;
+	}
+}
+
+void Lookup1D::DisplayInitialCondition()
+{
+	std::cout << "------No initial condition for lookup block----------" << std::endl;
+}
+
+Lookup1D::~Lookup1D()
+{
+}
+
+Lookup2D::Lookup2D(const Lookup2DParameter param)
+{
+	system_info.type = math_LOOKUP2D;
+	system_info.category = MATH;
+	system_info.DIRECT_FEED_THROUGH = true;
+	system_info.NO_CONTINUOUS_STATE = true;
+	system_info.num_of_continuous_states = 0;
+
+	param_ = param;
+
+	auto NumofDataReference_row = param_.reference_row.rows(); // number of data points for row reference
+	auto NumofDataReference_col = param_.reference_col.rows(); // number of data points for column reference
+
+	auto TableRows = param_.table.rows();// number of row data points of table
+	auto TableCols = param_.table.cols();// number of column data points of table
+
+	if ((NumofDataReference_row == TableRows) && (NumofDataReference_col == TableCols) ) {
+		system_info.system_parameter_ok = 0;
+		ready_to_run = true;
+		table_.LoadTableData(param_.reference_row, param_.reference_col,param_.table, false);
+	}
+	else {
+		system_info.system_parameter_ok = 1;
+		ready_to_run = false;
+	}
+
+	system_info.num_of_inputs  = 2;// number of total inputs 
+	system_info.num_of_outputs = 1;
+	output.resize(system_info.num_of_outputs);
+	output.setZero();
+}
+
+void Lookup2D::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+{
+	// No differential equations for lookup block
+}
+
+void Lookup2D::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+{
+	output(0) = table_.GetOutput(input(LOOKUP_INPUT_ROW), input(LOOKUP_INPUT_COL));
+}
+
+void Lookup2D::IncrementState()
+{
+	// No IncrementState for lookup block
+}
+
+void Lookup2D::DisplayParameters()
+{
+	if (system_info.system_parameter_ok == 0) {
+		std::cout << "The lookup row reference data is:  " << std::endl;
+		std::cout << param_.reference_row << std::endl;
+		std::cout << "The lookup colume reference data is:  " << std::endl;
+		std::cout << param_.reference_col << std::endl;
+		std::cout << "The table data is:  " << std::endl;
+		std::cout << param_.table << std::endl;
+	}
+	else {
+		std::cout << "Incorrect Table File!  " << std::endl;
+	}
+}
+
+void Lookup2D::DisplayInitialCondition()
+{
+	std::cout << "------No initial condition for lookup block----------" << std::endl;
+}
+
+Lookup2D::~Lookup2D()
+{
+}
+// trig -------------------------------------------------------------
+TrigonometricFunction::TrigonometricFunction()
+{
+}
+
+TrigonometricFunction::TrigonometricFunction(const TrigonometryParameter & param)
+{
+	system_info.type = math_TRIGONOMETRYFUNCTION;
+	system_info.category = MATH;
+	system_info.DIRECT_FEED_THROUGH = true;
+	system_info.NO_CONTINUOUS_STATE = true;
+	system_info.num_of_continuous_states = 0;
+	param_ = param;
+
+	if (param_.type == TrigonometryType::ATAN2) {
+		system_info.num_of_inputs = 2* param_.num_of_channels;// number of total inputs for atan 2
+	}
+	else
+	{
+		system_info.num_of_inputs = param_.num_of_channels;// number of total inputs 
+		TargetFunction = TrigFunctionSingleInput.find(param_.type);// determine which function is used before running
+		if (TargetFunction != TrigFunctionSingleInput.end()) {
+			system_info.system_parameter_ok = 0;
+			ready_to_run = true;
+		}
+		else {
+			std::cout << "Error Function Type\n";
+			system_info.system_parameter_ok = 1;
+			ready_to_run = false;
+		}
+	}
+
+	system_info.num_of_outputs = param_.num_of_channels;// same as number of 
+	output.resize(system_info.num_of_outputs);
+	output.setZero();
+
+}
+
+void TrigonometricFunction::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+{
+	// no differential equation for trigonometric function block
+}
+
+void TrigonometricFunction::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+{
+	if (param_.type == TrigonometryType::ATAN2) {
+		for (int i = 0; i < param_.num_of_channels; i++) {
+			output(i) = atan2(input(i),input(param_.num_of_channels+i));// for atan 2 i and i + number of input channel are y and x inputs
+		}
+	}
+	else
+	{
+		for (int i = 0; i < param_.num_of_channels; i++) {
+			output(i) = TargetFunction->second(input(i));
+		}
+	}
+
+}
+
+void TrigonometricFunction::IncrementState()
+{
+	// no increment state for trigonometric function block
+}
+
+void TrigonometricFunction::DisplayParameters()
+{
+	std::cout << "The function is selected as: " << TrigFunctionNameList [param_.type]<< std::endl;
+}
+
+void TrigonometricFunction::DisplayInitialCondition()
+{
+	std::cout << "------No initial condition for trigonometric function block----------" << std::endl;
+}
+
+TrigonometricFunction::~TrigonometricFunction()
+{
+}
+
 }

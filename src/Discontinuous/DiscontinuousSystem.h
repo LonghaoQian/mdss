@@ -2,38 +2,44 @@
 /*
 _________________________________
 Author: Longhao Qian
-Data:   2020 02 15
+Data:   2020 07 19
 
-geographic libs contains the following blocks:
+discontinuos blocks contains the following blocks:
 
-1. Standard Atomsphere
-2. Gravity Model
-TO DO :
-3. Wind Gust Model
+1. Saturtion block
+2. Switch block
+TO DO:
+3. Backlash block
+4. Coulomb and Viscous Friction
+5. Wrap to 0
+6. Rate Limiter
 _________________________________
 */
 
 #include "Subsystem.h"
 #include "UtilityFunctions.h"
-#include "MatlabIO.h"
+namespace discontinuoussystem {
 
-namespace geographic {
-	// standard atmosphere
-	struct StandardAtmosphereParameter {
-		const char* atmoshpere_name_;
+	enum SaturationType{
+		SATURATION_UPPER,
+		SATURATION_LOWER,
+		SATURATION_BOTH
 	};
-	class StandardAtmosphere :
+
+	struct SaturationParameter {
+		int num_of_channels;
+		double upper_bound;
+		double lower_bound;
+		SaturationType type;
+	};	
+
+	class Saturation :
 		public Subsystem
 	{
 	private:
-		// parameters
-		MatlabIO atmosphere_file;
-		MatrixXd atmosphere_data_;
-		mathauxiliary::Lookup_1D atmopshere_table_;
-		bool load_flag_;
-		/*TO DO: built-in atmosphere data */
+		SaturationParameter param_;
 	public:
-		StandardAtmosphere(const StandardAtmosphereParameter& parameter);
+		Saturation(const SaturationParameter& param);
 		void DifferentialEquation(const double& t,
 			const VectorXd& state,
 			const VectorXd& input,
@@ -44,26 +50,20 @@ namespace geographic {
 		void IncrementState();
 		void DisplayParameters();
 		void DisplayInitialCondition();
-		~StandardAtmosphere();
+		~Saturation();
 	};
-	// gravity model
-	enum GravityMode
-	{
-		FlatGround, Sphere, Ellipsoid
+
+	struct SwitchParameter {
+		int num_of_channels;
+		double switch_value;
 	};
-	struct GravityModelParameter {
-		GravityMode Mode;
-	};
-	class Gravity :
+	class Switch :
 		public Subsystem
 	{
 	private:
-		// parameters
-		GravityModelParameter param_;
-		// RIB
-
+		SwitchParameter param_;
 	public:
-		Gravity(const GravityModelParameter& parameter);
+		Switch(const SwitchParameter& param);
 		void DifferentialEquation(const double& t,
 			const VectorXd& state,
 			const VectorXd& input,
@@ -74,6 +74,6 @@ namespace geographic {
 		void IncrementState();
 		void DisplayParameters();
 		void DisplayInitialCondition();
-		~Gravity();
+		~Switch();
 	};
 }
