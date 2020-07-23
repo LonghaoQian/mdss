@@ -96,7 +96,7 @@ namespace linearsystem {
 		public Subsystem
 	{
 	private:
-		RateLimitedActuatorParameter parameter;
+		RateLimitedActuatorParameter param_;
 	public:
 		RateLimitedActuator();
 		RateLimitedActuator(const RateLimitedActuatorParameter& parameter);
@@ -108,6 +108,40 @@ namespace linearsystem {
 		~RateLimitedActuator();
 	};
 
+	struct PIDcontrollerParameter {
+		double Kp;
+		double Ki;
+		double Kd;
+		double Tf;
+		int num_of_channels;
+		bool integration_control_on;// if this is true, the first input is a switch to control the integration
+	};
+
+	struct PIDcontrollerInitialCondition{
+		VectorXd initial_integrator;
+	};
+
+	class PIDcontroller :
+		public Subsystem
+	{
+	private:
+		PIDcontrollerParameter param_;
+		Matrix<double, 2, 2> A;
+		Matrix<double, 2, 1> B;
+		Matrix<double, 1, 2> C;
+		Matrix<double, 1, 1> D;
+	public:
+		PIDcontroller(const PIDcontrollerParameter& parameter);
+		void DifferentialEquation(const double& t, 
+								  const VectorXd& state, 
+								  const VectorXd& input, 
+								  VectorXd& derivative);
+		void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~PIDcontroller();
+	};
 }
 
 

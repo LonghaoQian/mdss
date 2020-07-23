@@ -325,4 +325,144 @@ namespace linearsystem {
 	{
 	}
 
+	RateLimitedActuator::RateLimitedActuator()
+	{
+	}
+
+	RateLimitedActuator::RateLimitedActuator(const RateLimitedActuatorParameter & parameter)
+	{
+	}
+
+	void RateLimitedActuator::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+	}
+
+	void RateLimitedActuator::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+	}
+
+	void RateLimitedActuator::IncrementState()
+	{
+	}
+
+	void RateLimitedActuator::DisplayParameters()
+	{
+	}
+
+	void RateLimitedActuator::DisplayInitialCondition()
+	{
+	}
+
+	RateLimitedActuator::~RateLimitedActuator()
+	{
+	}
+
+	// PID controller (optional: integration trigger)
+
+	
+	PIDcontroller::PIDcontroller(const PIDcontrollerParameter & parameter)
+	{
+		system_info.category = LINEARSYSTEM;
+		system_info.type = continous_PIDcontroller;
+		param_ = parameter;
+		// initialzie system matrices, and convert the PID using control canonical form (Tf = 1/N in simulink) https://www.engr.mun.ca/~millan/Eng6825/canonicals.pdf
+		A.setZero();
+		B.setZero();
+		C.setZero();
+		D.setZero(); 
+
+		double b_0 = param_.Kp + param_.Kd / param_.Tf;
+		double b_1 = param_.Ki + param_.Kd / param_.Tf;
+		double b_2 = param_.Ki / param_.Tf;
+		double a_1 = 1.0 / param_.Tf;
+		double a_2 = 0.0;
+
+		A(0, 0) = 0.0;
+		A(0, 1) = 1.0;
+		A(1, 0) = -a_2;
+		A(1, 1) = -a_1;
+
+		B(0) = 0;
+		B(1) = 1;
+
+		C(0) = b_2 - a_2 * b_0;
+		C(1) = b_1 - a_1 * b_0;
+
+		D(0,0) = b_0;
+		// determine the number of states based on channels
+		system_info.num_of_continuous_states = 2 * param_.num_of_channels;
+		system_info.num_of_inputs = param_.num_of_channels+1;
+		system_info.num_of_outputs = param_.num_of_channels;
+		// if kp and kd are non-zeros 
+		if (b_0 == 0.0) {
+			system_info.DIRECT_FEED_THROUGH = false;
+		}
+		else
+		{
+			system_info.DIRECT_FEED_THROUGH = true;
+		}
+
+		system_info.NO_CONTINUOUS_STATE = false;
+
+		system_info.EXTERNAL_CONNECTION_ONLY = false;
+		
+		ready_to_run = true;
+		system_info.system_parameter_ok = true;
+
+		// initialize state memeory
+		state.resize(system_info.num_of_continuous_states);
+		state.setZero();
+		output.resize(system_info.num_of_outputs);
+		system_info.input_connection.resize(system_info.num_of_inputs, 2);
+
+	}
+
+	void PIDcontroller::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+		for (int i = 0; i < param_.num_of_channels; i++) {
+			// x_dot  = A x + B u
+			if(input(0)>=0.0){
+				derivative.segment(i*2,2) = A * state.segment(i*2,2) + B * input(i+1); // if input(0) is positive, enable state
+			}
+			else {
+				derivative.segment(i * 2, 2).setZero(); // if input(0) is negative, reset the states
+			}
+		}
+	}
+
+	void PIDcontroller::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+		for (int i = 0; i < param_.num_of_channels; i++) {
+			if (input(0) >= 0.0) {
+				output.segment(i,1) = C * state.segment(i*2,2) + D * input(i+1);
+			}
+			else {
+				output(i) = 0.0;
+			}
+		}
+	}
+
+	void PIDcontroller::IncrementState()
+	{
+		state += solver_buffer_state_increment1;
+	}
+
+	void PIDcontroller::DisplayParameters()
+	{
+		cout << "kp :" << param_.Kp << "ki :" << param_.Ki << " kd : " << param_.Kd << endl;
+		cout << " A : " << A << endl;
+		cout << " B : " << B << endl;
+		cout << " C : " << C << endl;
+		cout << " D : " << D << endl;
+	}
+
+	void PIDcontroller::DisplayInitialCondition()
+	{
+		cout << " The initial condition of PID is set to zero " << endl;
+	}
+
+	PIDcontroller::~PIDcontroller()
+	{
+	}
+
 }

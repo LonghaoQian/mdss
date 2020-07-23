@@ -52,6 +52,12 @@ namespace discontinuoussystem {
 		void DisplayInitialCondition();
 		~Saturation();
 	};
+	//--------------------------------------------------
+	// 
+
+	enum {
+		SWITCH_INPUT = 0
+	};
 
 	struct SwitchParameter {
 		int num_of_channels;
