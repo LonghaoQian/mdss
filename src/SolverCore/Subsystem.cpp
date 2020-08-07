@@ -97,7 +97,7 @@ void Subsystem::Solver_CalculateIncrement(const VectorXd & updatecoefficients)
 {
 	if (!system_info.NO_CONTINUOUS_STATE)
 	{
-		solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);// set to zero before added
+		solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);// set to zero before added ? why specifying dimension? 
 		for (int i = 0; i < updatecoefficients.size(); i++)
 		{
 			solver_buffer_state_increment1 += updatecoefficients(i)*solver_buffer_k_sequence.col(i);

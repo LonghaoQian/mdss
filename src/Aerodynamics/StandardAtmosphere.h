@@ -15,10 +15,16 @@ _________________________________
 
 #include "Subsystem.h"
 #include "UtilityFunctions.h"
-#include "MatlabIO.h"
 
 namespace geographic {
 	// standard atmosphere
+	enum AtmoshpereOutputIndex{
+		AtmTemperature = 0,
+		AtmSoundSpeed,
+		AtmPressure, 
+		AtmDensity
+	};
+
 	struct StandardAtmosphereParameter {
 		const char* atmoshpere_name_;
 	};
@@ -27,11 +33,8 @@ namespace geographic {
 	{
 	private:
 		// parameters
-		MatlabIO atmosphere_file;
 		MatrixXd atmosphere_data_;
 		mathauxiliary::Lookup_1D atmopshere_table_;
-		bool load_flag_;
-		/*TO DO: built-in atmosphere data */
 	public:
 		StandardAtmosphere(const StandardAtmosphereParameter& parameter);
 		void DifferentialEquation(const double& t,
@@ -61,7 +64,6 @@ namespace geographic {
 		// parameters
 		GravityModelParameter param_;
 		// RIB
-
 	public:
 		Gravity(const GravityModelParameter& parameter);
 		void DifferentialEquation(const double& t,

@@ -55,6 +55,39 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
+	subsystem_handle SimController::AddSubSystem(const linearsystem::PIDcontrollerParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new linearsystem::PIDcontroller(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	subsystem_handle SimController::AddSubSystem(const discontinuoussystem::SaturationParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new discontinuoussystem::Saturation(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	subsystem_handle SimController::AddSubSystem(const discontinuoussystem::SwitchParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new discontinuoussystem::Switch(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
 	subsystem_handle SimController::AddSubSystem(const RigidBodyParameter & parameters, const RigidBodyCondition & IC)
 	{
 		subsystem_info system_info;
@@ -103,6 +136,39 @@ namespace simulationcontrol {
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Multiplication(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	subsystem_handle SimController::AddSubsystem(const mathblocks::TrigonometryParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new mathblocks::TrigonometricFunction(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	subsystem_handle SimController::AddSubsystem(const mathblocks::Lookup1DParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new mathblocks::Lookup1D(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	subsystem_handle SimController::AddSubsystem(const mathblocks::Lookup2DParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new mathblocks::Lookup2D(parameters));
 		system_info = subsystem_list.back()->GetSystemInfo();
 		// update number of subsystems
 		num_of_subsystems = subsystem_list.size();
@@ -182,6 +248,15 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
+	void SimController::EditConnectionMatrix(subsystem_handle & handle,
+											 unsigned int from_input_ID,
+											 unsigned int to_output_systemID, 
+											 unsigned int to_output_portID)
+	{
+		handle.input_connection_list(from_input_ID, simulationcontrol::subsystemID)  = to_output_systemID;
+		handle.input_connection_list(from_input_ID, simulationcontrol::outputportID) = to_output_portID;
+	}
+
 	bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping)
 	{
 		// parse the connection mapping 
@@ -205,6 +280,30 @@ namespace simulationcontrol {
 
 		}
 
+		return flag;
+	}
+
+	bool SimController::MakeConnection(const subsystem_handle & handle)
+	{
+		// parse the connection mapping based on system handle
+		// the connection mapping is defined in a Xx2 matrix
+		// index of the input port, system ID of the output, index of the output 
+		bool flag = false;
+		if (handle.ID > num_of_subsystems)
+		{
+			cout << "CONNECTION ERROR: The system ID goes out of bound, the number of subsystem is " << num_of_subsystems << endl;
+			cout << " while the input system ID is (system_ID<number of subsystem)" << handle.ID << endl;
+		}
+		else {
+			if (handle.input_connection_list.rows() == subsystem_list[handle.ID]->GetSystemInfo().num_of_inputs) {
+				subsystem_list[handle.ID]->SetInputConnection(handle.input_connection_list);
+				flag = true;
+			}
+			else {
+				cout << "CONNECTION ERROR: The connection mapping matrix does not match the number of inputs of system # " << handle.ID << endl;
+			}
+
+		}
 		return flag;
 	}
 
@@ -620,15 +719,20 @@ namespace simulationcontrol {
 				// then update output
 				subsystem_list[output_sequence[i]]->UpdateOutput(solver_config.start_time, 0);
 			}
+			// write the header information to logged file
 			// push the initial condition into the logger
 			if (solver_config.loggingconfig.uselogging) {
 				total_number_log = logportlist.size();
-				if (loggingdata.is_open()) {// insert tag as the first row
-					loggingdata << "t";
+				if (loggingdata.is_open()) {
+					// insert identifier as the first row:
+					loggingdata << "This file is a data log from solver." << "\n";
+					// insert number of data tags as the second row:
+					loggingdata << total_number_log << "\n";
+					// the insert each tag on an individual row:
+					loggingdata << "t" << "\n";
 					for (int i = 0; i < total_number_log; i++) {
-						loggingdata << "XX" << logtaglist[i];
+						loggingdata << logtaglist[i] << "\n";
 					}
-					loggingdata << "\n";
 				}
 			}
 		}
@@ -804,6 +908,7 @@ namespace simulationcontrol {
 		handle.label_ = info.label_;
 		handle.type = info.type;
 		handle.ID = subsystem_list.size() - 1;
+		//cout <<"#" << handle.ID <<  " num of inputs: " << subsystem_list.back()->GetSystemInfo().num_of_inputs << endl;
 		if (subsystem_list.back()->GetSystemInfo().num_of_inputs > 0)
 		{
 			handle.input_connection_list.resize(subsystem_list.back()->GetSystemInfo().num_of_inputs,2); // resize and initialize the coonection matrix
@@ -812,6 +917,8 @@ namespace simulationcontrol {
 				handle.input_connection_list(i, simulationcontrol::outputportID) = 0;
 			}
 		}
+		//cout << " connection: " << handle.input_connection_list << endl;
+		// TO DO: add an initial condition for the input connection of each system
 		return  handle;
 	}
 
@@ -820,9 +927,9 @@ namespace simulationcontrol {
 		if (loggingdata.is_open()) {
 			loggingdata << Run_GetSystemTime();
 			for (int i = 0; i < total_number_log; i++) {
-				loggingdata << "XX" << Run_GetSubsystemOuput(logportlist[i](subsystemID))(logportlist[i](outputportID));
+				loggingdata << "*" << Run_GetSubsystemOuput(logportlist[i](subsystemID))(logportlist[i](outputportID));
 			}
-			loggingdata << "\n";
+			loggingdata << "\n"; //"\n" is madatory for fgetl to execute properly in matlab
 		}
 	}
 

@@ -224,7 +224,6 @@ Gain::Gain(const GainParameter& _gainparameter)
 	}
 	output.resize(system_info.num_of_outputs);
 	output.setZero(system_info.num_of_outputs);
-	ready_to_run = true;
 }
 
 void Gain::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)

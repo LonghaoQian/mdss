@@ -47,7 +47,7 @@ namespace discontinuoussystem {
 		case SATURATION_BOTH:
 			for (int i = 0; i < param_.num_of_channels; i++) {
 				output(i) = mathauxiliary::SaturationElementalWise(input(i),
-					param_.lower_bound,
+					param_.upper_bound,
 					param_.lower_bound);
 				
 			}
@@ -55,7 +55,7 @@ namespace discontinuoussystem {
 		default:// both
 			for (int i = 0; i < param_.num_of_channels; i++) {
 				output(i) = mathauxiliary::SaturationElementalWise(input(i),
-					param_.lower_bound,
+					param_.upper_bound,
 					param_.lower_bound);
 
 			}

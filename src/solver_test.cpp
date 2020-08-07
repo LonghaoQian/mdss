@@ -3,14 +3,13 @@
 
 #include "pch.h"
 #include "SimController.h"
-#include "util_Recorder.h"
-#include "MatlabIO.h"
 using std::iostream;
 
 //#define DEBUG_RIGID_BODY
-#define DEBUG_LINEAR
+//#define DEBUG_LINEAR
 //#define DEBUG_STIFF_MODEL
 //#define DEBUG_DISP
+#define DEBUG_ENGINE
 int main()
 {
 	simulationcontrol::SolverConfig config1;
@@ -647,6 +646,134 @@ int main()
 		std::cout << "Initialization failed, check subsystem connections" << std::endl;
 	}
 #endif 
+
+#ifdef DEBUG_ENGINE
+	linearsystem::TransferFunctionParameter N2RotorDynamics_param_;
+
+	N2RotorDynamics_param_.Denominator.resize(2);
+	N2RotorDynamics_param_.Numerator.resize(1);
+	N2RotorDynamics_param_.Denominator(0) = 1.0;
+	N2RotorDynamics_param_.Denominator(1) = 1.0/12.0;
+	N2RotorDynamics_param_.Numerator(0) = 1.0 / 12.0;
+
+	linearsystem::PIDcontrollerParameter N2controller_param_;
+
+	N2controller_param_.integration_control_on = true;
+	double total_gain = 4.0;
+	N2controller_param_.Kp = total_gain * 1.0;
+	N2controller_param_.Ki = total_gain * 0.05;
+	N2controller_param_.Kd = total_gain * 0.0;
+	N2controller_param_.num_of_channels = 1;
+	N2controller_param_.Tf = 1.0 / 100.0;
+
+	mathblocks::SumParameter sum_1_param_;
+	sum_1_param_.input_dimensions = 1;
+	sum_1_param_.num_of_inputs = 2;
+	sum_1_param_.sign_list.resize(2);
+	sum_1_param_.sign_list(0) = 1.0;
+	sum_1_param_.sign_list(1) = 1.0;
+
+	mathblocks::SumParameter sum_2_param_;
+	sum_2_param_.input_dimensions = 1;
+	sum_2_param_.num_of_inputs = 2;
+	sum_2_param_.sign_list.resize(2);
+	sum_2_param_.sign_list(0) = 1.0;
+	sum_2_param_.sign_list(1) =  - 1.0;
+
+	mathblocks::GainParameter gain_1_param_;
+	gain_1_param_.K.resize(1, 1);
+	gain_1_param_.K(0, 0) = 1.0;
+	gain_1_param_.Mode = mathblocks::ElementWise;
+	gain_1_param_.num_of_inputs = 1;
+
+	discontinuoussystem::SwitchParameter switch_1_param_;
+	switch_1_param_.num_of_channels = 1;
+	switch_1_param_.switch_value = 0.5;
+
+	discontinuoussystem::SwitchParameter switch_2_param_;
+	switch_2_param_.num_of_channels = 1;
+	switch_2_param_.switch_value = 0.295;
+
+	mathblocks::ConstantParameter const_1_param_;
+	const_1_param_.value.resize(1);
+	const_1_param_.value(0) = 0.304;
+
+	mathblocks::ConstantParameter N2_cmd_param_;
+	N2_cmd_param_.value.resize(1);
+	N2_cmd_param_.value(0) = 0.588;
+
+	discontinuoussystem::SaturationParameter saturation_1_param_;
+	saturation_1_param_.lower_bound = - 0.055;
+	saturation_1_param_.upper_bound = 0.055;
+	saturation_1_param_.num_of_channels = 1;
+	saturation_1_param_.type = discontinuoussystem::SATURATION_BOTH;
+
+
+	subsystem_handle N2rotordynamics = SimInstance1.AddSubSystem(N2RotorDynamics_param_);
+	subsystem_handle N2controller = SimInstance1.AddSubSystem(N2controller_param_);
+	subsystem_handle Sum_1 = SimInstance1.AddSubSystem(sum_1_param_);
+	subsystem_handle Sum_2 = SimInstance1.AddSubSystem(sum_2_param_);
+	subsystem_handle N2_cmd = SimInstance1.AddSubSystem(N2_cmd_param_);
+	subsystem_handle Gain_1 = SimInstance1.AddSubSystem(gain_1_param_);
+	subsystem_handle Switch_1 = SimInstance1.AddSubSystem(switch_1_param_);
+	subsystem_handle Switch_2 = SimInstance1.AddSubSystem(switch_2_param_);
+	subsystem_handle const_1 = SimInstance1.AddSubSystem(const_1_param_);
+	subsystem_handle Saturation_1 = SimInstance1.AddSubSystem(saturation_1_param_);
+
+
+	SimInstance1.EditConnectionMatrix(N2rotordynamics, 0, Sum_1.ID, 0);
+	SimInstance1.EditConnectionMatrix(Sum_1, 0, N2controller.ID, 0);
+	SimInstance1.EditConnectionMatrix(Sum_1, 1, Switch_1.ID, 0);
+	SimInstance1.EditConnectionMatrix(Sum_2, 0, N2_cmd.ID, 0);
+	SimInstance1.EditConnectionMatrix(Sum_2, 1, N2rotordynamics.ID, 0);
+	SimInstance1.EditConnectionMatrix(Saturation_1, 0, Sum_2.ID,0);
+	SimInstance1.EditConnectionMatrix(N2controller, 0, Switch_2.ID, 0);
+	SimInstance1.EditConnectionMatrix(N2controller, 1, Saturation_1.ID, 0);
+	SimInstance1.EditConnectionMatrix(Switch_1, discontinuoussystem::SWITCH_INPUT, N2rotordynamics.ID, 0);
+	SimInstance1.EditConnectionMatrix(Switch_1, 1, const_1.ID, 0);
+	SimInstance1.EditConnectionMatrix(Switch_1, 2, const_1.ID, 0);
+	SimInstance1.EditConnectionMatrix(Switch_2, discontinuoussystem::SWITCH_INPUT, N2rotordynamics.ID, 0);
+	SimInstance1.EditConnectionMatrix(Gain_1, 0, N2controller.ID, 0);
+
+	cout << " gain connection is: " << Gain_1.input_connection_list << endl;
+
+	// make connection
+	SimInstance1.MakeConnection(N2rotordynamics);
+	SimInstance1.MakeConnection(Sum_1);
+	SimInstance1.MakeConnection(Sum_2);
+	SimInstance1.MakeConnection(Saturation_1);
+	SimInstance1.MakeConnection(N2controller);
+	SimInstance1.MakeConnection(Switch_1);
+	SimInstance1.MakeConnection(Switch_2);
+	SimInstance1.MakeConnection(Gain_1);
+	// define the data log tag
+
+	SimInstance1.DefineDataLogging(N2rotordynamics.ID, 0, "N2_sim");
+	SimInstance1.DefineDataLogging(Gain_1.ID, 0, "FF_sim");
+	SimInstance1.DefineDataLogging(Switch_1.ID, 0, "switch1");
+	SimInstance1.DefineDataLogging(Switch_2.ID, 0, "switch2");
+	SimInstance1.DefineDataLogging(Sum_2.ID, 0, "sum2");
+	SimInstance1.DefineDataLogging(Saturation_1.ID, 0, "saturation1");
+	bool flag = SimInstance1.PreRunProcess();
+	int N_steps = 7000;
+
+	if (flag) { // if successful, run updates
+
+		VectorXd extern_input;
+		SimInstance1.ReshapeExternalInputVector(extern_input);
+		extern_input(0) = 1;
+		extern_input(1) = -1;
+		for (int i = 0; i < N_steps; i++)
+		{
+			//std::cout << "Sum block output: " << SimInstance1.Run_GetSubsystemOuput(Sum_1.ID)(0) << " \n ";
+			SimInstance1.Run_Update(extern_input);
+		}
+	}
+	else {
+		std::cout << "Initialization failed, check subsystem connections" << std::endl;
+	}
+#endif // DEBUG_ENGINE
+
 	SimInstance1.PostRunProcess();
 	getchar();
 	return 0;

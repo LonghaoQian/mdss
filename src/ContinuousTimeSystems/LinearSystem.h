@@ -65,7 +65,7 @@ namespace linearsystem {
 	};
 
 	struct TransferFunctionParameter {
-		VectorXd Numerator;
+		VectorXd Numerator; 
 		VectorXd Denominator;
 	};
 	class TransferFunction :

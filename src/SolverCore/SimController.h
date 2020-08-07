@@ -10,6 +10,7 @@
 #include "MathBlocks.h"
 #include "AeroAngle.h"
 #include "AeroForceMoment1.h"
+#include "Discontinuous/DiscontinuousSystem.h"
 #define EXTERNAL_INPUT -1
 #define UNCONNECTED -2
 /* TO DO: 
@@ -101,6 +102,10 @@ namespace simulationcontrol {
 		subsystem_handle AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC);
 		subsystem_handle AddSubSystem(const linearsystem::IntegratorParameter& parameters, const linearsystem::IntegratorInitialCondition& IC);
 		subsystem_handle AddSubSystem(const linearsystem::TransferFunctionParameter& parameters);
+		subsystem_handle AddSubSystem(const linearsystem::PIDcontrollerParameter& parameters);
+		// Discontinuous
+		subsystem_handle AddSubSystem(const discontinuoussystem::SaturationParameter& parameters);
+		subsystem_handle AddSubSystem(const discontinuoussystem::SwitchParameter& parameters);
 		// To DO: rate limited 1st order system
 		// Dynamics 
 		subsystem_handle AddSubSystem(const RigidBodyParameter& parameters, const RigidBodyCondition& IC);
@@ -109,7 +114,10 @@ namespace simulationcontrol {
 		subsystem_handle AddSubSystem(const mathblocks::ConstantParameter& parameters);
 		subsystem_handle AddSubSystem(const mathblocks::SumParameter& parameters);
 		subsystem_handle AddSubSystem(const mathblocks::MultiplicationParam& parameters);
-		// TO DO: 1D look up, 2D look up block, power, ln, e^x,
+		subsystem_handle AddSubsystem(const mathblocks::TrigonometryParameter& parameters);
+		subsystem_handle AddSubsystem(const mathblocks::Lookup1DParameter& parameters);
+		subsystem_handle AddSubsystem(const mathblocks::Lookup2DParameter& parameters);
+		subsystem_handle AddSubsystem(const mathblocks::SpecialFunctionParameter& parameters);
 		// geographic libs
 		subsystem_handle AddSubSystem(const geographic::StandardAtmosphereParameter& parameters);
 		subsystem_handle AddSubSystem(const geographic::GravityModelParameter& parameters);
@@ -130,9 +138,12 @@ namespace simulationcontrol {
 							 const unsigned int input_length,
 							 const unsigned int output_system_ID,
 							 const unsigned int output_start_index);
-		bool VectorConcatenate(const unsigned int system_ID);
-		bool MatrixConcatenate();
-		bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);
+		void EditConnectionMatrix(subsystem_handle& handle,
+								  unsigned int from_input_ID, 
+								  unsigned int to_output_systemID, 
+								  unsigned int to_output_portID);
+		bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);// batch connection
+		bool MakeConnection(const subsystem_handle& handle);
 		/*------------------------PreRunProcess of the Connected Subystems--------------*/
 		bool PreRunProcess();// check and parse the system connection relationship.
 		void DisplayTopology();

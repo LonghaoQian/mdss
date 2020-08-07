@@ -372,7 +372,7 @@ void mathauxiliary::Lookup_1D::GetOutput(VectorXd & output, const double & targe
 			output.resize(num_of_data_arrays);// slow, try to predefine dimensions before running the GetOutput function.
 		}
 		if (index_sequence_(0) == index_sequence_(1)) {
-			if (isextrapolation) {
+			if (isextrapolation) {// TO DO:: add extrapolation law
 			}
 			else {
 				for (int i = 0; i < num_of_data_arrays; i++) {
