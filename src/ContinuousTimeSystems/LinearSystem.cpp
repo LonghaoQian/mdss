@@ -372,7 +372,7 @@ namespace linearsystem {
 		D.setZero(); 
 
 		double b_0 = param_.Kp + param_.Kd / param_.Tf;
-		double b_1 = param_.Ki + param_.Kd / param_.Tf;
+		double b_1 = param_.Ki + param_.Kp / param_.Tf;
 		double b_2 = param_.Ki / param_.Tf;
 		double a_1 = 1.0 / param_.Tf;
 		double a_2 = 0.0;
@@ -382,8 +382,8 @@ namespace linearsystem {
 		A(1, 0) = -a_2;
 		A(1, 1) = -a_1;
 
-		B(0) = 0;
-		B(1) = 1;
+		B(0) = 0.0;
+		B(1) = 1.0;
 
 		C(0) = b_2 - a_2 * b_0;
 		C(1) = b_1 - a_1 * b_0;
@@ -421,7 +421,7 @@ namespace linearsystem {
 	{
 		for (int i = 0; i < param_.num_of_channels; i++) {
 			// x_dot  = A x + B u
-			if(input(0)>=0.0){
+			if(input(0)>0.0){
 				derivative.segment(i*2,2) = A * state.segment(i*2,2) + B * input(i+1); // if input(0) is positive, enable state
 			}
 			else {
@@ -433,7 +433,7 @@ namespace linearsystem {
 	void PIDcontroller::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 	{
 		for (int i = 0; i < param_.num_of_channels; i++) {
-			if (input(0) >= 0.0) {
+			if (input(0) > 0.0) {
 				output.segment(i,1) = C * state.segment(i*2,2) + D * input(i+1);
 			}
 			else {

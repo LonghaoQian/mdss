@@ -57,7 +57,6 @@ namespace discontinuoussystem {
 				output(i) = mathauxiliary::SaturationElementalWise(input(i),
 					param_.upper_bound,
 					param_.lower_bound);
-
 			}
 			break;
 		}

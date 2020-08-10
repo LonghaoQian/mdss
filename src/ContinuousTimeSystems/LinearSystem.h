@@ -107,14 +107,14 @@ namespace linearsystem {
 		void DisplayInitialCondition();
 		~RateLimitedActuator();
 	};
-
+	// TO DO; add another mode where the integration is done normally
 	struct PIDcontrollerParameter {
 		double Kp;
 		double Ki;
 		double Kd;
 		double Tf;
 		int num_of_channels;
-		bool integration_control_on;// if this is true, the first input is a switch to control the integration
+		bool integration_control_on;// if this is true, the first input is a switch to enable the controller. mode is reset
 	};
 
 	struct PIDcontrollerInitialCondition{

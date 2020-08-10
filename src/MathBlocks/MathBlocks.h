@@ -109,6 +109,11 @@ namespace mathblocks {
 		VectorXd sign_list;
 	};
 
+	enum SumSignList {
+		SUM_POSITIVE = 1,
+		SUM_NEGATIVE = -1
+	};
+
 	class Sum :
 		public Subsystem
 	{
