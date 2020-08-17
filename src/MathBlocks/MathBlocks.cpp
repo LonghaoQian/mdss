@@ -445,6 +445,10 @@ Lookup2D::Lookup2D(const Lookup2DParameter param)
 	if ((NumofDataReference_row == TableRows) && (NumofDataReference_col == TableCols) ) {
 		system_info.system_parameter_ok = 0;
 		ready_to_run = true;
+
+		std::cout << param_.reference_row << std::endl;
+		std::cout << param_.reference_col << std::endl;
+
 		table_.LoadTableData(param_.reference_row, param_.reference_col,param_.table, false);
 	}
 	else {

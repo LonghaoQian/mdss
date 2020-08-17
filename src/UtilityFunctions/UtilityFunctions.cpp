@@ -229,18 +229,30 @@ double mathauxiliary::LinearInterpolation2D(const MatrixXd & data,  // data inde
 											const Vector2i & index_2d, // col index
 											const VectorXd & reference_1d, // col reference
 											const VectorXd & reference_2d, // row reference
-											const double& target1, // col target
-											const double& target2) { // row target
+											const double& target1, // row target
+											const double& target2) { // col target
 	// bilinear interpolation
 	double temp_1, temp_2;
-	temp_1 = LinearInterpolation1D(data.col(index_2d(0)), index_1d(0), index_1d(1), reference_1d, target1);// 
-	temp_2 = LinearInterpolation1D(data.col(index_2d(1)), index_1d(0), index_1d(1), reference_1d, target1);
+	
 
-	VectorXd temp_3;
-	temp_3 << temp_1,
-			  temp_2;
 
-	return LinearInterpolation1D(temp_3, index_2d(0), index_2d(1), reference_2d, target2);
+
+	if (index_1d(0) == index_1d(1)) { // at the corner point of rows
+		temp_1 = data(index_1d(0), index_2d(0));
+		temp_2 = data(index_1d(0), index_2d(1));
+	}
+	else {
+		temp_1 = LinearInterpolation1D(data.col(index_2d(0)), index_1d(0), index_1d(1), reference_1d, target1);// 
+		temp_2 = LinearInterpolation1D(data.col(index_2d(1)), index_1d(0), index_1d(1), reference_1d, target1);//
+	}
+
+	if (index_2d(0) == index_2d(1)) { // at the corner point of cols
+		return temp_1;
+	}
+	else {
+		return temp_1 + (temp_2 - temp_1)*(target2 - reference_2d(index_2d(0))) / (reference_2d(index_2d(1))-reference_2d(index_2d(0)));
+	}	
+				 	
 }
 
 void mathauxiliary::SaturationElementalWise(VectorXd & output, const VectorXd & upper_limit_, const VectorXd & lower_limit_)
@@ -465,11 +477,15 @@ double mathauxiliary::Lookup_2D::GetOutput(const double& target1, // row target
 {
 	index_sequence_.col(0) = BinarySearchVector(true, reference_1d_, target1);// row target
 	index_sequence_.col(1) = BinarySearchVector(true, reference_2d_, target2); // col target
+
 	return LinearInterpolation2D(table_data_, index_sequence_.col(0), index_sequence_.col(1), reference_1d_, reference_2d_,target1,target2);
 }
 
-void mathauxiliary::Lookup_2D::LoadTableData(const VectorXd & reference_1d, const VectorXd & reference_2d, const MatrixXd & table_data_, bool extrapolation)
+void mathauxiliary::Lookup_2D::LoadTableData(const VectorXd & reference_1d, const VectorXd & reference_2d, const MatrixXd & table_data, bool extrapolation)
 {
+	reference_1d_ = reference_1d;
+	reference_2d_ = reference_2d;
+	table_data_ = table_data;
 }
 
 void mathauxiliary::Lookup_2D::Preprocess() {

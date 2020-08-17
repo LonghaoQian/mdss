@@ -42,6 +42,10 @@ void Subsystem::Solver_InitSolverBuffer(unsigned int num_of_kn)
 {
 	solver_buffer_output_temp.resize(system_info.num_of_outputs);
 	solver_buffer_input_temp.resize(system_info.num_of_inputs);
+	// initialize the increment first
+	solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);
+	solver_buffer_state_increment2.setZero(system_info.num_of_continuous_states);
+	relative_error.resize(system_info.num_of_continuous_states);// initialize relative error
 	// k1,...,kn vector for numerical solver
 	if (system_info.num_of_continuous_states == 0)
 	{
@@ -97,7 +101,8 @@ void Subsystem::Solver_CalculateIncrement(const VectorXd & updatecoefficients)
 {
 	if (!system_info.NO_CONTINUOUS_STATE)
 	{
-		solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);// set to zero before added ? why specifying dimension? 
+		//solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);// set to zero before added ? why specifying dimension? 
+		solver_buffer_state_increment1.setZero(); // setzero without resize
 		for (int i = 0; i < updatecoefficients.size(); i++)
 		{
 			solver_buffer_state_increment1 += updatecoefficients(i)*solver_buffer_k_sequence.col(i);
@@ -110,19 +115,21 @@ double Subsystem::Solver_CalculateIncrement(const VectorXd & updatecoefficients1
 	if (!system_info.NO_CONTINUOUS_STATE)
 	{
 
-		solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);// set to zero before added
+		//solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);// set to zero before added
+		solver_buffer_state_increment1.setZero();
 		for (int i = 0; i < updatecoefficients1.size(); i++)
 		{
 			solver_buffer_state_increment1 += updatecoefficients1(i)*solver_buffer_k_sequence.col(i);
 		}
-		solver_buffer_state_increment2.setZero(system_info.num_of_continuous_states);// set to zero before added
+		//solver_buffer_state_increment2.setZero(system_info.num_of_continuous_states);// set to zero before added
+		solver_buffer_state_increment2.setZero();
 		for (int i = 0; i < updatecoefficients2.size(); i++)
 		{
 			solver_buffer_state_increment2 += updatecoefficients2(i)*solver_buffer_k_sequence.col(i);
 		}
 		// calculate relative error
-		VectorXd relative_error;
-		relative_error.resize(system_info.num_of_continuous_states);
+		//VectorXd relative_error;
+		// relative_error.resize(system_info.num_of_continuous_states);
 		for (unsigned int i = 0; i < system_info.num_of_continuous_states; i++)
 		{
 			if (abs(state(i)) > 1)// if this state is greater than 1, then normalize it to 1;

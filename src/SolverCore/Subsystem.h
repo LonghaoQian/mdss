@@ -14,6 +14,7 @@ enum subsystem_category {
 	DYNAMICS,
 	GEOGRAPHIC,
 	MATH,
+	PROPULSION,
 	SOURCE,
 	UTILITY,
 };
@@ -40,6 +41,8 @@ enum subsystem_type {
 	math_SPECIALFUNCTION,
 	math_SUM,
 	math_TRIGONOMETRYFUNCTION,
+	propulsion_CFM56AUXILIARYMODEL,
+	propulsion_CFM56THRUST,
 	source_SINGALGENERATOR,
 	source_STEP,
 	source_RAMP
@@ -69,6 +72,8 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{math_SPECIALFUNCTION,"Special function block"},
 	{math_TRIGONOMETRYFUNCTION,"Special function block"},
 	{math_SUM, "Summation block"},
+	{propulsion_CFM56AUXILIARYMODEL, "CFM56 Auxiliary Model block"},
+	{propulsion_CFM56THRUST, "CFM56 Thrust block"},
 	{source_SINGALGENERATOR, "Signal Generator "},
 	{source_STEP, "Step block"},
 	{source_RAMP, "Ramp block"}
@@ -113,6 +118,8 @@ protected:
 	VectorXd solver_buffer_state_increment2;
 	// k1,...,kn vector for numerical solver
 	MatrixXd solver_buffer_k_sequence;
+	// relative error for adaptive step
+	VectorXd relative_error;
 public:
 	/*----------SystemSetUp--------------*/
 	virtual void DifferentialEquation(const double& t, 

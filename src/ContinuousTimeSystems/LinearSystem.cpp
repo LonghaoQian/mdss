@@ -115,7 +115,6 @@ namespace linearsystem {
 
 	Integrator::Integrator(const IntegratorParameter & parameter_, const IntegratorInitialCondition & IC)
 	{
-		state = IC.X_0;// assign the initial condition to the state
 		parameter = parameter_;
 		// sets the system type and category 
 		system_info.category = LINEARSYSTEM;
@@ -133,6 +132,7 @@ namespace linearsystem {
 		system_info.NO_CONTINUOUS_STATE = false;
 		// initialize state memeory
 		state.resize(system_info.num_of_continuous_states);
+		state = IC.X_0;// assign the initial condition to the state
 		output.resize(system_info.num_of_outputs);
 		system_info.input_connection.resize(system_info.num_of_inputs, 2);
 	}
@@ -157,7 +157,7 @@ namespace linearsystem {
 	void Integrator::DisplayParameters()
 	{
 		cout << "-------------" << endl;
-		cout << "Number of Channel is :" << parameter.num_of_channels << ' \n ';
+		cout << "Number of Channel is :" << parameter.num_of_channels << "\n";
 	}
 
 	void Integrator::DisplayInitialCondition()

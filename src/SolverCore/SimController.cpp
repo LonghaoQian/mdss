@@ -248,6 +248,28 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
+	subsystem_handle SimController::AddSubSystem(const  propulsionsystem::CFM56Parameter& parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new  propulsionsystem::CFM56AuxiliaryModel(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	subsystem_handle SimController::AddSubSystem(const propulsionsystem::CF56ThrustModelParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new  propulsionsystem::CFM56ThrustModel(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
 	void SimController::EditConnectionMatrix(subsystem_handle & handle,
 											 unsigned int from_input_ID,
 											 unsigned int to_output_systemID, 

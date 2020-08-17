@@ -11,6 +11,7 @@
 #include "AeroAngle.h"
 #include "AeroForceMoment1.h"
 #include "Discontinuous/DiscontinuousSystem.h"
+#include "PropulsionBlocks.h"
 #define EXTERNAL_INPUT -1
 #define UNCONNECTED -2
 /* TO DO: 
@@ -87,6 +88,7 @@ namespace simulationcontrol {
 		bool RunTopologyAnalysis();
 		string GetSystemTypeFromID(subsystem_type type);
 		subsystem_handle CreateSystemHandle(const subsystem_info& info, const vector<unique_ptr<Subsystem>>& subsystem_list);
+		vector<subsystem_handle> handle_pointer_list;// TO DO: use this internal list
 		/*--------------------- Data logging -------------------------------------------*/
 		ofstream loggingdata;
 		std::vector<Matrix<int, 1, 2>> logportlist; // list containing the mapping of the subsystemID and map
@@ -95,9 +97,6 @@ namespace simulationcontrol {
 		void LogRequestedData();
 	public:
 		/* A list of all overloadings of AddSubsystem(...) for pre-defined types of models*/
-		// Discontious
-		// TO DO: switch block, saturation block
-		// 
 		// Linear system
 		subsystem_handle AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC);
 		subsystem_handle AddSubSystem(const linearsystem::IntegratorParameter& parameters, const linearsystem::IntegratorInitialCondition& IC);
@@ -128,22 +127,21 @@ namespace simulationcontrol {
 		subsystem_handle AddSubSystem(const  source_sink::PeriodicWaveparameter& parameters);
 		subsystem_handle AddSubSystem(const  source_sink::Stepparameter& parameters);
 		subsystem_handle AddSubSystem(const  source_sink::Rampparamter& parameters);
+		// propulsion
+		subsystem_handle AddSubSystem(const  propulsionsystem::CFM56Parameter& parameters);
+		subsystem_handle AddSubSystem(const  propulsionsystem::CF56ThrustModelParameter& parameters);
 		// TO DO: utility blocks
 		// unit conversion, matrix to euler angles, matrix quaternion, quaternion euler angle
 		/*------------------------define connections between subsystems--------------------------------*/
 		bool ResetParameter(); // TO DO: reset subsystem parameter
 		bool ResetInitialCondition(); // TO DO: reset subsystem initial condition
-		bool BatchConnection(const unsigned int input_system_ID,
-							 const unsigned int input_start_index,
-							 const unsigned int input_length,
-							 const unsigned int output_system_ID,
-							 const unsigned int output_start_index);
 		void EditConnectionMatrix(subsystem_handle& handle,
 								  unsigned int from_input_ID, 
 								  unsigned int to_output_systemID, 
 								  unsigned int to_output_portID);
 		bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);// batch connection
 		bool MakeConnection(const subsystem_handle& handle);
+		bool FlushMakeConnection();
 		/*------------------------PreRunProcess of the Connected Subystems--------------*/
 		bool PreRunProcess();// check and parse the system connection relationship.
 		void DisplayTopology();

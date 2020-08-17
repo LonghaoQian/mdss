@@ -31,6 +31,7 @@ struct EngineLogicOutput{
 };
 
 struct EngineLogicInput {
+	bool EngineON;
 	bool Ignition;
 	bool Starter;
 	double N2;
@@ -46,7 +47,7 @@ private:
 	ControlState state;
 	EngineLogicOutput output;
 	bool switchflag;
-	void OutputFromState(ControlState state_);
+	void OutputFromState(ControlState state_, const EngineLogicInput& input);
 
 	std::map<const ControlState, std::function<ControlState(const EngineLogicInput&)> > SwitchingLogic{
 		{LOGIC_SHUTDOWN,[](const EngineLogicInput& input) {
@@ -102,11 +103,11 @@ void EngineLogic::ResetState(ControlState reset_state) {
 
 EngineLogicOutput EngineLogic::UpdateLogic(const EngineLogicInput& input) {
 	state = SwitchingLogic[state](input);// update state
-	OutputFromState(state);
+	OutputFromState(state,input);
 	return output;
 }
 
-void EngineLogic::OutputFromState(ControlState state_) {
+void EngineLogic::OutputFromState(ControlState state_,const EngineLogicInput& input) {
 	switch (state_) {
 		case LOGIC_SHUTDOWN: {
 			output.FuelFlow = 0.0;
@@ -122,7 +123,12 @@ void EngineLogic::OutputFromState(ControlState state_) {
 		}
 		case LOGIC_STARTING: {
 			output.FuelFlow = 0.0;
-			output.startertorque = 1.0;
+			if (input.EngineON) {
+				output.startertorque = 1.0;
+			}
+			else {
+				output.startertorque = 0.0;
+			}
 			output.state = LOGIC_STARTING;
 			break;
 		}
@@ -133,7 +139,12 @@ void EngineLogic::OutputFromState(ControlState state_) {
 			break;
 		}
 		case LOGIC_NORMAL: {
-			output.FuelFlow = 1.0;
+			if (input.EngineON) {
+				output.FuelFlow = 1.0;
+			}
+			else {
+				output.FuelFlow = 0.0;
+			}
 			output.startertorque = 0.0;
 			output.state = LOGIC_NORMAL;
 			break;
@@ -151,9 +162,9 @@ int main()
 	config1.frame_step = 0.02;
 	config1.mim_step = 0.005;
 	config1.start_time = 0.0;
-	config1.solver_type = RungeKuttaFamily::DORMANDPRINCE;
+	config1.solver_type = RungeKuttaFamily::RUNGKUTTA45;
 	config1.loggingconfig.filename = "datalog.txt";
-	config1.loggingconfig.uselogging = false;
+	config1.loggingconfig.uselogging = true;
 	simulationcontrol::SimController SimInstance1(config1);
 
 	clock_t t;
@@ -963,18 +974,92 @@ int main()
 
 	handle_pointer_list.push_back(&N2controller_product);
 
+	propulsionsystem::CFM56Parameter CFM56_param_;
+	CFM56_param_.CFM56N1model.b0 = 0.115;
+	CFM56_param_.CFM56N1model.b1 = 0.6;
+	CFM56_param_.CFM56N1model.b2 = 0.8;
+
+	CFM56_param_.CFM56N1model.k0 = 2.0 / 3.0;
+	CFM56_param_.CFM56N1model.k1 = 1.0;
+	CFM56_param_.CFM56N1model.k2 = 2.8;
+	CFM56_param_.CFM56N1model.power0 = 1.6;
+	CFM56_param_.CFM56N1model.Tf = 0.02;
+	CFM56_param_.CFM56N1model.c1 = CFM56_param_.CFM56N1model.k0*pow((CFM56_param_.CFM56N1model.b1 - CFM56_param_.CFM56N1model.b0), CFM56_param_.CFM56N1model.power0);
+	CFM56_param_.CFM56N1model.c2 = CFM56_param_.CFM56N1model.k1*(CFM56_param_.CFM56N1model.b2 - CFM56_param_.CFM56N1model.b1) + CFM56_param_.CFM56N1model.c1;
+
+	CFM56_param_.CFM56EGTmodel.b0 = 0.313;
+	CFM56_param_.CFM56EGTmodel.b1 = 0.591;
+	CFM56_param_.CFM56EGTmodel.c1 = 400.0;
+	CFM56_param_.CFM56EGTmodel.environment_temp = 31.0;
+	CFM56_param_.CFM56EGTmodel.k0 = 1434.7;
+	CFM56_param_.CFM56EGTmodel.k1 = 979.9118;
+	CFM56_param_.CFM56EGTmodel.Tf = 0.02;
+
+	CFM56_param_.CFM56FuelFlowmodel.b0 = 0.339;
+	CFM56_param_.CFM56FuelFlowmodel.b1 = 0.591;
+	CFM56_param_.CFM56FuelFlowmodel.c0 = 0.29;
+	CFM56_param_.CFM56FuelFlowmodel.c1 = 0.42;
+	CFM56_param_.CFM56FuelFlowmodel.d1 = 3.0;
+	CFM56_param_.CFM56FuelFlowmodel.k0 = 0.4319;
+	CFM56_param_.CFM56FuelFlowmodel.k1 = 2.3;
+	CFM56_param_.CFM56FuelFlowmodel.power1 = 3.0;
+	CFM56_param_.CFM56FuelFlowmodel.Tf = 0.02;
+	
+
+	subsystem_handle CFM56_aux = SimInstance1.AddSubSystem(CFM56_param_);
+	handle_pointer_list.push_back(&CFM56_aux);
+
+
+	// thrust table
+	MatrixXd Idle(6, 7);
+	MatrixXd Max(6, 7);
+	VectorXd Mach(6);
+	VectorXd Height(7);
+
+	Idle << 0.0420000000000000, 0.0436000000000000, 0.0528000000000000, 0.0694000000000000, 0.0899000000000000, 0.118300000000000, 0.146700000000000,
+		 0.0500000000000000,	0.0501000000000000,	0.0335000000000000,	0.0544000000000000,	0.0797000000000000,	0.104900000000000,	0.134200000000000,
+		0.00400000000000000,	0.00470000000000000,	0.00200000000000000,	0.0272000000000000,	0.0595000000000000,	0.0891000000000000,	0.120300000000000,
+		0,	0,	0,	0,	0.0276000000000000,	0.0718000000000000,	0.107300000000000,
+		0,	0,	0,	0,	0.0174000000000000,	0.0468000000000000,	0.0900000000000000,
+		0,	0,	0,	0,	0,	0.0422000000000000,	0.0700000000000000;
+
+	Max << 1.26000000000000, 1, 0.740000000000000, 0.534000000000000, 0.372000000000000, 0.241000000000000, 0.149000000000000,
+		1.17100000000000, 0.934000000000000, 0.697000000000000, 0.506000000000000, 0.355000000000000, 0.231000000000000, 0.143000000000000,
+		1.15000000000000, 0.921000000000000, 0.692000000000000, 0.506000000000000, 0.357000000000000, 0.233000000000000, 0.145000000000000,
+		1.18100000000000, 0.951000000000000, 0.721000000000000, 0.532000000000000, 0.378000000000000, 0.248000000000000, 0.154000000000000,
+		1.25800000000000, 1.02000000000000, 0.782000000000000, 0.582000000000000, 0.417000000000000, 0.275000000000000, 0.170000000000000,
+		1.36900000000000, 1.12000000000000, 0.871000000000000, 0.651000000000000, 0.475000000000000, 0.315000000000000, 0.195000000000000;
+	Mach <<0, 0.200000000000000, 0.400000000000000, 0.600000000000000, 0.800000000000000, 1;
+	Height << -3048,	0,	3048,	6096,	9144,	12192,	15240;
+
+
+	propulsionsystem::CF56ThrustModelParameter thrustmodelparam;
+
+	thrustmodelparam.Height = Height;
+	thrustmodelparam.Max = Max;
+	thrustmodelparam.IdelN1 = 0.2;
+	thrustmodelparam.Idle = Idle;
+	thrustmodelparam.Mach = Mach;
+	thrustmodelparam.MaxN1 = 1.0;
+	thrustmodelparam.MaxThrust = 88964.43230599999;
+
+
+	subsystem_handle  CFM56_thrust = SimInstance1.AddSubSystem(thrustmodelparam);
+	handle_pointer_list.push_back(&CFM56_thrust);
+
 	SimInstance1.EditConnectionMatrix(N2controller_N2starterrate, 0, N2rotordynamics.ID, 0);
 	SimInstance1.EditConnectionMatrix(N2controller_sum_2, 0, N2controller_N2starterrate.ID, 0);
 	SimInstance1.EditConnectionMatrix(N2controller_sum_2, 1, N2controller_N2starterintercept.ID, 0);
 	SimInstance1.EditConnectionMatrix(N2controller_starterlimiter, 0, N2controller_sum_2.ID, 0);
 	SimInstance1.EditConnectionMatrix(N2controller_product, 0, simulationcontrol::external, 0); // 2 for starter
 	SimInstance1.EditConnectionMatrix(N2controller_product, 1, N2controller_starterlimiter.ID, 0);
-
 	SimInstance1.EditConnectionMatrix(N2controller_sum_3, 0, N2controller_product.ID, 0);
 	SimInstance1.EditConnectionMatrix(N2controller_sum_3, 1, PID.ID, 0);
-
 	SimInstance1.EditConnectionMatrix(N2_dynamics_sum, 0, N2controller_sum_3.ID, 0);
-
+	SimInstance1.EditConnectionMatrix(CFM56_aux, 0, N2rotordynamics.ID, 0);
+	SimInstance1.EditConnectionMatrix(CFM56_thrust, propulsionsystem::CFM56_INPUT_Height, simulationcontrol::external, 0);
+	SimInstance1.EditConnectionMatrix(CFM56_thrust, propulsionsystem::CFM56_INPUT_Mach, simulationcontrol::external, 0);
+	SimInstance1.EditConnectionMatrix(CFM56_thrust, propulsionsystem::CFM56_INPUT_N1, CFM56_aux.ID, propulsionsystem::CFM56_OUTPUT_N1);
 
 	// make connection
 
@@ -986,21 +1071,33 @@ int main()
 
 	// define the data log tag
 
-	//SimInstance1.DefineDataLogging(N2rotordynamics.ID, 0, "N2_sim");
-	//SimInstance1.DefineDataLogging(N2controller_starterlimiter.ID, 0, "starter_torque_sim");
-	//SimInstance1.DefineDataLogging(PID.ID, 0, "PID_sim");
-	//SimInstance1.DefineDataLogging(N2controller_switch_1.ID, 0, "switch_sim");
-	//SimInstance1.DefineDataLogging(N2_dynamics_sum_1.ID, 0, "N2_dynamics_sum_1_sim");
+	SimInstance1.DefineDataLogging(N2rotordynamics.ID, 0, "N2_sim");
+	SimInstance1.DefineDataLogging(N2controller_starterlimiter.ID, 0, "starter_torque_sim");
+	SimInstance1.DefineDataLogging(PID.ID, 0, "PID_sim");
+	SimInstance1.DefineDataLogging(N2controller_switch_1.ID, 0, "switch_sim");
+	SimInstance1.DefineDataLogging(N2_dynamics_sum_1.ID, 0, "N2_dynamics_sum_1_sim");
+	SimInstance1.DefineDataLogging(CFM56_aux.ID, propulsionsystem::CFM56_OUTPUT_N1, "N1_sim");
+	SimInstance1.DefineDataLogging(CFM56_aux.ID, propulsionsystem::CFM56_OUTPUT_EGT, "EGT_sim");
+	SimInstance1.DefineDataLogging(CFM56_aux.ID, propulsionsystem::CFM56_OUTPUT_FF, "FF_sim");
+	SimInstance1.DefineDataLogging(CFM56_thrust.ID,0, "Thrust");
 
 	bool flag = SimInstance1.PreRunProcess();
-	int N_steps = 6500;
+	int N_steps = 10000;
 	logic1_input.Ignition = true;
 	logic1_input.Starter = true;
+	logic1_input.EngineON = true;
 	double throttle = 0.588;
 
 
 	if (flag) { // if successful, run updates
-
+		std::cout << " All good, ready to run. Enter 1 to start.../ Enter other number to stop ..." << std::endl;
+		int start = 0;
+		std::cin >> start;
+		if (start != 1) {
+			std::cout << " Abort... " << std::endl;
+			return 0;
+		}
+		std::cout << "Running ... " << std::endl;
 		VectorXd extern_input;
 		SimInstance1.ReshapeExternalInputVector(extern_input);
 		t = clock();
@@ -1019,6 +1116,10 @@ int main()
 				else {
 					throttle = 0.114 + 0.588;
 				}
+			}
+
+			if (SimInstance1.Run_GetSystemTime() > 130) {
+				logic1_input.EngineON = false;
 			}
 
 			logic1_output = logic1.UpdateLogic(logic1_input);
