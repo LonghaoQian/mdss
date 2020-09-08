@@ -165,6 +165,7 @@ int main()
 	config1.solver_type = RungeKuttaFamily::RUNGKUTTA45;
 	config1.loggingconfig.filename = "datalog.txt";
 	config1.loggingconfig.uselogging = true;
+	config1.loglevel = simulationcontrol::LOGLEVEL_ERROR;
 	simulationcontrol::SimController SimInstance1(config1);
 
 	clock_t t;

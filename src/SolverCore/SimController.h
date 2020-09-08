@@ -24,6 +24,15 @@ using namespace Eigen;
 using namespace std;
 namespace simulationcontrol {
 	typedef MatrixX2i SIMCONNECTION;
+	typedef vector<subsystem_handle>::iterator subsystemhandlePtr;
+
+	enum LogMsgLevel { // log level
+		LOGLEVEL_ALL = 0, // disp all msg
+		LOGLEVEL_WARN,    // disp warnings and errors
+		LOGLEVEL_ERROR,   // disp errors
+		LOGLEVEL_NONE     // disp nothing
+	};
+
 	enum signalrouting
 	{
 		external = -1,
@@ -45,6 +54,7 @@ namespace simulationcontrol {
 		bool adaptive_step;
 		double start_time;
 		DataLogging loggingconfig;
+		LogMsgLevel loglevel{ LOGLEVEL_ALL };
 	};
 	// the handle for assigned subsystems
 	struct SubsystemGroupHandle {
@@ -66,6 +76,7 @@ namespace simulationcontrol {
 		vector<unique_ptr<Subsystem>> subsystem_list;// a list of all subsystems
 		MatrixXi connectivity;// connectivity map of the simulation
 		MatrixXi external_mapping;
+		LogMsgLevel loglevel{ LOGLEVEL_ALL };
 		// temp space for numerical integration
 		//----------------------------- Solver Variables---------------------------//
 		bool GetExternalInputs(const VectorXd& extern_input);// buffer the external inputs
@@ -88,7 +99,7 @@ namespace simulationcontrol {
 		bool RunTopologyAnalysis();
 		string GetSystemTypeFromID(subsystem_type type);
 		subsystem_handle CreateSystemHandle(const subsystem_info& info, const vector<unique_ptr<Subsystem>>& subsystem_list);
-		vector<subsystem_handle> handle_pointer_list;// TO DO: use this internal list
+		vector<subsystem_handle> system_handle_list;// the list of handles
 		/*--------------------- Data logging -------------------------------------------*/
 		ofstream loggingdata;
 		std::vector<Matrix<int, 1, 2>> logportlist; // list containing the mapping of the subsystemID and map
@@ -133,16 +144,20 @@ namespace simulationcontrol {
 		// TO DO: utility blocks
 		// unit conversion, matrix to euler angles, matrix quaternion, quaternion euler angle
 		/*------------------------define connections between subsystems--------------------------------*/
-		bool ResetParameter(); // TO DO: reset subsystem parameter
 		bool ResetInitialCondition(); // TO DO: reset subsystem initial condition
 		void EditConnectionMatrix(subsystem_handle& handle,
 								  unsigned int from_input_ID, 
 								  unsigned int to_output_systemID, 
 								  unsigned int to_output_portID);
+		void EditConnectionMatrix(subsystemhandlePtr handlePtr,
+								  unsigned int from_input_ID,
+								  unsigned int to_output_systemID,
+								  unsigned int to_output_portID);
 		bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);// batch connection
 		bool MakeConnection(const subsystem_handle& handle);
 		bool FlushMakeConnection();
 		/*------------------------PreRunProcess of the Connected Subystems--------------*/
+		void EditSolverConfig(const SolverConfig& config);
 		bool PreRunProcess();// check and parse the system connection relationship.
 		void DisplayTopology();
 		void ReshapeExternalInputVector(VectorXd& extern_input);
@@ -156,7 +171,9 @@ namespace simulationcontrol {
 							   string tag);
 		/*-----------------------Post run process----------------------------------------*/
 		int PostRunProcess();
+		/*-----------------------Solver definition--------------------------------------*/
 		SimController(const SolverConfig& config);
+		SimController();// default constructor
 		~SimController();
 	};
 }

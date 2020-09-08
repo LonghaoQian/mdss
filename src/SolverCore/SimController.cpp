@@ -8,12 +8,35 @@ namespace simulationcontrol {
 		current_stepsize = solver_config.frame_step;
 		num_of_cycles_per_step = 1; // set the number of cycles per step to 1 as initial condition
 		current_time = solver_config.start_time;
-		if (solver_config.loggingconfig.uselogging) {
-			loggingdata.open(solver_config.loggingconfig.filename,std::ios::trunc);// overwrite exsiting file
-		}
+		loglevel = solver_config.loglevel;
+
+	}
+	SimController::SimController() {
+		// load the default parameter for solver
+		solver_config.eposilon = 0.00001;
+		solver_config.adaptive_step = false;
+		solver_config.frame_step = 0.02;
+		solver_config.mim_step = 0.005;
+		solver_config.start_time = 0.0;
+		solver_config.solver_type = RungeKuttaFamily::RUNGKUTTA45;
+		solver_config.loggingconfig.filename = "datalog.txt";
+		solver_config.loggingconfig.uselogging = false;
+		solver_config.loglevel = simulationcontrol::LOGLEVEL_ERROR;
+		//
+		current_stepsize = solver_config.frame_step;
+		num_of_cycles_per_step = 1; // set the number of cycles per step to 1 as initial condition
+		current_time = solver_config.start_time;
+		loglevel = solver_config.loglevel;
 	}
 
-
+	void SimController::EditSolverConfig(const SolverConfig & config)
+	{
+		solver_config = config;// load the solver information
+		current_stepsize = solver_config.frame_step;
+		num_of_cycles_per_step = 1; // set the number of cycles per step to 1 as initial condition
+		current_time = solver_config.start_time;
+		loglevel = solver_config.loglevel;
+	}
 
 	subsystem_handle SimController::AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC)
 	{
@@ -622,6 +645,7 @@ namespace simulationcontrol {
 		extern_input.setZero();
 	}
 
+
 	bool SimController::PreRunProcess()
 	{
 		bool flag = true;
@@ -769,6 +793,11 @@ namespace simulationcontrol {
 			}
 
 		}
+		// if the logging setting is true, turn on open the log file
+		if (solver_config.loggingconfig.uselogging) {
+			loggingdata.open(solver_config.loggingconfig.filename, std::ios::trunc);// overwrite exsiting file
+		}
+
 		return flag;
 	}
 	bool SimController::DetermineOutputSequenceDFS(int level, unsigned int index_now) {
@@ -925,12 +954,12 @@ namespace simulationcontrol {
 
 	subsystem_handle SimController::CreateSystemHandle(const subsystem_info & info, const vector<unique_ptr<Subsystem>>& subsystem_list)
 	{
+		//handle_pointer_list.emplace_back(new subsystem_handle*);
 		subsystem_handle handle;
 		handle.isParameterOK = info.system_parameter_ok;
 		handle.label_ = info.label_;
 		handle.type = info.type;
 		handle.ID = subsystem_list.size() - 1;
-		//cout <<"#" << handle.ID <<  " num of inputs: " << subsystem_list.back()->GetSystemInfo().num_of_inputs << endl;
 		if (subsystem_list.back()->GetSystemInfo().num_of_inputs > 0)
 		{
 			handle.input_connection_list.resize(subsystem_list.back()->GetSystemInfo().num_of_inputs,2); // resize and initialize the coonection matrix
@@ -939,7 +968,6 @@ namespace simulationcontrol {
 				handle.input_connection_list(i, simulationcontrol::outputportID) = 0;
 			}
 		}
-		//cout << " connection: " << handle.input_connection_list << endl;
 		// TO DO: add an initial condition for the input connection of each system
 		return  handle;
 	}
