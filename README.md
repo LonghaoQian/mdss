@@ -18,7 +18,25 @@
 |文件目录    |内容                        |
 |----------------|-------------------------------|
 |src            |`包含所有源代码`            |
-|solver_verification       |`包含求解器计算输出和利用Simulink计算的仿真结果的对比验证代码和记录数据读取MATLAB脚本`            |
+|verification       |`包含求解器计算输出和利用Simulink计算的仿真结果的对比验证代码和记录数据读取MATLAB脚本`            |
+
+## 代码编译：
+
+以下步骤包含工程编译步骤：
+> 第一步：克隆工程到文件夹，解决方案为：solver_test.sln。
+> 第二步：下载Eigen库，解压缩后将文件夹重命名为eigen3，放在解决方案文件夹中（ SimulationSolver/）。
+> 第三步：选择 release + x64 构型，然后编译运行。
+
+## Eigen 库下载：
+
+* Eigen 库 ：[http://eigen.tuxfamily.org/index.php?title=Main_Page](http://eigen.tuxfamily.org/index.php?title=Main_Page)
+	- 如果下载有困难可以联系我，我直接把库压缩发给你。Gitlab 有文件传输限制，Eigen 库无法直接与其它代码一起上传。
+	- 证书描述如下：
+--Eigen is  [Free Software](http://www.gnu.org/philosophy/free-sw.html). Starting from the 3.1.1 version, it is licensed under the  [MPL2](http://www.mozilla.org/MPL/2.0), which is a simple weak copyleft license. Common questions about the MPL2 are answered in the official  [MPL2 FAQ](http://www.mozilla.org/MPL/2.0/FAQ.html).
+--Earlier versions were licensed under the LGPL3+.
+--Note that currently, a few features rely on third-party code licensed under the LGPL: SimplicialCholesky, AMD 		ordering, and constrained_cg. Such features can be explicitly disabled by compiling with the EIGEN_MPL2_ONLY preprocessor symbol defined. Furthermore, Eigen provides interface classes for various third-party libraries (usually recognizable by the <Eigen/*Support> header name). Of course you have to mind the license of the so-included library when using them.
+Virtually any software may use Eigen. For example, closed-source software may use Eigen without having to disclose its own source code. Many proprietary and closed-source software projects are using Eigen right now, as well as many BSD-licensed projects.
+See the  **[MPL2 FAQ](http://www.mozilla.org/MPL/2.0/FAQ.html)**  for more information, and do not hesitate to  [contact us](http://eigen.tuxfamily.org/index.php?title=Main_Page#Mailing_list)  if you have any questions.
 
 ## 模型运行简介：
 以下步骤包含运行仿真器的基本设置
