@@ -769,6 +769,9 @@ namespace simulationcontrol {
 			// push the initial condition into the logger
 			if (solver_config.loggingconfig.uselogging) {
 				total_number_log = logportlist.size();
+				// if the logging setting is true, turn on open the log file
+				loggingdata.open(solver_config.loggingconfig.filename, std::ios::trunc);// overwrite exsiting file
+				// write the file info
 				if (loggingdata.is_open()) {
 					// insert identifier as the first row:
 					loggingdata << "This file is a data log from solver." << "\n";
@@ -792,10 +795,6 @@ namespace simulationcontrol {
 				cout << "PARSING ERROR EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
 			}
 
-		}
-		// if the logging setting is true, turn on open the log file
-		if (solver_config.loggingconfig.uselogging) {
-			loggingdata.open(solver_config.loggingconfig.filename, std::ios::trunc);// overwrite exsiting file
 		}
 
 		return flag;

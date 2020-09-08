@@ -10,7 +10,7 @@
 #include "MathBlocks.h"
 #include "AeroAngle.h"
 #include "AeroForceMoment1.h"
-#include "Discontinuous/DiscontinuousSystem.h"
+#include "DiscontinuousSystem.h"
 #include "PropulsionBlocks.h"
 #define EXTERNAL_INPUT -1
 #define UNCONNECTED -2
