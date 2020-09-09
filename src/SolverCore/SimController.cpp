@@ -38,7 +38,7 @@ namespace simulationcontrol {
 		loglevel = solver_config.loglevel;
 	}
 
-	subsystem_handle SimController::AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC)
+	unsigned int SimController::AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC)
 	{
 		/* Logic:
 		1. push a pointer into subsystem_list
@@ -56,7 +56,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const linearsystem::IntegratorParameter & parameters, const linearsystem::IntegratorInitialCondition & IC)
+	unsigned int SimController::AddSubSystem(const linearsystem::IntegratorParameter & parameters, const linearsystem::IntegratorInitialCondition & IC)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new linearsystem::Integrator(parameters, IC));
@@ -67,7 +67,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const linearsystem::TransferFunctionParameter & parameters)
+	unsigned int SimController::AddSubSystem(const linearsystem::TransferFunctionParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new linearsystem::TransferFunction(parameters));
@@ -78,7 +78,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const linearsystem::PIDcontrollerParameter & parameters)
+	unsigned int SimController::AddSubSystem(const linearsystem::PIDcontrollerParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new linearsystem::PIDcontroller(parameters));
@@ -89,7 +89,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const discontinuoussystem::SaturationParameter & parameters)
+	unsigned int SimController::AddSubSystem(const discontinuoussystem::SaturationParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new discontinuoussystem::Saturation(parameters));
@@ -100,7 +100,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const discontinuoussystem::SwitchParameter & parameters)
+	unsigned int SimController::AddSubSystem(const discontinuoussystem::SwitchParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new discontinuoussystem::Switch(parameters));
@@ -111,10 +111,10 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const RigidBodyParameter & parameters, const RigidBodyCondition & IC)
+	unsigned int SimController::AddSubSystem(const dynamics::RigidBodyParameter & parameters, const dynamics::RigidBodyCondition & IC)
 	{
 		subsystem_info system_info;
-		subsystem_list.emplace_back(new RigidBody(parameters, IC));
+		subsystem_list.emplace_back(new dynamics::RigidBody(parameters, IC));
 		system_info = subsystem_list.back()->GetSystemInfo();
 		// update number of subsystems
 		num_of_subsystems = subsystem_list.size();
@@ -122,7 +122,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const mathblocks::GainParameter& parameters)
+	unsigned int SimController::AddSubSystem(const mathblocks::GainParameter& parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Gain(parameters));
@@ -133,7 +133,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const mathblocks::ConstantParameter & parameters)
+	unsigned int SimController::AddSubSystem(const mathblocks::ConstantParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Constant(parameters));
@@ -144,7 +144,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const mathblocks::SumParameter & parameters)
+	unsigned int SimController::AddSubSystem(const mathblocks::SumParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Sum(parameters));
@@ -155,7 +155,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const mathblocks::MultiplicationParam & parameters)
+	unsigned int SimController::AddSubSystem(const mathblocks::MultiplicationParam & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Multiplication(parameters));
@@ -166,7 +166,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubsystem(const mathblocks::TrigonometryParameter & parameters)
+	unsigned int SimController::AddSubsystem(const mathblocks::TrigonometryParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::TrigonometricFunction(parameters));
@@ -177,7 +177,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubsystem(const mathblocks::Lookup1DParameter & parameters)
+	unsigned int SimController::AddSubsystem(const mathblocks::Lookup1DParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Lookup1D(parameters));
@@ -188,7 +188,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubsystem(const mathblocks::Lookup2DParameter & parameters)
+	unsigned int SimController::AddSubsystem(const mathblocks::Lookup2DParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Lookup2D(parameters));
@@ -199,7 +199,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const  source_sink::PeriodicWaveparameter& parameters) {
+	unsigned int SimController::AddSubSystem(const  source_sink::PeriodicWaveparameter& parameters) {
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new  source_sink::PeriodicWave(parameters));
 		system_info = subsystem_list.back()->GetSystemInfo();
@@ -209,7 +209,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const geographic::StandardAtmosphereParameter& parameters) {
+	unsigned int SimController::AddSubSystem(const geographic::StandardAtmosphereParameter& parameters) {
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new geographic::StandardAtmosphere(parameters));
 		// update number of subsystems
@@ -218,7 +218,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const geographic::GravityModelParameter & parameters)
+	unsigned int SimController::AddSubSystem(const geographic::GravityModelParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new geographic::Gravity(parameters));
@@ -228,7 +228,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const aero::AerosForceParameter& parameters)
+	unsigned int SimController::AddSubSystem(const aero::AerosForceParameter& parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new aero::AeroForceMoment1(parameters));
@@ -238,7 +238,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const aero::AeroAngleParameter & parameters)
+	unsigned int SimController::AddSubSystem(const aero::AeroAngleParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new aero::AeroAngle(parameters));
@@ -249,7 +249,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const source_sink::Stepparameter& parameters)
+	unsigned int SimController::AddSubSystem(const source_sink::Stepparameter& parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new source_sink::Step(parameters));
@@ -260,7 +260,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const source_sink::Rampparamter& parameters)
+	unsigned int SimController::AddSubSystem(const source_sink::Rampparamter& parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new source_sink::Ramp(parameters));
@@ -271,7 +271,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const  propulsionsystem::CFM56Parameter& parameters)
+	unsigned int SimController::AddSubSystem(const  propulsionsystem::CFM56Parameter& parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new  propulsionsystem::CFM56AuxiliaryModel(parameters));
@@ -282,7 +282,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	subsystem_handle SimController::AddSubSystem(const propulsionsystem::CF56ThrustModelParameter & parameters)
+	unsigned int SimController::AddSubSystem(const propulsionsystem::CF56ThrustModelParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new  propulsionsystem::CFM56ThrustModel(parameters));
@@ -293,13 +293,30 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	void SimController::EditConnectionMatrix(subsystem_handle & handle,
+	void SimController::EditConnectionMatrix(unsigned int handleID,
 											 unsigned int from_input_ID,
 											 unsigned int to_output_systemID, 
 											 unsigned int to_output_portID)
 	{
-		handle.input_connection_list(from_input_ID, simulationcontrol::subsystemID)  = to_output_systemID;
-		handle.input_connection_list(from_input_ID, simulationcontrol::outputportID) = to_output_portID;
+		if (handleID >= num_of_subsystems) { // if the handle ID is greater than the total number of subsystems, return an error msg
+			if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+				std::cout << " CONNNECTION ERROR: THE HANDLE ID IS: " << handleID << ". HOWEVER, THE TOTAL NUMBER OF SUBSYSTEM IS: " << num_of_subsystems << "\n";
+			}
+		}
+		else {
+			if (from_input_ID >= subsystem_list[handleID]->GetSystemInfo().num_of_inputs) {
+				if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+					std::cout << " CONNNECTION ERROR: THE INPUT PORT ID IS: " 
+							  << from_input_ID << ". HOWEVER, THE TOTAL NUMBER OF INPUT FOR THE SYSTEM IS: "
+							  << subsystem_list[handleID]->GetSystemInfo().num_of_inputs << "\n";
+				}
+			}
+			else {
+				system_handle_list[(std::size_t)handleID]->input_connection_list(from_input_ID, simulationcontrol::subsystemID)  = to_output_systemID;
+				system_handle_list[(std::size_t)handleID]->input_connection_list(from_input_ID, simulationcontrol::outputportID) = to_output_portID;
+			}
+		}
+
 	}
 
 	bool SimController::MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping)
@@ -309,7 +326,7 @@ namespace simulationcontrol {
 		// index of the input port, system ID of the output, index of the output 
 		// TO DO: add unconnected to port
 		bool flag = false;
-		if (system_ID > num_of_subsystems)
+		if (system_ID >= num_of_subsystems)
 		{
 			cout << "CONNECTION ERROR: The system ID goes out of bound, the number of subsystem is " << num_of_subsystems << endl;
 			cout << " while the input system ID is (system_ID<number of subsystem)" << system_ID << endl;
@@ -334,7 +351,7 @@ namespace simulationcontrol {
 		// the connection mapping is defined in a Xx2 matrix
 		// index of the input port, system ID of the output, index of the output 
 		bool flag = false;
-		if (handle.ID > num_of_subsystems)
+		if (handle.ID >= num_of_subsystems)
 		{
 			cout << "CONNECTION ERROR: The system ID goes out of bound, the number of subsystem is " << num_of_subsystems << endl;
 			cout << " while the input system ID is (system_ID<number of subsystem)" << handle.ID << endl;
@@ -350,6 +367,43 @@ namespace simulationcontrol {
 
 		}
 		return flag;
+	}
+
+	bool SimController::FlushMakeConnection()
+	{
+		bool flag = true;
+		connection_flag_list.resize(num_of_subsystems, 1);
+		for (int i = 0; i < num_of_subsystems; i++) {
+			bool flag_for_each = MakeConnection(*system_handle_list[i]);
+			connection_flag_list(i) = flag_for_each;
+			if (!flag_for_each) {
+				flag = false;
+			}
+		}
+		
+		if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+			if (!flag) {
+				std::cout << " CONNNECTION ERROR! CHECK ERROR MESSAGE  \n";
+			}
+		}
+
+		return flag;
+	}
+
+	subsystem_handle SimController::GetSystemHandle(const unsigned int system_ID)
+	{
+		if (system_ID < num_of_subsystems) {
+			return *system_handle_list[system_ID];
+		}
+		else {
+			subsystem_handle empty_handel;
+			empty_handel.ID = -1;
+			if (solver_config.loglevel >= LOGLEVEL_WARN) {
+				std::cout << " WARN: SYSTEM ID GREATER THAN TOTAL NUMBER OF SYSTEMS  \n";
+			}
+			return empty_handel;
+		}
+		
 	}
 
 	int SimController::Run_Update(const VectorXd& extern_input)
@@ -575,14 +629,56 @@ namespace simulationcontrol {
 		return flag;
 	}
 
+	LoggerTag SimController::GetLoggerTag(unsigned int TagIndex)
+	{
+		if (!solver_config.loggingconfig.uselogging) {
+			return LoggerTag{"LOGGER IS OFF!",0,0};
+		}
+		else {
+			int num_of_tags = logtaglist.size();
+			if (TagIndex >= num_of_tags) {
+				return LoggerTag{ "INDEX OUT OF RANGE! ",0,0 };
+			}
+			else
+			{
+				LoggerTag logger_tag_;
+				logger_tag_.output_port_ID = logportlist[TagIndex](outputportID);
+				logger_tag_.output_system_ID = logportlist[TagIndex](subsystemID);
+				logger_tag_.tag = logtaglist[TagIndex];
+				return logger_tag_;
+			}
+		}
+	}
+
+	void SimController::DisplayLoggerTagList()
+	{
+		if (solver_config.loggingconfig.uselogging) {
+			if (logtaglist.size() < 1) {
+				cout << " LOGGER IS TURNED ON, BUT NOT TAGS ARE DEFINED! \n";
+			}
+			else {
+				LoggerTag logger_tag_;
+				cout << " LOGGER IS TURNED ON, THE FOLLOWING TOPICS ARE RECORDED: \n";
+				for (unsigned int i = 0; i < logtaglist.size();i++) {
+					logger_tag_ = GetLoggerTag(i);
+					cout << logger_tag_.tag << " RECORDS " << logger_tag_.output_port_ID << " TH OUTPUT OF SYSTEM # " << logger_tag_.output_system_ID << "\n";
+				}
+			}
+		}
+		else
+		{
+			cout << " LOGGER IS TURNED OFF! \n";
+		}
+	}
+
 	int SimController::PostRunProcess()
 	{
-		std::cout << "Calculationi Finished " << std::endl;
+		std::cout << "CALCULATION COMPLETE! " << std::endl;
 		// display some logging info after simulation
 		if (solver_config.loggingconfig.uselogging) {
 			if (loggingdata.is_open()) {
 				LogRequestedData();// log the final frame of simulation
-				std::cout << "Data has been logged! " << std::endl;
+				std::cout << "SELECTED DATA HAS BEEN LOGGED TO: "<< solver_config.loggingconfig.filename << std::endl;
 				loggingdata.close();
 			}
 		}// close file
@@ -708,7 +804,9 @@ namespace simulationcontrol {
 				{
 					if (subsystem_list[i]->GetSystemInfo().input_connection(j, 0) >= num_of_subsystems)// detect if the input mapping index exceeds the total number of subsystems
 					{
-						cout << "PARSING ERROR: subsystem # " << i << " input index " << j << " exceeds num_of_subsystems. " << endl;
+						if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+							cout << "PARSING ERROR: subsystem # " << i << " input index " << j << " exceeds num_of_subsystems. " << endl;
+						}
 						flag = false;
 					}
 					else
@@ -718,12 +816,13 @@ namespace simulationcontrol {
 						num_of_target_output = subsystem_list[subsystem_list[i]->GetSystemInfo().input_connection(j, 0)]->GetSystemInfo().num_of_outputs;
 						if (subsystem_list[i]->GetSystemInfo().input_connection(j, 1) >= num_of_target_output)
 						{
-							cout << "PARSING ERROR: subsystem # " << i << " input index " << j << " exceeds num_of_outputs of subsystem # " << subsystem_list[i]->GetSystemInfo().input_connection(j, 0) << endl;
+							if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+								cout << "PARSING ERROR: subsystem # " << i << " input index " << j << " exceeds num_of_outputs of subsystem # " << subsystem_list[i]->GetSystemInfo().input_connection(j, 0) << endl;
+							}
 							flag = false;
 						}
 						else
 						{
-							//connectivity(i, subsystem_list[i]->GetSystemInfo().input_connection(j, 0)) = 1;
 							connectivity(subsystem_list[i]->GetSystemInfo().input_connection(j, 0), i) = 1;
 						}
 					}
@@ -731,12 +830,14 @@ namespace simulationcontrol {
 
 			}
 		}
-		DisplayTopology();
+		if (solver_config.loglevel >= LOGLEVEL_ALL) {
+			DisplayTopology(); // display information if log level is set to ALL
+		}
 		bool isalgebraricloop = RunTopologyAnalysis(); // Do the algebraric loop check before loading the butcher tabeleau
 		// if no algebraric loop discovered, load the table according to the solver choice
 		if (flag == true && isalgebraricloop == false)
 		{
-			cout << "PARSING IS SUCESSFUL! LOADING BUTCHERTABLEAU... " << endl;
+			cout << "SOLVER PARSING IS SUCESSFUL! LOADING BUTCHERTABLEAU... " << endl;
 			RungeKuttaFamily::LoadButcherTableau(solver_config.solver_type,
 				butchertableau,
 				updatecoefficient1,
@@ -789,10 +890,14 @@ namespace simulationcontrol {
 
 			if (flag == true && isalgebraricloop == true)
 			{
-				cout << "ALGEBRARICLOOP EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
+				if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+					cout << "ALGEBRARICLOOP EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
+				}
 			}
 			else {
-				cout << "PARSING ERROR EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
+				if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+					cout << "PARSING ERROR EXISTS, CHECK SUBSYSTEM CONNECTIONS! " << endl;
+				}
 			}
 
 		}
@@ -837,7 +942,11 @@ namespace simulationcontrol {
 		bool isAlegraricloopexist = false;
 		// determine all the closed loops in the system
 		TopologyAnalysis system_topology(connectivity);
-		num_of_closed_loops = system_topology.RunSimulationTopologyAnalysis();// get the loop results from DFS
+		bool display_closed_loops = false;
+		if (solver_config.loglevel >= LOGLEVEL_ALL) {
+			display_closed_loops = true;
+		}
+		num_of_closed_loops = system_topology.RunSimulationTopologyAnalysis(display_closed_loops);// get the loop results from DFS
 		output_sequence.clear();				// the order on which the solver uploads the output of each subsystem
 		non_direct_feedthrough_index.clear();	// this stores all the indexes for non direct feedthrough blocks
 		temp_all_susystems.clear();		// this stores wether a subsystem in the output sequence is ready
@@ -898,12 +1007,15 @@ namespace simulationcontrol {
 				{
 					// push node index to buffer if algebraric loop exists
 					isAlegraricloopexist = true;
-					cout << "PARSING ERROR: ALGEBRARIC LOOP FOUND! THE LOOP CONTAINS THE FOLLOWING SUBSYSTMES: " << endl;
-					for (int k = 0; k < system_topology.GetLoopIndex(i).size(); k++)
-					{
-						cout << " -> " << system_topology.GetLoopIndex(i)(k);
+					if (solver_config.loglevel>=LOGLEVEL_ERROR) {
+							cout << "PARSING ERROR: ALGEBRARIC LOOP FOUND! THE LOOP CONTAINS THE FOLLOWING SUBSYSTMES: " << endl;
+						// display algebraic loops
+						for (int k = 0; k < system_topology.GetLoopIndex(i).size(); k++)
+						{
+							cout << " -> " << system_topology.GetLoopIndex(i)(k);
+						}
+						cout << endl;
 					}
-					cout << endl;
 					algebraric_loops.push_back(system_topology.GetLoopIndex(i));
 				}
 
@@ -930,12 +1042,14 @@ namespace simulationcontrol {
 					counter++;
 				}
 			}
-			// after the output sequence is determined, show it. 
-			cout << "The output sequence is : " << endl;
-			for (int k = 0; k < output_sequence.size(); k++) {
-				cout << output_sequence[k] << " -> "; // TO DO: display the output sequence
+			if (solver_config.loglevel >= LOGLEVEL_ALL) {
+				// after the output sequence is determined, show it. 
+				cout << "The output sequence is : " << endl;
+				for (int k = 0; k < output_sequence.size(); k++) {
+					cout << output_sequence[k] << " -> "; 
+				}
+				cout << "END" << endl;
 			}
-			cout << "END" << endl;
 		}
 		return isAlegraricloopexist;
 	}
@@ -951,24 +1065,22 @@ namespace simulationcontrol {
 		}
 	}
 
-	subsystem_handle SimController::CreateSystemHandle(const subsystem_info & info, const vector<unique_ptr<Subsystem>>& subsystem_list)
+	unsigned int SimController::CreateSystemHandle(const subsystem_info & info, const vector<unique_ptr<Subsystem>>& subsystem_list)
 	{
-		//handle_pointer_list.emplace_back(new subsystem_handle*);
-		subsystem_handle handle;
-		handle.isParameterOK = info.system_parameter_ok;
-		handle.label_ = info.label_;
-		handle.type = info.type;
-		handle.ID = subsystem_list.size() - 1;
+		system_handle_list.emplace_back(new subsystem_handle);// add a handle on the heap
+		system_handle_list.back()->isParameterOK = info.system_parameter_ok;
+		system_handle_list.back()->label_ = info.label_;
+		system_handle_list.back()->type = info.type;
+		system_handle_list.back()->ID = subsystem_list.size() - 1;
 		if (subsystem_list.back()->GetSystemInfo().num_of_inputs > 0)
 		{
-			handle.input_connection_list.resize(subsystem_list.back()->GetSystemInfo().num_of_inputs,2); // resize and initialize the coonection matrix
+			system_handle_list.back()->input_connection_list.resize(subsystem_list.back()->GetSystemInfo().num_of_inputs,2); // resize and initialize the coonection matrix
 			for (int i = 0; i < subsystem_list.back()->GetSystemInfo().num_of_inputs; i++) {
-				handle.input_connection_list(i, simulationcontrol::subsystemID) = simulationcontrol::external;
-				handle.input_connection_list(i, simulationcontrol::outputportID) = 0;
+				system_handle_list.back()->input_connection_list(i, simulationcontrol::subsystemID) = simulationcontrol::external;
+				system_handle_list.back()->input_connection_list(i, simulationcontrol::outputportID) = 0;
 			}
 		}
-		// TO DO: add an initial condition for the input connection of each system
-		return  handle;
+		return (unsigned int)system_handle_list.size() - 1;
 	}
 
 	void SimController::LogRequestedData()

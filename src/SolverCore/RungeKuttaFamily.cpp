@@ -146,7 +146,7 @@ void RungeKuttaFamily::LoadButcherTableau(const SolverType & solver,
 	switch (solver)
 	{
 	case DORMANDPRINCE:
-		std::cout << " ----DORMANDPRINCE---- " << std::endl;
+		std::cout << " DORMANDPRINCE IS USED! " << std::endl;
 		table.resize(9, 8);
 		table.setZero();
 		table = RungeKuttaFamily::InitbutchertableauDORMANDPRINCE();// update butcher tableau
@@ -162,7 +162,7 @@ void RungeKuttaFamily::LoadButcherTableau(const SolverType & solver,
 		
 		break;
 	case RUNGKUTTA45:
-		std::cout << " ----RUNGKUTTA45---- " <<std::endl;
+		std::cout << " RUNGKUTTA45 IS USED! " <<std::endl;
 		table.resize(5, 5);
 		table.setZero();
 		table = RungeKuttaFamily::InitbutchertableauRK4();// update butcher tableau
@@ -174,7 +174,7 @@ void RungeKuttaFamily::LoadButcherTableau(const SolverType & solver,
 		break;
 
 	case EULER1ST:
-		std::cout << " ----1ST ORDER EULER---- " << std::endl;
+		std::cout << "  1ST ORDER EULER IS USED! " << std::endl;
 		table.resize(2, 2);
 		table.setZero();
 		table = RungeKuttaFamily::InitbutchertableauEuler1();// update butcher tableau
@@ -184,10 +184,7 @@ void RungeKuttaFamily::LoadButcherTableau(const SolverType & solver,
 		num_of_k = 1;
 		break;
 	default:
-		std::cout << "WARNING: INCORRECT SOLVER SETTING. THE DEFAULT SOLVER DORMANDPRINCE IS USED" << std::endl;
+		std::cout << "WARNING: INCORRECT SOLVER SETTING. THE DEFAULT SOLVER: DORMANDPRINCE IS USED" << std::endl;
 		break;
 	}
-	std::cout << table << std::endl;
-	std::cout << updatecoefficient1 << std::endl;
-
 }

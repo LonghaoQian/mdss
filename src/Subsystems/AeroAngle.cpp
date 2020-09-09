@@ -7,6 +7,7 @@ aero::AeroAngle::AeroAngle(const AeroAngleParameter& parameter)
 {
 	param_ = parameter;
 	system_info.type = aero_AROANGLE;
+	system_info.category = AERODYNAMICS;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;
 	system_info.num_of_continuous_states = 0;
@@ -64,22 +65,22 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 	*/
 	output(0) = input.segment(2, 3).norm();
 	mathauxiliary::SaturationElementalWise(output(0), 10000000.0, param_.min_airspeed_); // TAS 
-	output(1) = output(0) / input(1); // mach number
-	output(2) = atan2(input(4), input(2));
-	output(3) = asin(input(3) / output(0));
+	output(1) = output(0) / input(1);      // mach number
+	output(2) = atan2(input(4), input(2));  // angle of attack
+	output(3) = asin(input(3) / output(0)); // side slip anlge
 	output(4) = 0.5* input(0) * output(0) * output(0);
-	double lon_normalizer = param_.c_bar_ / (2 * output(0));
-	double lat_normalizer = param_.b_ / (2 * output(0));
+	lon_normalizer = param_.c_bar_ / (2 * output(0));
+	lat_normalizer = param_.b_ / (2 * output(0));
  	/* alpha  = atan2(w,U)
-	 beta = asin(v/TAS)  
-	 TAS_dot = Vb^T Ab / TAS
+	   beta = asin(v/TAS)  
+	   TAS_dot = Vb^T Ab / TAS
 	*/
 	omega_b(0) = input(5);
 	omega_b(1) = input(6);
 	omega_b(2) = input(7);
 	Vb = input.segment(2, 3);
 	Vb_dot = input.segment(8, 3);
-	double TAS_dot = Vb.dot(Vb_dot) / output(0);
+	TAS_dot = Vb.dot(Vb_dot) / output(0);
 
 	output(5) = lon_normalizer * (Vb_dot(3)*input(2)- Vb_dot(0)*input(4)) / (input(2)* input(2) + input(4) * input(4));
 	output(6) = lat_normalizer * (output(0)*Vb_dot(1)-input(3)*TAS_dot) / (output(0)*output(0)*sqrt(1-(input(3)/ output(0))*(input(3)/ output(0))));
@@ -90,7 +91,7 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 
 void aero::AeroAngle::IncrementState()
 {
-
+	// No increment state for aero angle block
 }
 
 void aero::AeroAngle::DisplayParameters()

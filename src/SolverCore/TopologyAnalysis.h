@@ -18,7 +18,7 @@ private:
 	void DisplayClosedLoops();
 	void InitRecord(int index_now);
 public:
-	int RunSimulationTopologyAnalysis();
+	int RunSimulationTopologyAnalysis(bool display_result);
 	VectorXi GetLoopIndex(int loop_index);
 	TopologyAnalysis(const MatrixXi& connectivity_matrix_temp);
 	~TopologyAnalysis();

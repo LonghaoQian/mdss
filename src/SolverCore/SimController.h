@@ -12,14 +12,7 @@
 #include "AeroForceMoment1.h"
 #include "DiscontinuousSystem.h"
 #include "PropulsionBlocks.h"
-#define EXTERNAL_INPUT -1
-#define UNCONNECTED -2
-/* TO DO: 
-1. if external is not defined, keep them as -2 as unconnected and set to 0
-2. makeconnection ( from_ouput_ID, to_input,ID, )
-3. add batch simulation function
-4. batch add subsystem by ID 
-*/
+
 using namespace Eigen;
 using namespace std;
 namespace simulationcontrol {
@@ -27,10 +20,10 @@ namespace simulationcontrol {
 	typedef vector<subsystem_handle>::iterator subsystemhandlePtr;
 
 	enum LogMsgLevel { // log level
-		LOGLEVEL_ALL = 0, // disp all msg
-		LOGLEVEL_WARN,    // disp warnings and errors
+		LOGLEVEL_NONE = 0,    // disp nothing
 		LOGLEVEL_ERROR,   // disp errors
-		LOGLEVEL_NONE     // disp nothing
+		LOGLEVEL_WARN,    // disp warnings and errors
+		LOGLEVEL_ALL, // disp all msg	
 	};
 
 	enum signalrouting
@@ -45,6 +38,12 @@ namespace simulationcontrol {
 		string filename; // file name 
 	};
 
+	struct LoggerTag{
+		string tag;
+		unsigned int output_system_ID;
+		unsigned int output_port_ID;
+	};
+
 	struct SolverConfig {
 		double mim_step;
 		double frame_step;// step_size according to the frame
@@ -55,12 +54,6 @@ namespace simulationcontrol {
 		double start_time;
 		DataLogging loggingconfig;
 		LogMsgLevel loglevel{ LOGLEVEL_ALL };
-	};
-	// the handle for assigned subsystems
-	struct SubsystemGroupHandle {
-		int num_of_inputs;
-		int num_of_ouputs;
-		int num_of_blocks;
 	};
 
 	class SimController
@@ -98,8 +91,9 @@ namespace simulationcontrol {
 		bool DetermineOutputSequenceDFS(int level, unsigned int base_index);
 		bool RunTopologyAnalysis();
 		string GetSystemTypeFromID(subsystem_type type);
-		subsystem_handle CreateSystemHandle(const subsystem_info& info, const vector<unique_ptr<Subsystem>>& subsystem_list);
-		vector<subsystem_handle> system_handle_list;// the list of handles
+		unsigned int CreateSystemHandle(const subsystem_info& info, const vector<unique_ptr<Subsystem>>& subsystem_list);// subsystem handle
+		vector<unique_ptr<subsystem_handle>> system_handle_list;// the list of handles
+		Matrix<bool, Dynamic, 1> connection_flag_list;
 		/*--------------------- Data logging -------------------------------------------*/
 		ofstream loggingdata;
 		std::vector<Matrix<int, 1, 2>> logportlist; // list containing the mapping of the subsystemID and map
@@ -109,53 +103,51 @@ namespace simulationcontrol {
 	public:
 		/* A list of all overloadings of AddSubsystem(...) for pre-defined types of models*/
 		// Linear system
-		subsystem_handle AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC);
-		subsystem_handle AddSubSystem(const linearsystem::IntegratorParameter& parameters, const linearsystem::IntegratorInitialCondition& IC);
-		subsystem_handle AddSubSystem(const linearsystem::TransferFunctionParameter& parameters);
-		subsystem_handle AddSubSystem(const linearsystem::PIDcontrollerParameter& parameters);
+		unsigned int AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC);
+		unsigned int AddSubSystem(const linearsystem::IntegratorParameter& parameters, const linearsystem::IntegratorInitialCondition& IC);
+		unsigned int AddSubSystem(const linearsystem::TransferFunctionParameter& parameters);
+		unsigned int AddSubSystem(const linearsystem::PIDcontrollerParameter& parameters);
 		// Discontinuous
-		subsystem_handle AddSubSystem(const discontinuoussystem::SaturationParameter& parameters);
-		subsystem_handle AddSubSystem(const discontinuoussystem::SwitchParameter& parameters);
+		unsigned int AddSubSystem(const discontinuoussystem::SaturationParameter& parameters);
+		unsigned int AddSubSystem(const discontinuoussystem::SwitchParameter& parameters);
 		// To DO: rate limited 1st order system
 		// Dynamics 
-		subsystem_handle AddSubSystem(const RigidBodyParameter& parameters, const RigidBodyCondition& IC);
+		unsigned int AddSubSystem(const dynamics::RigidBodyParameter& parameters, const dynamics::RigidBodyCondition& IC);
 		// math blocks
-		subsystem_handle AddSubSystem(const mathblocks::GainParameter& parameters);
-		subsystem_handle AddSubSystem(const mathblocks::ConstantParameter& parameters);
-		subsystem_handle AddSubSystem(const mathblocks::SumParameter& parameters);
-		subsystem_handle AddSubSystem(const mathblocks::MultiplicationParam& parameters);
-		subsystem_handle AddSubsystem(const mathblocks::TrigonometryParameter& parameters);
-		subsystem_handle AddSubsystem(const mathblocks::Lookup1DParameter& parameters);
-		subsystem_handle AddSubsystem(const mathblocks::Lookup2DParameter& parameters);
-		subsystem_handle AddSubsystem(const mathblocks::SpecialFunctionParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::GainParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::ConstantParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::SumParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::MultiplicationParam& parameters);
+		unsigned int AddSubsystem(const mathblocks::TrigonometryParameter& parameters);
+		unsigned int AddSubsystem(const mathblocks::Lookup1DParameter& parameters);
+		unsigned int AddSubsystem(const mathblocks::Lookup2DParameter& parameters);
+		unsigned int AddSubsystem(const mathblocks::SpecialFunctionParameter& parameters);
 		// geographic libs
-		subsystem_handle AddSubSystem(const geographic::StandardAtmosphereParameter& parameters);
-		subsystem_handle AddSubSystem(const geographic::GravityModelParameter& parameters);
+		unsigned int AddSubSystem(const geographic::StandardAtmosphereParameter& parameters);
+		unsigned int AddSubSystem(const geographic::GravityModelParameter& parameters);
 		// aerodynamics
-		subsystem_handle AddSubSystem(const aero::AerosForceParameter& parameters);
-		subsystem_handle AddSubSystem(const aero::AeroAngleParameter& parameters);
+		unsigned int AddSubSystem(const aero::AerosForceParameter& parameters);
+		unsigned int AddSubSystem(const aero::AeroAngleParameter& parameters);
 		// source and sinks
-		subsystem_handle AddSubSystem(const  source_sink::PeriodicWaveparameter& parameters);
-		subsystem_handle AddSubSystem(const  source_sink::Stepparameter& parameters);
-		subsystem_handle AddSubSystem(const  source_sink::Rampparamter& parameters);
+		unsigned int AddSubSystem(const  source_sink::PeriodicWaveparameter& parameters);
+		unsigned int AddSubSystem(const  source_sink::Stepparameter& parameters);
+		unsigned int AddSubSystem(const  source_sink::Rampparamter& parameters);
 		// propulsion
-		subsystem_handle AddSubSystem(const  propulsionsystem::CFM56Parameter& parameters);
-		subsystem_handle AddSubSystem(const  propulsionsystem::CF56ThrustModelParameter& parameters);
+		unsigned int AddSubSystem(const  propulsionsystem::CFM56Parameter& parameters);
+		unsigned int AddSubSystem(const  propulsionsystem::CF56ThrustModelParameter& parameters);
 		// TO DO: utility blocks
 		// unit conversion, matrix to euler angles, matrix quaternion, quaternion euler angle
 		/*------------------------define connections between subsystems--------------------------------*/
 		bool ResetInitialCondition(); // TO DO: reset subsystem initial condition
-		void EditConnectionMatrix(subsystem_handle& handle,
+		void EditConnectionMatrix(unsigned int handleID,
 								  unsigned int from_input_ID, 
 								  unsigned int to_output_systemID, 
 								  unsigned int to_output_portID);
-		void EditConnectionMatrix(subsystemhandlePtr handlePtr,
-								  unsigned int from_input_ID,
-								  unsigned int to_output_systemID,
-								  unsigned int to_output_portID);
+
 		bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);// batch connection
 		bool MakeConnection(const subsystem_handle& handle);
 		bool FlushMakeConnection();
+		subsystem_handle GetSystemHandle(const unsigned int system_ID);
 		/*------------------------PreRunProcess of the Connected Subystems--------------*/
 		void EditSolverConfig(const SolverConfig& config);
 		bool PreRunProcess();// check and parse the system connection relationship.
@@ -169,6 +161,8 @@ namespace simulationcontrol {
 		bool DefineDataLogging(const unsigned int output_system_ID,
 							   const unsigned int output_port_ID,
 							   string tag);
+		LoggerTag GetLoggerTag(unsigned int TagIndex);
+		void DisplayLoggerTagList();
 		/*-----------------------Post run process----------------------------------------*/
 		int PostRunProcess();
 		/*-----------------------Solver definition--------------------------------------*/

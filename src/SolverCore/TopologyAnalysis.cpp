@@ -94,7 +94,7 @@ void TopologyAnalysis::DisplayClosedLoops()
 
 }
 
-int TopologyAnalysis::RunSimulationTopologyAnalysis()
+int TopologyAnalysis::RunSimulationTopologyAnalysis(bool display_result)
 {
 	int start_index = 0;
 	bool scanning_continue = true;
@@ -114,7 +114,9 @@ int TopologyAnalysis::RunSimulationTopologyAnalysis()
 		// no unscanned nodes
 		}	
 	}
-	DisplayClosedLoops();
+	if (display_result) {
+		DisplayClosedLoops();
+	}
 	return num_of_loops;
 }
 

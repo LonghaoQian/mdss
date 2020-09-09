@@ -827,25 +827,21 @@ int main()
 
 	// n2 dynamics
 
-	std::vector< subsystem_handle*> handle_pointer_list;
-
 	linearsystem::IntegratorParameter N2_dynamics;
 	N2_dynamics.num_of_channels = 1;
 	linearsystem::IntegratorInitialCondition N2_initialcondition;
 	N2_initialcondition.X_0.resize(1);
 	N2_initialcondition.X_0(0) = N2_initial;
-	subsystem_handle N2rotordynamics = SimInstance1.AddSubSystem(N2_dynamics, N2_initialcondition);
+	unsigned int N2rotordynamics = SimInstance1.AddSubSystem(N2_dynamics, N2_initialcondition);
 
-	handle_pointer_list.push_back(&N2rotordynamics);
 
 	mathblocks::GainParameter N2_damping_param_;
 	N2_damping_param_.K.resize(1,1);
 	N2_damping_param_.K(0) = N2_damping_;
 	N2_damping_param_.Mode = mathblocks::ElementWise;
 	N2_damping_param_.num_of_inputs = 1;
-	subsystem_handle N2_damping = SimInstance1.AddSubSystem(N2_damping_param_);
+	unsigned int N2_damping = SimInstance1.AddSubSystem(N2_damping_param_);
 
-	handle_pointer_list.push_back(&N2_damping);
 
 	mathblocks::SumParameter N2_dynamics_sum_param_;
 	N2_dynamics_sum_param_.input_dimensions = 1;
@@ -853,13 +849,11 @@ int main()
 	N2_dynamics_sum_param_.sign_list.resize(2);
 	N2_dynamics_sum_param_.sign_list(0) = 1.0*mathblocks::SUM_POSITIVE;
 	N2_dynamics_sum_param_.sign_list(1) = 1.0*mathblocks::SUM_NEGATIVE;
-	subsystem_handle N2_dynamics_sum = SimInstance1.AddSubSystem(N2_dynamics_sum_param_);
+	unsigned int N2_dynamics_sum = SimInstance1.AddSubSystem(N2_dynamics_sum_param_);
 
-	handle_pointer_list.push_back(&N2_dynamics_sum);
-
-	SimInstance1.EditConnectionMatrix(N2rotordynamics, 0, N2_dynamics_sum.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2_damping, 0, N2rotordynamics.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2_dynamics_sum, 1, N2_damping.ID, 0);
+	SimInstance1.EditConnectionMatrix(N2rotordynamics, 0, N2_dynamics_sum, 0);
+	SimInstance1.EditConnectionMatrix(N2_damping, 0, N2rotordynamics, 0);
+	SimInstance1.EditConnectionMatrix(N2_dynamics_sum, 1, N2_damping, 0);
 
 	// inside n2 speed control 
 	linearsystem::PIDcontrollerParameter N2controller_param_;
@@ -869,9 +863,9 @@ int main()
 	N2controller_param_.Kd = 0.0;
 	N2controller_param_.num_of_channels = 1;
 	N2controller_param_.Tf = 1.0 / 100.0;
-	subsystem_handle PID = SimInstance1.AddSubSystem(N2controller_param_);
+	unsigned int PID = SimInstance1.AddSubSystem(N2controller_param_);
 
-	handle_pointer_list.push_back(&PID);
+
 
 	// 2 satruation part 
 	mathblocks::SumParameter N2controller_sum_1_param_;
@@ -880,43 +874,39 @@ int main()
 	N2controller_sum_1_param_.sign_list.resize(2);
 	N2controller_sum_1_param_.sign_list(0) = 1.0*mathblocks::SUM_POSITIVE;
 	N2controller_sum_1_param_.sign_list(1) = 1.0*mathblocks::SUM_NEGATIVE;
-	subsystem_handle N2_dynamics_sum_1 = SimInstance1.AddSubSystem(N2controller_sum_1_param_);
+	unsigned int N2_dynamics_sum_1 = SimInstance1.AddSubSystem(N2controller_sum_1_param_);
 
-	handle_pointer_list.push_back(&N2_dynamics_sum_1);
-	
+
 	discontinuoussystem::SwitchParameter N2controller_switch_1_param_;
 	N2controller_switch_1_param_.num_of_channels = 1;
 	N2controller_switch_1_param_.switch_value = 0.6;
-	subsystem_handle N2controller_switch_1 = SimInstance1.AddSubSystem(N2controller_switch_1_param_);
+	unsigned int N2controller_switch_1 = SimInstance1.AddSubSystem(N2controller_switch_1_param_);
 
-	handle_pointer_list.push_back(&N2controller_switch_1);
 
 	discontinuoussystem::SaturationParameter N2controller_saturation_norm_param_;
 	N2controller_saturation_norm_param_.lower_bound = c_norm_lower;
 	N2controller_saturation_norm_param_.upper_bound = c_norm_upper;
 	N2controller_saturation_norm_param_.num_of_channels = 1;
 	N2controller_saturation_norm_param_.type = discontinuoussystem::SATURATION_BOTH;
-	subsystem_handle N2controller_saturation_norm = SimInstance1.AddSubSystem(N2controller_saturation_norm_param_);
+	unsigned int N2controller_saturation_norm = SimInstance1.AddSubSystem(N2controller_saturation_norm_param_);
 
-	handle_pointer_list.push_back(&N2controller_saturation_norm);
-
+	
 	discontinuoussystem::SaturationParameter N2controller_saturation_start_param_;
 	N2controller_saturation_start_param_.lower_bound = c_start_lower;
 	N2controller_saturation_start_param_.upper_bound = c_start_upper;
 	N2controller_saturation_start_param_.num_of_channels = 1;
 	N2controller_saturation_start_param_.type = discontinuoussystem::SATURATION_BOTH;
-	subsystem_handle N2controller_saturation_start = SimInstance1.AddSubSystem(N2controller_saturation_start_param_);
+	unsigned int N2controller_saturation_start = SimInstance1.AddSubSystem(N2controller_saturation_start_param_);
 
-	handle_pointer_list.push_back(&N2controller_saturation_start);
-
+	
 	SimInstance1.EditConnectionMatrix(N2_dynamics_sum_1, 0, simulationcontrol::external, 0); // 0 for N2_cmd
-	SimInstance1.EditConnectionMatrix(N2_dynamics_sum_1, 1, N2rotordynamics.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_switch_1, 0, N2rotordynamics.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_saturation_norm, 0, N2_dynamics_sum_1.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_saturation_start, 0, N2_dynamics_sum_1.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_switch_1, 1, N2controller_saturation_norm.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_switch_1, 2, N2controller_saturation_start.ID, 0);
-	SimInstance1.EditConnectionMatrix(PID, 1, N2controller_switch_1.ID, 0);
+	SimInstance1.EditConnectionMatrix(N2_dynamics_sum_1, 1, N2rotordynamics, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_switch_1, 0, N2rotordynamics, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_saturation_norm, 0, N2_dynamics_sum_1, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_saturation_start, 0, N2_dynamics_sum_1, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_switch_1, 1, N2controller_saturation_norm, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_switch_1, 2, N2controller_saturation_start, 0);
+	SimInstance1.EditConnectionMatrix(PID, 1, N2controller_switch_1, 0);
 	SimInstance1.EditConnectionMatrix(PID, 0, simulationcontrol::external, 0); // 1 for FF_flow
 
 	// inside FADEC
@@ -926,9 +916,9 @@ int main()
 	N2controller_sum_2_param_.sign_list.resize(2);
 	N2controller_sum_2_param_.sign_list(0) = 1.0*mathblocks::SUM_POSITIVE;
 	N2controller_sum_2_param_.sign_list(1) = 1.0*mathblocks::SUM_POSITIVE;
-	subsystem_handle  N2controller_sum_2 = SimInstance1.AddSubSystem(N2controller_sum_2_param_);
+	unsigned int  N2controller_sum_2 = SimInstance1.AddSubSystem(N2controller_sum_2_param_);
 
-	handle_pointer_list.push_back(&N2controller_sum_2);
+
 
 	mathblocks::SumParameter N2controller_sum_3_param_;// starter torque + PID controller
 	N2controller_sum_3_param_.input_dimensions = 1;
@@ -936,34 +926,29 @@ int main()
 	N2controller_sum_3_param_.sign_list.resize(2);
 	N2controller_sum_3_param_.sign_list(0) = 1.0*mathblocks::SUM_POSITIVE;
 	N2controller_sum_3_param_.sign_list(1) = 1.0*mathblocks::SUM_POSITIVE;
-	subsystem_handle  N2controller_sum_3 = SimInstance1.AddSubSystem(N2controller_sum_3_param_);
+	unsigned int  N2controller_sum_3 = SimInstance1.AddSubSystem(N2controller_sum_3_param_);
 
-	handle_pointer_list.push_back(&N2controller_sum_3);
+	
 
 	mathblocks::GainParameter N2controller_N2starterrate_param_; // N
 	N2controller_N2starterrate_param_.K.resize(1, 1);
 	N2controller_N2starterrate_param_.K(0, 0) = N2_starter_rate;
 	N2controller_N2starterrate_param_.Mode = mathblocks::ElementWise;
 	N2controller_N2starterrate_param_.num_of_inputs = 1;
-	subsystem_handle  N2controller_N2starterrate = SimInstance1.AddSubSystem(N2controller_N2starterrate_param_);
+	unsigned int  N2controller_N2starterrate = SimInstance1.AddSubSystem(N2controller_N2starterrate_param_);
 
-	handle_pointer_list.push_back(&N2controller_N2starterrate);
 
 	mathblocks::ConstantParameter N2controller_N2starterintercept_param_;
 	N2controller_N2starterintercept_param_.value.resize(1);
 	N2controller_N2starterintercept_param_.value(0) = N2_starter_intercept;
-	subsystem_handle  N2controller_N2starterintercept = SimInstance1.AddSubSystem(N2controller_N2starterintercept_param_);
-
-	handle_pointer_list.push_back(&N2controller_N2starterintercept);
+	unsigned int  N2controller_N2starterintercept = SimInstance1.AddSubSystem(N2controller_N2starterintercept_param_);
 
 	discontinuoussystem::SaturationParameter N2controller_starterlimiter_param_;
 	N2controller_starterlimiter_param_.lower_bound = 0.0;
 	N2controller_starterlimiter_param_.upper_bound = N2_starter_torque;
 	N2controller_starterlimiter_param_.num_of_channels = 1;
 	N2controller_starterlimiter_param_.type = discontinuoussystem::SATURATION_BOTH;
-	subsystem_handle  N2controller_starterlimiter = SimInstance1.AddSubSystem(N2controller_starterlimiter_param_);
-
-	handle_pointer_list.push_back(&N2controller_starterlimiter);
+	unsigned int  N2controller_starterlimiter = SimInstance1.AddSubSystem(N2controller_starterlimiter_param_);
 
 	mathblocks::MultiplicationParam  N2controller_product_param_;
 	N2controller_product_param_.input1_dimension(0) = 1;
@@ -971,9 +956,8 @@ int main()
 	N2controller_product_param_.input2_dimension(0) = 1;
 	N2controller_product_param_.input2_dimension(1) = 1;
 	N2controller_product_param_.Mode = mathblocks::ElementWise;
-	subsystem_handle N2controller_product = SimInstance1.AddSubSystem(N2controller_product_param_);
+	unsigned int N2controller_product = SimInstance1.AddSubSystem(N2controller_product_param_);
 
-	handle_pointer_list.push_back(&N2controller_product);
 
 	propulsionsystem::CFM56Parameter CFM56_param_;
 	CFM56_param_.CFM56N1model.b0 = 0.115;
@@ -1007,8 +991,7 @@ int main()
 	CFM56_param_.CFM56FuelFlowmodel.Tf = 0.02;
 	
 
-	subsystem_handle CFM56_aux = SimInstance1.AddSubSystem(CFM56_param_);
-	handle_pointer_list.push_back(&CFM56_aux);
+	unsigned int CFM56_aux = SimInstance1.AddSubSystem(CFM56_param_);
 
 
 	// thrust table
@@ -1045,43 +1028,38 @@ int main()
 	thrustmodelparam.MaxThrust = 88964.43230599999;
 
 
-	subsystem_handle  CFM56_thrust = SimInstance1.AddSubSystem(thrustmodelparam);
-	handle_pointer_list.push_back(&CFM56_thrust);
+	unsigned int CFM56_thrust = SimInstance1.AddSubSystem(thrustmodelparam);
 
-	SimInstance1.EditConnectionMatrix(N2controller_N2starterrate, 0, N2rotordynamics.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_sum_2, 0, N2controller_N2starterrate.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_sum_2, 1, N2controller_N2starterintercept.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_starterlimiter, 0, N2controller_sum_2.ID, 0);
+
+	SimInstance1.EditConnectionMatrix(N2controller_N2starterrate, 0, N2rotordynamics, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_sum_2, 0, N2controller_N2starterrate, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_sum_2, 1, N2controller_N2starterintercept, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_starterlimiter, 0, N2controller_sum_2, 0);
 	SimInstance1.EditConnectionMatrix(N2controller_product, 0, simulationcontrol::external, 0); // 2 for starter
-	SimInstance1.EditConnectionMatrix(N2controller_product, 1, N2controller_starterlimiter.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_sum_3, 0, N2controller_product.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2controller_sum_3, 1, PID.ID, 0);
-	SimInstance1.EditConnectionMatrix(N2_dynamics_sum, 0, N2controller_sum_3.ID, 0);
-	SimInstance1.EditConnectionMatrix(CFM56_aux, 0, N2rotordynamics.ID, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_product, 1, N2controller_starterlimiter, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_sum_3, 0, N2controller_product, 0);
+	SimInstance1.EditConnectionMatrix(N2controller_sum_3, 1, PID, 0);
+	SimInstance1.EditConnectionMatrix(N2_dynamics_sum, 0, N2controller_sum_3, 0);
+	SimInstance1.EditConnectionMatrix(CFM56_aux, 0, N2rotordynamics, 0);
 	SimInstance1.EditConnectionMatrix(CFM56_thrust, propulsionsystem::CFM56_INPUT_Height, simulationcontrol::external, 0);
 	SimInstance1.EditConnectionMatrix(CFM56_thrust, propulsionsystem::CFM56_INPUT_Mach, simulationcontrol::external, 0);
-	SimInstance1.EditConnectionMatrix(CFM56_thrust, propulsionsystem::CFM56_INPUT_N1, CFM56_aux.ID, propulsionsystem::CFM56_OUTPUT_N1);
+	SimInstance1.EditConnectionMatrix(CFM56_thrust, propulsionsystem::CFM56_INPUT_N1, CFM56_aux, propulsionsystem::CFM56_OUTPUT_N1);
 
-	// make connection
+	SimInstance1.FlushMakeConnection();
 
-	int num_of_systems_defined = handle_pointer_list.size();
-
-	for (int i = 0; i < num_of_systems_defined; i++) {
-		SimInstance1.MakeConnection(*handle_pointer_list[i]);
-	}
 
 	// define the data log tag
 
-	SimInstance1.DefineDataLogging(N2rotordynamics.ID, 0, "N2_sim");
-	SimInstance1.DefineDataLogging(N2controller_starterlimiter.ID, 0, "starter_torque_sim");
-	SimInstance1.DefineDataLogging(PID.ID, 0, "PID_sim");
-	SimInstance1.DefineDataLogging(N2controller_switch_1.ID, 0, "switch_sim");
-	SimInstance1.DefineDataLogging(N2_dynamics_sum_1.ID, 0, "N2_dynamics_sum_1_sim");
-	SimInstance1.DefineDataLogging(CFM56_aux.ID, propulsionsystem::CFM56_OUTPUT_N1, "N1_sim");
-	SimInstance1.DefineDataLogging(CFM56_aux.ID, propulsionsystem::CFM56_OUTPUT_EGT, "EGT_sim");
-	SimInstance1.DefineDataLogging(CFM56_aux.ID, propulsionsystem::CFM56_OUTPUT_FF, "FF_sim");
-	SimInstance1.DefineDataLogging(CFM56_thrust.ID,0, "Thrust");
-
+	SimInstance1.DefineDataLogging(N2rotordynamics, 0, "N2_sim");
+	SimInstance1.DefineDataLogging(N2controller_starterlimiter, 0, "starter_torque_sim");
+	SimInstance1.DefineDataLogging(PID, 0, "PID_sim");
+	SimInstance1.DefineDataLogging(N2controller_switch_1, 0, "switch_sim");
+	SimInstance1.DefineDataLogging(N2_dynamics_sum_1, 0, "N2_dynamics_sum_1_sim");
+	SimInstance1.DefineDataLogging(CFM56_aux, propulsionsystem::CFM56_OUTPUT_N1, "N1_sim");
+	SimInstance1.DefineDataLogging(CFM56_aux, propulsionsystem::CFM56_OUTPUT_EGT, "EGT_sim");
+	SimInstance1.DefineDataLogging(CFM56_aux, propulsionsystem::CFM56_OUTPUT_FF, "FF_sim");
+	SimInstance1.DefineDataLogging(CFM56_thrust,0, "Thrust");
+	SimInstance1.DisplayLoggerTagList();// show the logged tags
 	bool flag = SimInstance1.PreRunProcess();
 	int N_steps = 10000;
 	logic1_input.Ignition = true;
@@ -1104,7 +1082,7 @@ int main()
 		t = clock();
 		for (int i = 0; i < N_steps; i++)
 		{
-			logic1_input.N2 = SimInstance1.Run_GetSubsystemOuput(N2rotordynamics.ID)(0);
+			logic1_input.N2 = SimInstance1.Run_GetSubsystemOuput(N2rotordynamics)(0);
 			if (SimInstance1.Run_GetSystemTime() > 70) {
 				if (SimInstance1.Run_GetSystemTime() > 80) {
 					if (SimInstance1.Run_GetSystemTime() > 100) {
