@@ -22,9 +22,11 @@
 
 ## 代码编译：
 
-以下步骤包含工程编译步骤：
+以下步骤包含工程编译步骤 ：(VS2017）
 > 第一步：克隆工程到文件夹，解决方案为：solver_test.sln。
+
 > 第二步：下载Eigen库，解压缩后将文件夹重命名为eigen3，放在解决方案文件夹中（ SimulationSolver/）。
+
 > 第三步：选择 release + x64 构型，然后编译运行。
 
 ## Eigen 库下载：
@@ -52,12 +54,11 @@ See the  **[MPL2 FAQ](http://www.mozilla.org/MPL/2.0/FAQ.html)**  for more infor
 	config1.solver_type = RungeKuttaFamily::RUNGKUTTA45; // 数值方法
 	config1.loggingconfig.filename = "datalog.txt"; // 数据记录文件名
 	config1.loggingconfig.uselogging = true; // 开启数据记录标识
+	config1.loglevel = simulationcontrol::LOGLEVEL_ERROR; // 显示信息
 	simulationcontrol::SimController SimInstance1(config1); // 声明仿真系统实例
 
 > 第二步：定义子系统。利用 AddSubSystem(param, initial_condition) 方法添加一个子系统
 示例如下：
-
-	std::vector< subsystem_handle*> handle_pointer_list; // 定义一个子系统指针的容器
 
 	linearsystem::IntegratorParameter N2_dynamics; // 定义子系统的参数
 	N2_dynamics.num_of_channels = 1;
@@ -65,24 +66,18 @@ See the  **[MPL2 FAQ](http://www.mozilla.org/MPL/2.0/FAQ.html)**  for more infor
 	N2_initialcondition.X_0.resize(1);
 	N2_initialcondition.X_0(0) = N2_initial;
 	// 定义子系统
-	subsystem_handle N2rotordynamics = SimInstance1.AddSubSystem(N2_dynamics, N2_initialcondition); 
-	// 将子系统指针推入容器内
-	handle_pointer_list.push_back(&N2rotordynamics);
+	unsigned int N2rotordynamics = SimInstance1.AddSubSystem(N2_dynamics, N2_initialcondition); 
 
-> 第三步：连接子系统。使用EditConnectionMatrix(A, a, B, b) 进行连接。将A子系统的第a 个输入连接到B子系统的第b个输出上。使用方法MakeConnection()载入连接矩阵。
+> 第三步：连接子系统。使用EditConnectionMatrix(A, a, B, b) 进行连接。将A子系统的第a 个输入连接到B子系统的第b个输出上。然后使用方法FlushMakeConnection()载入连接矩阵。
 
 示例如下：
 	
 	//将N2_dynamics_sum_1子系统的第0个输入连接到外部输入端 （simulationcontrol::external =-1）
 	SimInstance1.EditConnectionMatrix(N2_dynamics_sum_1, 0, simulationcontrol::external, 0);
 	//将N2_dynamics_sum_1子系统的第1个输入连接到N2rotordynamics子系统的第0个输出端上
-	SimInstance1.EditConnectionMatrix(N2_dynamics_sum_1, 1, N2rotordynamics.ID, 0);
-	// 得出子系统总数
-	int num_of_systems_defined = handle_pointer_list.size();
-	// 载入连接矩阵
-	for (int i = 0; i < num_of_systems_defined; i++) {
-		SimInstance1.MakeConnection(*handle_pointer_list[i]);
-	}
+	SimInstance1.EditConnectionMatrix(N2_dynamics_sum_1, 1, N2rotordynamics, 0);
+	//在所有连接完成后，向求解器载入连接矩阵
+	SimInstance1.FlushMakeConnection();
 
 
 > 第四步：预处理。用PreRunProcess()方法对模型进行预处理。预处理函数会分析子系统连接的拓扑结构，检测是否存在代数环，以及确定子系统数值计算顺序。预处理标识符flag为真时，说明预处理成功，系统可以运行。
@@ -104,7 +99,7 @@ See the  **[MPL2 FAQ](http://www.mozilla.org/MPL/2.0/FAQ.html)**  for more infor
 
 示例如下：
 
-	SimInstance1.DefineDataLogging(N2rotordynamics.ID, 0, "N2_sim");
+	SimInstance1.DefineDataLogging(N2rotordynamics, 0, "N2_sim");
 
 >2. 在 solver_verification 文件夹中，loadloggeddata.m 为读取数据记录文件的MATLAB函数并将文件数据保存成.mat 格式文件。
 >3. 在 solver_verifcation 文件夹中，drawlogfromtag('file_name','tag_name')。
