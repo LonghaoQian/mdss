@@ -131,5 +131,21 @@ namespace propulsionsystem {
 		void DisplayInitialCondition();
 		~CFM56ThrustModel();
 	};
+	/*
+	class PropellerChart :
+		public Subsystem 
+	{
+	private:
+	public:
 
+	};
+	
+	class PistonEngine :
+	public Subsystem
+	{
+
+	}
+
+	
+	*/
 }

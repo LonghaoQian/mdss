@@ -27,6 +27,8 @@ enum subsystem_type {
 	continous_LTI,
 	continous_PIDcontroller,
 	continous_RIGIDBODY,
+	continous_RIGIDDYNAMICS,
+	continous_RIGIDKINEMATICS,
 	continous_VARIABLEMASS,
 	discontinuous_SATURATION,
 	discontinuous_SWITCH,
@@ -85,7 +87,7 @@ struct subsystem_handle {
 	bool isParameterOK;
 	MatrixX2i input_connection_list;
 };
-// subsystem info for the solver
+// subsystem info for the solver TO DO: add a mandatory function 
 struct subsystem_info {
 	unsigned int num_of_continuous_states; // number of continunous states, for direct feed-through blocks, this should be 0
 	unsigned int num_of_inputs;            // number of inputs for the system

@@ -3,9 +3,6 @@
 
 
 namespace dynamics {
-	RigidBody::RigidBody()
-	{
-	}
 
 	RigidBody::RigidBody(const RigidBodyParameter & parameter, const RigidBodyCondition & IC)
 	{
@@ -28,6 +25,7 @@ namespace dynamics {
 		system_info.input_connection.resize(6, 2);
 		system_info.num_of_outputs = 21;
 		system_info.system_parameter_ok = true;
+		system_info.NO_CONTINUOUS_STATE = false;
 		output.resize(system_info.num_of_outputs);
 		output.setZero();
 	}
@@ -41,7 +39,7 @@ namespace dynamics {
 		state(6,7,8) = X_I
 		state(9,0,11,12) = quaternion
 		*/
-		Vector4d q = state_temp.segment(9, 4);
+		q = state_temp.segment(9, 4);
 
 		derivative.segment(0, 3) = mathauxiliary::GetR_IBFromQuaterion(q)*input.segment(0, 3) / m;// dot_VI = R_IB F_B/m
 		derivative.segment(3, 3) = J_inv * (input.segment(3, 3) - mathauxiliary::Hatmap(state_temp.segment(3, 3))*J*state_temp.segment(3, 3)); // dot_omega = J_inv *( M - omega^x J omega) 
@@ -76,8 +74,8 @@ namespace dynamics {
 		output_temp.segment(6, 3) = state_temp.segment(6, 3);
 		//std::cout << " the XI output is : " << output_temp.segment(6, 3) << std::endl;
 		// calculate rotation matrix
-		Vector4d q = state_temp.segment(9, 4);
-		Matrix3d R_IB = mathauxiliary::GetRmatrixFromQuaterion(q.normalized())*mathauxiliary::GetLmatrixFromQuaterion(q.normalized()).transpose();
+		q = state_temp.segment(9, 4);
+		R_IB = mathauxiliary::GetRmatrixFromQuaterion(q.normalized())*mathauxiliary::GetLmatrixFromQuaterion(q.normalized()).transpose();
 		output_temp.segment(9, 9) = mathauxiliary::ConvertRotationMatrixToVector(R_IB);
 		output_temp.segment(18, 3) = R_IB.transpose()*state_temp.segment(0, 3);// R_BI*V_I
 	}
@@ -113,6 +111,143 @@ namespace dynamics {
 	}
 
 	RigidBody::~RigidBody()
+	{
+
+	}
+	/*-----------------------------------------------------------------------------------------*/
+	// rigid body kinematics
+	RigidBodyKinematics::RigidBodyKinematics(const RigidBodyKinematicsInitialCondition& IC)
+	{
+		system_info.type = continous_RIGIDKINEMATICS;
+		system_info.category = DYNAMICS;
+		system_info.num_of_continuous_states = 13;// 3 for V_I, 3 for Omega_BI, 3 for X_I, 4 for q
+		system_info.num_of_inputs = 6;// 
+		// loading initial condition:
+		InitialCondition = IC;
+		state.resize(system_info.num_of_continuous_states);
+		state.segment(KINEMATICS_STATE_VIx, 3) = IC.VI0;
+		state.segment(KINEMATICS_STATE_OmegaBIx, 3) = IC.Omega0;
+		state.segment(KINEMATICS_STATE_XIx, 3) = IC.XI0;
+		state.segment(KINEMATICS_STATE_q0, 4) = mathauxiliary::GetQuaterionFromRulerAngle(IC.Euler0);
+
+		// output mapping: 0-2 V_I 3-5 X_I 6-8 Omega_BI 9-17 R_IB
+		system_info.DIRECT_FEED_THROUGH = false;
+		system_info.input_connection.resize(6, 2);
+		system_info.input_connection.setZero();
+		system_info.num_of_outputs = 24;
+		system_info.system_parameter_ok = true;
+		system_info.NO_CONTINUOUS_STATE = false;
+		output.resize(system_info.num_of_outputs);
+		output.setZero();
+	}
+
+	void RigidBodyKinematics::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+		// dot_VI = AI
+		derivative.segment(KINEMATICS_STATE_VIx, 3) = input.segment(KINEMATICS_INPUT_AIx, 3);
+		// dot_Omega = Omega_DOT
+		derivative.segment(KINEMATICS_STATE_OmegaBIx, 3) = input.segment(KINEMATICS_INPUT_OMEGA_DOTx, 3);
+		// dot_XI = VI
+		derivative.segment(KINEMATICS_STATE_XIx, 3) = state.segment(KINEMATICS_STATE_VIx, 3);
+		// dot_q = 0.5 * L^T * omega
+		derivative.segment(KINEMATICS_STATE_q0, 4) = 0.5*mathauxiliary::GetLmatrixFromQuaterion(state.segment(KINEMATICS_STATE_q0, 4).normalized()).transpose()*state.segment(KINEMATICS_STATE_OmegaBIx, 3);
+	}
+	void RigidBodyKinematics::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+		// calculate the rotation matrix first
+		R_IB = mathauxiliary::GetRmatrixFromQuaterion(state.segment(KINEMATICS_STATE_q0, 4).normalized())*mathauxiliary::GetLmatrixFromQuaterion(state.segment(KINEMATICS_STATE_q0, 4).normalized()).transpose();
+		output.segment(KINEMATICS_OUTPUT_VIx, 3) = state.segment(KINEMATICS_STATE_VIx, 3);
+		output.segment(KINEMATICS_OUTPUT_VBx, 3) = R_IB.transpose() * output.segment(KINEMATICS_OUTPUT_VIx, 3);
+		output.segment(KINEMATICS_OUTPUT_OmegaBIx, 3) = state.segment(KINEMATICS_STATE_OmegaBIx, 3);
+		output.segment(KINEMATICS_OUTPUT_XIx, 3) = state.segment(KINEMATICS_STATE_XIx, 3);
+		output.segment(KINEMATICS_OUTPUT_EulerRoll,3) = mathauxiliary::GetEulerAngleFromQuaterion(state.segment(KINEMATICS_STATE_q0, 4));
+		output.segment(KINEMATICS_OUTPUT_R_IB00,9) = mathauxiliary::ConvertRotationMatrixToVector(R_IB);
+	}
+	void RigidBodyKinematics::DisplayParameters()
+	{
+		std::cout << "-------NO parameters for kinematics block-------" << std::endl;
+	}
+	void RigidBodyKinematics::DisplayInitialCondition()
+	{
+		std::cout << "---------------------" << std::endl;
+		std::cout << "Initial Velocity: " << InitialCondition.VI0 << std::endl;
+		std::cout << "Initial Position: " << InitialCondition.XI0 << std::endl;
+		std::cout << "Initial Omega: " << InitialCondition.Omega0<< std::endl;
+		std::cout << "Initial Euler: " << InitialCondition.Euler0 << std::endl;
+	}
+	void RigidBodyKinematics::IncrementState()
+	{
+		/*
+		state(0,1,2) = V_I
+		state(3,4,5) = omega_BI
+		state(6,7,8) = X_I
+		state(9,0,11,12) = quaternion
+		*/
+		state.segment(0, 9) += solver_buffer_state_increment1.segment(0, 9);
+		state.segment(KINEMATICS_STATE_q0, 4) += solver_buffer_state_increment1.segment(KINEMATICS_STATE_q0, 4);
+		state.segment(KINEMATICS_STATE_q0, 4).normalize();// normalize the quaternion
+	}
+
+	RigidBodyKinematics::~RigidBodyKinematics()
+	{
+	}
+
+	/*-----------------------------------------------------------------------------------------*/
+	// rigid body dynamics
+	RigidBodyDynamics::RigidBodyDynamics(const RigidBodyDynamicsParamter & parameter)
+	{
+		system_info.type = continous_RIGIDDYNAMICS;
+		system_info.category = DYNAMICS;
+		system_info.num_of_continuous_states = 0;
+		system_info.num_of_inputs = 9; // 0-2 F_B 3-5 M_B 6-8 omega_b
+		// loading parameters:
+		J = parameter.J;
+		m = parameter.m;
+		J_inv = parameter.J.inverse();
+		// output mapping: 0-2 A_I, 3 - 5 , Omega_DOT
+		system_info.DIRECT_FEED_THROUGH = true;
+		system_info.NO_CONTINUOUS_STATE = true;
+		system_info.input_connection.resize(6, 2);
+		system_info.input_connection.setZero();
+		system_info.num_of_outputs = 24;
+		system_info.system_parameter_ok = true;
+		output.resize(system_info.num_of_outputs);
+		output.setZero();
+
+	}
+
+	void RigidBodyDynamics::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+		// No differential equations for rigid dynamics
+	}
+
+	void RigidBodyDynamics::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+		output.segment(DYNAMICS_OUTPUT_AIx, 3) = input.segment(DYNAMICS_INPUT_FIx, 3) / m;
+		output.segment(DYNAMICS_OUTPUT_OMEGA_DOTx, 3) = J_inv * (input.segment(DYNAMICS_INPUT_TBx, 3) 
+												- mathauxiliary::Hatmap(input.segment(DYNAMICS_INPUT_OmegaBIx, 3))*J*input.segment(DYNAMICS_INPUT_OmegaBIx, 3)); 
+		// dot_omega = J_inv *( M - omega^x J omega) 
+	}
+
+	void RigidBodyDynamics::DisplayParameters()
+	{
+		std::cout << "---------------------" << std::endl;
+		std::cout << "Mass: " << m << std::endl;
+		std::cout << "Moment of inertia: " << std::endl;
+		std::cout << J << std::endl;
+	}
+
+	void RigidBodyDynamics::DisplayInitialCondition()
+	{
+		std::cout << "------- No initial condition for rigid dynamics -------" << std::endl;
+	}
+
+	void RigidBodyDynamics::IncrementState()
+	{
+		// no increment state for rigid dynamics
+	}
+
+	RigidBodyDynamics::~RigidBodyDynamics()
 	{
 	}
 }

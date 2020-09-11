@@ -10,8 +10,8 @@ using std::iostream;
 //#define DEBUG_LINEAR
 //#define DEBUG_STIFF_MODEL
 //#define DEBUG_DISP
-#define DEBUG_ENGINE
-
+//#define DEBUG_ENGINE
+#define  DEBUG_SPRING
 
 #ifdef DEBUG_ENGINE
 // FADEC control logic
@@ -1116,6 +1116,136 @@ int main()
 	}
 #endif // DEBUG_ENGINE
 
+#ifdef DEBUG_SPRING
+
+	double kx = 30;
+	double kv = 0.5;
+	double initial_height = 15.0;
+	double m = 1.0;
+	double g = 9.81;
+	double l = 1.0;
+
+	linearsystem::IntegratorParameter int_v;
+	int_v.num_of_channels = 1;
+	linearsystem::IntegratorInitialCondition int_v_initialcondition;
+	int_v_initialcondition.X_0.resize(1);
+	int_v_initialcondition.X_0(0) = 0.0;
+	unsigned int speed = SimInstance1.AddSubSystem(int_v, int_v_initialcondition);
+
+	linearsystem::IntegratorParameter int_x;
+	int_x.num_of_channels = 1;
+	linearsystem::IntegratorInitialCondition int_x_initialcondition;
+	int_x_initialcondition.X_0.resize(1);
+	int_x_initialcondition.X_0(0) = initial_height;
+	unsigned int position = SimInstance1.AddSubSystem(int_x, int_x_initialcondition);
+
+	mathblocks::SumParameter sum_1_param;// starter torque + PID controller
+	sum_1_param.input_dimensions = 1;
+	sum_1_param.num_of_inputs = 2;
+	sum_1_param.sign_list.resize(2);
+	sum_1_param.sign_list(0) = 1.0*mathblocks::SUM_NEGATIVE;
+	sum_1_param.sign_list(1) = 1.0*mathblocks::SUM_POSITIVE;
+	unsigned int  sum_1 = SimInstance1.AddSubSystem(sum_1_param);
+
+	mathblocks::SumParameter sum_2_param;// starter torque + PID controller
+	sum_2_param.input_dimensions = 1;
+	sum_2_param.num_of_inputs = 3;
+	sum_2_param.sign_list.resize(2);
+	sum_2_param.sign_list(0) = 1.0*mathblocks::SUM_POSITIVE;
+	sum_2_param.sign_list(1) = 1.0*mathblocks::SUM_NEGATIVE;
+	sum_2_param.sign_list(2) = 1.0*mathblocks::SUM_NEGATIVE;
+	unsigned int  sum_2 = SimInstance1.AddSubSystem(sum_2_param);
+
+	discontinuoussystem::SwitchParameter switch_1_param;
+	switch_1_param.num_of_channels = 1;
+	switch_1_param.switch_value = 0.0;
+	unsigned int switch_1 = SimInstance1.AddSubSystem(switch_1_param);
+
+	mathblocks::GainParameter gain_1_param;
+	gain_1_param.K.resize(1, 1);
+	gain_1_param.K(0) = kv;
+	gain_1_param.Mode = mathblocks::ElementWise;
+	gain_1_param.num_of_inputs = 1;
+	unsigned int gain_1 = SimInstance1.AddSubSystem(gain_1_param);
+
+	mathblocks::GainParameter gain_2_param;
+	gain_2_param.K.resize(1, 1);
+	gain_2_param.K(0) = kx;
+	gain_2_param.Mode = mathblocks::ElementWise;
+	gain_2_param.num_of_inputs = 1;
+	unsigned int gain_2 = SimInstance1.AddSubSystem(gain_2_param);
+
+	mathblocks::GainParameter gain_3_param;
+	gain_3_param.K.resize(1, 1);
+	gain_3_param.K(0) = 1.0/m;
+	gain_3_param.Mode = mathblocks::ElementWise;
+	gain_3_param.num_of_inputs = 1;
+	unsigned int gain_3 = SimInstance1.AddSubSystem(gain_3_param);
+	
+	mathblocks::ConstantParameter gravity_param;
+	gravity_param.value.resize(1,1);
+	gravity_param.value(0) = m * g;
+	unsigned int gravity = SimInstance1.AddSubSystem(gravity_param);
+
+	mathblocks::ConstantParameter length_param;
+	length_param.value.resize(1, 1);
+	length_param.value(0) = l;
+	unsigned int length = SimInstance1.AddSubSystem(length_param);
+
+	SimInstance1.EditConnectionMatrix(speed, 0, gain_3, 0);
+	SimInstance1.EditConnectionMatrix(position, 0, speed, 0);
+
+	SimInstance1.EditConnectionMatrix(gain_3, 0, sum_2, 0);
+	SimInstance1.EditConnectionMatrix(gain_1, 0, speed, 0);
+	SimInstance1.EditConnectionMatrix(gain_2, 0, sum_1, 0);
+
+	SimInstance1.EditConnectionMatrix(sum_1, 0, position, 0);
+	SimInstance1.EditConnectionMatrix(sum_1, 1, length, 0);
+
+	SimInstance1.EditConnectionMatrix(sum_2, 0, switch_1, 0);
+	SimInstance1.EditConnectionMatrix(sum_2, 1, gain_1, 0);
+	SimInstance1.EditConnectionMatrix(sum_2, 2, gravity, 0);
+
+	SimInstance1.EditConnectionMatrix(switch_1, 0, sum_1, 0);
+	SimInstance1.EditConnectionMatrix(switch_1, 1, gain_2,0);
+	SimInstance1.EditConnectionMatrix(switch_1, 2, simulationcontrol::external, 0);
+
+	SimInstance1.FlushMakeConnection();
+
+	// define the data log tag
+
+	SimInstance1.DefineDataLogging(speed, 0, "speed");
+	SimInstance1.DefineDataLogging(position, 0, "position");
+	SimInstance1.DefineDataLogging(gain_3, 0, "total_force");
+
+	SimInstance1.DisplayLoggerTagList();// show the logged tags
+	bool flag = SimInstance1.PreRunProcess();
+	int N_steps = 2000;
+
+
+	if (flag) { // if successful, run updates
+		std::cout << " All good, ready to run. Enter 1 to start.../ Enter other number to stop ..." << std::endl;
+		int start = 0;
+		std::cin >> start;
+		if (start != 1) {
+			std::cout << " Abort... " << std::endl;
+			return 0;
+		}
+		std::cout << "Running ... " << std::endl;
+		VectorXd extern_input;
+		SimInstance1.ReshapeExternalInputVector(extern_input);
+		t = clock();
+		for (int i = 0; i < N_steps; i++)
+		{
+			SimInstance1.Run_Update(extern_input);
+		}
+		t = clock() - t;
+		std::cout << "Calculation Takes " << t << " clicks " << ((float)t) / CLOCKS_PER_SEC << " seconds \n";
+	}
+	else {
+		std::cout << "Initialization failed, check subsystem connections" << std::endl;
+	}
+#endif
 	SimInstance1.PostRunProcess();
 	getchar();
 	return 0;
