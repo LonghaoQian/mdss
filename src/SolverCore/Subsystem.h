@@ -1,17 +1,15 @@
 #pragma once
-// connection type
-#define NOCONNECTION -1
-#define EXTERNAL -2
 // A template for a subsystem used for schecduling.
 using std::vector;
 using namespace Eigen;
-typedef Matrix<int, Dynamic, 2> MatrixX2i;
+typedef Matrix<int, Dynamic, 2> MatrixX2i; // connnection matrix
 
 enum subsystem_category {
 	AERODYNAMICS = 0,
 	LINEARSYSTEM,
 	DISCONTINUOUS,
 	DYNAMICS,
+	EXTERNAL,
 	GEOGRAPHIC,
 	MATH,
 	PROPULSION,
@@ -45,12 +43,13 @@ enum subsystem_type {
 	math_TRIGONOMETRYFUNCTION,
 	propulsion_CFM56AUXILIARYMODEL,
 	propulsion_CFM56THRUST,
+	propulsion_PROPELLERCHARTFIXEDPITCH,
+	propulsion_PROPELLERCHARTVARIABLEPITCH,
+	propulsion_PISTONENGINE,
 	source_SINGALGENERATOR,
 	source_STEP,
 	source_RAMP
 };
-
-static const std::map<subsystem_type, std::string> subsystems[7];
 
 
 static const std::map<subsystem_type, std::string> subsystem_type_list{
@@ -80,12 +79,14 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{source_STEP, "Step block"},
 	{source_RAMP, "Ramp block"}
 };
+
+
 struct subsystem_handle {
-	subsystem_type type;
-	int ID;			// the index this subsystem is assigned after the addsubsystem function
-	std::string label_;
-	bool isParameterOK;
-	MatrixX2i input_connection_list;
+	subsystem_type type;   // type of the system
+	int ID;			       // the index this subsystem is assigned after the addsubsystem function
+	std::string label_;    // a name tag for the subsystem
+	bool isParameterOK;    // a flag indicating whether the parameter check passes
+	MatrixX2i input_connection_list; // connection matrix 
 };
 // subsystem info for the solver TO DO: add a mandatory function 
 struct subsystem_info {

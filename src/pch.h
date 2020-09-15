@@ -18,4 +18,5 @@
 #include <string.h>
 #include <map>
 #include <fstream>
+#include <functional>
 #endif //PCH_H

@@ -206,5 +206,220 @@ namespace propulsionsystem {
 	CFM56ThrustModel::~CFM56ThrustModel() {
 
 	}
+	/* ---------------------------   propeller chart -------------------------------------------------*/
+	PropellerChartFixedPitch::PropellerChartFixedPitch(const PropellerChartFixedPitchParameter & param)
+	{
+		parameter = param;
+		// sets the system type and category 
+		system_info.category = PROPULSION;
+		system_info.type = propulsion_PROPELLERCHARTFIXEDPITCH;
+		// set ready_to_run to true since there is not parameter check for this subsystem
+		ready_to_run = true;
+		// determine the size of the system
+		system_info.num_of_continuous_states = 0;
+		system_info.num_of_inputs = 3;  
+		system_info.num_of_outputs = 2; 
+		// check the compatibility of the system matrices:
+		system_info.system_parameter_ok = true;
+		system_info.DIRECT_FEED_THROUGH = true;
+		system_info.EXTERNAL_CONNECTION_ONLY = false;
+		system_info.NO_CONTINUOUS_STATE = true;
+		// initialize state memeory
+		output.resize(system_info.num_of_outputs);
+		system_info.input_connection.resize(system_info.num_of_inputs, 2);
+		// 0 th raw is J, 1 thrust, 2 power
+		system_info.system_parameter_ok = 0;
+		int num_of_cols = parameter.Chart.cols();
+		propeller_fixed_pitch_.LoadTableData(parameter.Chart.col(0), parameter.Chart.rightCols(num_of_cols - 1), false);
+		// initialize coefficient vector 
+		Coefficient.resize(2, 1);
+		Coefficient.setZero();
+		D_4 = pow(parameter.diameter,4.0);
+		D_5 = pow(parameter.diameter,5.0);
+	}
+
+	void PropellerChartFixedPitch::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+		// no diferential equation for propeller chart
+	}
+
+	void PropellerChartFixedPitch::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+		// 
+		if (input(PROPELLER_INPUT_V) < parameter.minimumAngularRate) {
+			output(PROPELLER_OUTPUT_Q) = 0.0;
+			output(PROPELLER_OUTPUT_T) = 0.0;
+		}
+		else { // normal condition
+			J = input(PROPELLER_INPUT_V) / (input(PROPELLER_INPUT_N)*parameter.diameter);
+			N_2 = input(PROPELLER_INPUT_N) * input(PROPELLER_INPUT_N);
+			propeller_fixed_pitch_.GetOutput(Coefficient,J); // use the first element of the input as the target height
+			// T = rho n^2 D^4 CT, P = rho n^3 D_5 CP, Q = P/n = rho n^2 D_5 CP
+			output(PROPELLER_OUTPUT_T) = input(PROPELLER_INPUT_RHO) * N_2 * D_4* Coefficient(0);// CT  = 0, CP = 1
+			output(PROPELLER_OUTPUT_Q) = input(PROPELLER_INPUT_RHO) * N_2 * D_5* Coefficient(1);// CT  = 0, CP = 1
+		}
+	}
+
+	void PropellerChartFixedPitch::IncrementState()
+	{
+		// no increment state for propeller chart block
+	}
+
+	void PropellerChartFixedPitch::DisplayParameters()
+	{
+		std::cout << "------ propeller chart parameter --------  \n";
+		std::cout << " minimum angular rate is: " << parameter.minimumAngularRate << " (RPS) \n";
+		std::cout << " propeller diameter is: " << parameter.diameter << " (m) \n";
+		std::cout << " propeller chart is: \n";
+		std::cout << parameter.Chart << "\n";
+	}
+
+	void PropellerChartFixedPitch::DisplayInitialCondition()
+	{
+		std::cout << "------No initial condition for propeller chart block----------" << std::endl;
+	}
+
+	PropellerChartFixedPitch::~PropellerChartFixedPitch()
+	{
+
+	}
+
+	/*---------------------- Varable pitch propeller --------------------------- */
+	PropellerChartVariablePitch::PropellerChartVariablePitch(const PropellerChartVariablePitchParameter & param)
+	{
+		parameter = param;
+		// sets the system type and category 
+		system_info.category = PROPULSION;
+		system_info.type = propulsion_PROPELLERCHARTVARIABLEPITCH;
+		// determine the size of the system
+		system_info.num_of_continuous_states = 0;
+		system_info.num_of_inputs = 4;
+		system_info.num_of_outputs = 2;
+		// check the compatibility of the system matrices:
+		system_info.DIRECT_FEED_THROUGH = true;
+		system_info.EXTERNAL_CONNECTION_ONLY = false;
+		system_info.NO_CONTINUOUS_STATE = true;
+
+		// check the consistency of the thrust table:
+
+		auto J_dimension = parameter.Jindex.size(); // number of data points for row reference
+		auto Pitch_dimension = parameter.PitchIndex.size(); // number of data points for column reference
+
+		auto ChartPRows = parameter.Chart_P.rows();// number of row data points of table
+		auto ChartPCols = parameter.Chart_P.cols();// number of column data points of table
+
+		auto ChartTRows = parameter.Chart_T.rows();// number of row data points of table
+		auto ChartTCols = parameter.Chart_T.cols();// number of column data points of table
+
+		if ((ChartPRows == ChartTRows) && (ChartPCols == ChartTCols) && (ChartTRows == J_dimension) && (ChartPCols == Pitch_dimension)) {
+			system_info.system_parameter_ok = 0;
+			ready_to_run = true;
+			propeller_table_T_.LoadTableData(parameter.Jindex, parameter.PitchIndex, parameter.Chart_T, false);
+			propeller_table_P_.LoadTableData(parameter.Jindex, parameter.PitchIndex, parameter.Chart_P, false);
+		}
+		else {
+			system_info.system_parameter_ok = 1;
+			ready_to_run = false;
+		}
+		// initialize state memeory
+		output.resize(system_info.num_of_outputs);
+		system_info.input_connection.resize(system_info.num_of_inputs, 2);
+		D_4 = pow(parameter.diameter, 4.0);
+		D_5 = pow(parameter.diameter, 5.0);
+	}
+
+	void PropellerChartVariablePitch::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+		// no diferential equation for propeller chart
+	}
+
+	void PropellerChartVariablePitch::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+		if (input(PROPELLER_INPUT_V) < parameter.minimumAngularRate) {
+			output(PROPELLER_OUTPUT_Q) = 0.0;
+			output(PROPELLER_OUTPUT_T) = 0.0;
+		}
+		else {
+			N_2 = input(PROPELLER_INPUT_N) * input(PROPELLER_INPUT_N);
+			J = input(PROPELLER_INPUT_V) / (input(PROPELLER_INPUT_N)*parameter.diameter);
+			CT = propeller_table_T_.GetOutput(J, input(PROPELLER_INPUT_PITCH));
+			CP = propeller_table_P_.GetOutput(J, input(PROPELLER_INPUT_PITCH));
+			// T = rho n^2 D^4 CT, P = rho n^3 D_5 CP, Q = P/n = rho n^2 D_5 CP
+			output(PROPELLER_OUTPUT_T) = input(PROPELLER_INPUT_RHO) * N_2 * D_4* CT;// CT  = 0, CP = 1
+			output(PROPELLER_OUTPUT_Q) = input(PROPELLER_INPUT_RHO) * N_2 * D_5* CP;// CT  = 0, CP = 1
+		}
+	}
+
+	void PropellerChartVariablePitch::IncrementState()
+	{
+		// no increment state
+	}
+
+	void PropellerChartVariablePitch::DisplayParameters()
+	{
+		std::cout << "------ propeller chart parameter --------  \n";
+		std::cout << " minimum angular rate is: " << parameter.minimumAngularRate << " (RPS) \n";
+		std::cout << " propeller diameter is: " << parameter.diameter << " (m) \n";
+		std::cout << " propeller power chart is: \n";
+		std::cout << parameter.Chart_P << "\n";
+		std::cout << " propeller thrust chart is: \n";
+		std::cout << parameter.Chart_T << "\n";
+	}
+
+	void PropellerChartVariablePitch::DisplayInitialCondition()
+	{
+		std::cout << "------No initial condition for propeller chart block----------" << std::endl;
+	}
+
+	PropellerChartVariablePitch::~PropellerChartVariablePitch()
+	{
+	}
+
+	/*---------------------- pitson engine --------------------------- */
+
+	PistonEngine::PistonEngine(const PistonEngineParameter & param)
+	{
+		parameter = param;
+		// sets the system type and category 
+		system_info.category = PROPULSION;
+		system_info.type = propulsion_PISTONENGINE;
+		// determine the size of the system
+		system_info.num_of_continuous_states = 0;
+		system_info.num_of_inputs = 4;
+		system_info.num_of_outputs = 1; // shaft speed
+		// check the compatibility of the system matrices:
+		system_info.DIRECT_FEED_THROUGH = true;
+		system_info.EXTERNAL_CONNECTION_ONLY = false;
+		system_info.NO_CONTINUOUS_STATE = true;
+		// initialize state
+
+		// initialize state memeory
+		output.resize(system_info.num_of_outputs);
+		system_info.input_connection.resize(system_info.num_of_inputs, 2);
+	}
+
+	void PistonEngine::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+	}
+
+	void PistonEngine::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+	}
+
+	void PistonEngine::IncrementState()
+	{
+	}
+
+	void PistonEngine::DisplayParameters()
+	{
+	}
+
+	void PistonEngine::DisplayInitialCondition()
+	{
+	}
+
+	PistonEngine::~PistonEngine()
+	{
+	}
 
 }

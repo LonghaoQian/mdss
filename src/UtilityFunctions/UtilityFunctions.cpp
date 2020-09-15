@@ -483,9 +483,9 @@ double mathauxiliary::Lookup_2D::GetOutput(const double& target1, // row target
 
 void mathauxiliary::Lookup_2D::LoadTableData(const VectorXd & reference_1d, const VectorXd & reference_2d, const MatrixXd & table_data, bool extrapolation)
 {
-	reference_1d_ = reference_1d;
-	reference_2d_ = reference_2d;
-	table_data_ = table_data;
+	reference_1d_ = reference_1d; // row reference
+	reference_2d_ = reference_2d; // col reference
+	table_data_ = table_data;    // table data
 }
 
 void mathauxiliary::Lookup_2D::Preprocess() {

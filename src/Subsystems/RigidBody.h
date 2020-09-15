@@ -204,5 +204,5 @@ namespace dynamics {
 		RigidBodyDynamics(const RigidBodyDynamicsParamter& parameter);
 		~RigidBodyDynamics();
 	};
-
+	// TO DO: gyroscopic forces for rotating objects
 }
