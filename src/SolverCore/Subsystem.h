@@ -27,6 +27,7 @@ enum subsystem_type {
 	continous_RIGIDBODY,
 	continous_RIGIDDYNAMICS,
 	continous_RIGIDKINEMATICS,
+	continous_RATELIMITED,
 	continous_VARIABLEMASS,
 	discontinuous_SATURATION,
 	discontinuous_SWITCH,
@@ -50,36 +51,6 @@ enum subsystem_type {
 	source_STEP,
 	source_RAMP
 };
-
-
-static const std::map<subsystem_type, std::string> subsystem_type_list{
-	{aero_AROANGLE, "Aero angles block"},
-	{aero_AROFORCEMENT_1, "Aerodynamics Forces and Moments"},
-	{continous_INTEGRATOR, "Integrator"},
-	{continous_LTI, "LTI"},
-	{continous_PIDcontroller, "PID controller"},
-	{continous_RIGIDBODY,"Rigid body"},
-	{continous_VARIABLEMASS, "Variable mass body"},
-	{discontinuous_SATURATION, "Saturation"},
-	{discontinuous_SWITCH, "Switch"},
-	{geographic_ATOMSPHERE, "Standard atmopshere "},
-	{geographic_GRAVITY, "Gravity block"},
-	{math_CONSTANT, "Constant block"},
-	{math_CROSSPRODUCT, "Cross product block"},
-	{math_GAIN, "Gain block "},
-	{math_LOOKUP1D,"1D Lookup block"},
-	{math_LOOKUP2D,"2D Lookup block"},
-	{math_PRODUCT, "Product block"},
-	{math_SPECIALFUNCTION,"Special function block"},
-	{math_TRIGONOMETRYFUNCTION,"Special function block"},
-	{math_SUM, "Summation block"},
-	{propulsion_CFM56AUXILIARYMODEL, "CFM56 Auxiliary Model block"},
-	{propulsion_CFM56THRUST, "CFM56 Thrust block"},
-	{source_SINGALGENERATOR, "Signal Generator "},
-	{source_STEP, "Step block"},
-	{source_RAMP, "Ramp block"}
-};
-
 
 struct subsystem_handle {
 	subsystem_type type;   // type of the system

@@ -64,8 +64,6 @@ namespace dynamics {
 
 	*/
 
-
-
 	class RigidBody :
 		public Subsystem
 	{

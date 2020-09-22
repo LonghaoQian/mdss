@@ -87,9 +87,13 @@ namespace linearsystem {
 	};
 
 	struct RateLimitedActuatorParameter {
-		double maximum_rate;
-		double time_constant;
+		double shape_factor;
+		double steady_speed;
 		int num_of_channels;
+	};
+
+	struct RateLimitedActuatorInitialCondition {
+		VectorXd initial_condition;
 	};
 
 	class RateLimitedActuator :
@@ -97,9 +101,11 @@ namespace linearsystem {
 	{
 	private:
 		RateLimitedActuatorParameter param_;
+		VectorXd X0;
+		double K1;
+		double K2;
 	public:
-		RateLimitedActuator();
-		RateLimitedActuator(const RateLimitedActuatorParameter& parameter);
+		RateLimitedActuator(const RateLimitedActuatorParameter& parameter, const RateLimitedActuatorInitialCondition& IC);
 		void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
 		void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
 		void IncrementState();

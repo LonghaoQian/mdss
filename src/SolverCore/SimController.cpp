@@ -741,6 +741,35 @@ namespace simulationcontrol {
 		extern_input.setZero();
 	}
 
+	void SimController::DisplaySystemParameter(unsigned int system_ID)
+	{
+		if (system_ID >= num_of_subsystems) {
+			if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+				std::cout << " ERROR: INDEX EXCEEDS THE MAXIMUM SYSTEM NUMBER. The input index is: "
+						  << system_ID << ". However, the number of subsystem is: " << num_of_subsystems << "\n";
+			}
+		}
+		else {
+			// display system parameters
+			subsystem_list[system_ID]->DisplayParameters();
+		}
+
+	}
+
+	void SimController::DisplaySystemInitialCondition(unsigned int system_ID)
+	{
+		if (system_ID >= num_of_subsystems) {
+			if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+				std::cout << " ERROR: INDEX EXCEEDS THE MAXIMUM SYSTEM NUMBER. The input index is: "
+					      << system_ID << ". However, the number of subsystem is: " << num_of_subsystems << "\n";
+			}
+		}
+		else {
+			// display system initial condition
+			subsystem_list[system_ID]->DisplayInitialCondition();
+		}
+	}
+
 
 	bool SimController::PreRunProcess()
 	{

@@ -247,10 +247,14 @@ namespace propulsionsystem {
 	/*-------- piston engine model------- */
 	struct PistonEngineParameter {
 		Eigen::Matrix<double, Dynamic, 2> PowerRPM_chart;
-		Eigen::Matrix<double, Dynamic, 2> PowerFactor_mixture_chart;
-		double starting_RPM;
+		Eigen::Matrix<double, Dynamic, 2> Mixture_PowerFactor_SFCfactor_chart;
+		double idle_RPM;
 		double shaft_damping;
 		double starter_torque;
+		double sfc;
+		double superchargerfactor;
+		double krho0;
+		double krho1;
 	};
 
 	class PistonEngine :
@@ -258,7 +262,11 @@ namespace propulsionsystem {
 	{
 	private:
 		PistonEngineParameter parameter;
+		double RPM;
 		double EngineON;
+		mathauxiliary::Lookup_1D rpm_power_;
+		mathauxiliary::Lookup_1D mixture_powerfactor_;
+		mathauxiliary::Lookup_1D mixture_sfcfactor_;
 	public:
 		PistonEngine(const PistonEngineParameter& param);
 		void DifferentialEquation(const double& t,

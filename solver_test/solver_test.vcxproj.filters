@@ -134,5 +134,8 @@
     <ClCompile Include="..\src\UtilityFunctions\UtilityFunctions.cpp">
       <Filter>Source Files\UtilityFunctions</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Subsystems\ExternalModel.cpp">
+      <Filter>Source Files\Subsystems</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

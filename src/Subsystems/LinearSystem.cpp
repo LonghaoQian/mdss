@@ -324,33 +324,74 @@ namespace linearsystem {
 	TransferFunction::~TransferFunction()
 	{
 	}
+	/*-------------------rate limited actuator */
 
-	RateLimitedActuator::RateLimitedActuator()
+	RateLimitedActuator::RateLimitedActuator(const RateLimitedActuatorParameter & parameter, 
+											 const RateLimitedActuatorInitialCondition& IC)
 	{
+		// set system type
+		system_info.category = LINEARSYSTEM;
+		system_info.type = continous_RATELIMITED;
+		system_info.NO_CONTINUOUS_STATE = false;
+		system_info.EXTERNAL_CONNECTION_ONLY = false;
+		system_info.DIRECT_FEED_THROUGH = false;
+		param_ = parameter;
+
+		if (IC.initial_condition.size() != param_.num_of_channels) {
+			ready_to_run = false;
+			system_info.system_parameter_ok = 1;
+		}
+		else {
+			ready_to_run = true;
+			system_info.system_parameter_ok = 0;
+		}
+
+		K1 = parameter.shape_factor;
+		K2 = parameter.steady_speed * 2 / M_PI;
+
+		// determine the size of the system
+		system_info.num_of_continuous_states = param_.num_of_channels;
+		system_info.num_of_inputs            = param_.num_of_channels;
+		system_info.num_of_outputs           = param_.num_of_channels;
+		// initialize state memeory
+		state.resize(system_info.num_of_continuous_states);
+		state = IC.initial_condition;// load initial condition
+		output.resize(system_info.num_of_outputs);
+		system_info.input_connection.resize(system_info.num_of_inputs, 2);
 	}
 
-	RateLimitedActuator::RateLimitedActuator(const RateLimitedActuatorParameter & parameter)
+	void RateLimitedActuator::DifferentialEquation(const double & t, 
+												   const VectorXd & state, 
+												   const VectorXd & input, 
+												   VectorXd & derivative)
 	{
-	}
-
-	void RateLimitedActuator::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
-	{
+		for (int i = 0; i < system_info.num_of_continuous_states; i++) {
+			derivative(i) = atan(K1* (input(i) - state(i))) * K2;
+		}
+		
 	}
 
 	void RateLimitedActuator::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 	{
+		output = state;
 	}
 
 	void RateLimitedActuator::IncrementState()
 	{
+		state += solver_buffer_state_increment1;
 	}
 
 	void RateLimitedActuator::DisplayParameters()
 	{
+		cout << " Parameter of rate limited block is: \n";
+		cout << " number of channel is: " << param_.num_of_channels << "\n";
+		cout << " shape factor is: " << param_.shape_factor << " steady speed is: " << param_.steady_speed << "\n";
 	}
 
 	void RateLimitedActuator::DisplayInitialCondition()
 	{
+		cout << " Initial condition for the rate limited block is: \n ";
+		cout << X0 << "\n";
 	}
 
 	RateLimitedActuator::~RateLimitedActuator()

@@ -185,6 +185,7 @@
     <ClCompile Include="..\src\Subsystems\AeroAngle.cpp" />
     <ClCompile Include="..\src\Subsystems\AeroForceMoment1.cpp" />
     <ClCompile Include="..\src\Subsystems\DiscontinuousSystem.cpp" />
+    <ClCompile Include="..\src\Subsystems\ExternalModel.cpp" />
     <ClCompile Include="..\src\Subsystems\LinearSystem.cpp" />
     <ClCompile Include="..\src\Subsystems\MathBlocks.cpp" />
     <ClCompile Include="..\src\Subsystems\PropulsionBlocks.cpp" />

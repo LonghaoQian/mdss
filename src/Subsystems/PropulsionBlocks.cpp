@@ -385,14 +385,12 @@ namespace propulsionsystem {
 		system_info.type = propulsion_PISTONENGINE;
 		// determine the size of the system
 		system_info.num_of_continuous_states = 0;
-		system_info.num_of_inputs = 4;
-		system_info.num_of_outputs = 1; // shaft speed
+		system_info.num_of_inputs = 7;
+		system_info.num_of_outputs = 3; // 
 		// check the compatibility of the system matrices:
 		system_info.DIRECT_FEED_THROUGH = true;
 		system_info.EXTERNAL_CONNECTION_ONLY = false;
 		system_info.NO_CONTINUOUS_STATE = true;
-		// initialize state
-
 		// initialize state memeory
 		output.resize(system_info.num_of_outputs);
 		system_info.input_connection.resize(system_info.num_of_inputs, 2);
@@ -400,22 +398,35 @@ namespace propulsionsystem {
 
 	void PistonEngine::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
 	{
+		// no differential equation for engine block
 	}
 
 	void PistonEngine::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 	{
+		// determine whether the rpm reaches the starting rpm
+		RPM = input(PISTONENGINE_INPUT_SHAFTRPS) * 60.0;// convert rps to rps
+		if (RPM >= parameter.idle_RPM) {
+
+		}
+		else {// if not, in idle state.
+
+		}
+
 	}
 
 	void PistonEngine::IncrementState()
 	{
+		// no incremental state for engine block
 	}
 
 	void PistonEngine::DisplayParameters()
 	{
+		std::cout << "------ piston engine parameter --------  \n";
 	}
 
 	void PistonEngine::DisplayInitialCondition()
 	{
+		std::cout << "------No initial condition for piston engine block----------" << std::endl;
 	}
 
 	PistonEngine::~PistonEngine()
