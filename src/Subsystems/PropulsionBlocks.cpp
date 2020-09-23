@@ -391,6 +391,12 @@ namespace propulsionsystem {
 		system_info.DIRECT_FEED_THROUGH = true;
 		system_info.EXTERNAL_CONNECTION_ONLY = false;
 		system_info.NO_CONTINUOUS_STATE = true;
+		// convert the 
+		starter_torque_slope = - parameter.stater_max_torque / (parameter.stater_zero_torque_RPM - parameter.stater_breakaway_RPM);
+		// load table data
+		rpm_power_.LoadTableData(parameter.PowerMixture_chart.col(0), parameter.PowerRPM_chart.col(1), false);
+		mixture_powerfactor_.LoadTableData(parameter.PowerMixture_chart.col(0), parameter.PowerMixture_chart.col(1), false);
+		mixture_sfcfactor_.LoadTableData(parameter.Mixture_PowerFactor_SFCfactor_chart.col(0), parameter.Mixture_PowerFactor_SFCfactor_chart.col(1), false);
 		// initialize state memeory
 		output.resize(system_info.num_of_outputs);
 		system_info.input_connection.resize(system_info.num_of_inputs, 2);
@@ -405,13 +411,51 @@ namespace propulsionsystem {
 	{
 		// determine whether the rpm reaches the starting rpm
 		RPM = input(PISTONENGINE_INPUT_SHAFTRPS) * 60.0;// convert rps to rps
-		if (RPM >= parameter.idle_RPM) {
+		// 
+	
+		// determine the throttle command
+		if (input(PISTONENGINE_INPUT_THROTTLE) > 1.0) {
+			throttle = 1.0;
+		}
+		else if (input(PISTONENGINE_INPUT_THROTTLE) < 0.0){
+			throttle = 0.0;
+		}
+		else {
+			throttle = input(PISTONENGINE_INPUT_THROTTLE);
+		}
 
+		// determine fuel state
+		if (input(PISTONENGINE_INPUT_FUELSTATE) > 0.0) {
+			fuel_normal = 1.0;
+		}
+		else {
+			fuel_normal = 0.0;
+		}
+
+		// calculate starter torque
+		if (input(PISTONENGINE_INPUT_STARTER) > 0.0) {
+			if (RPM > parameter.stater_breakaway_RPM){
+				starter_torque = starter_torque_slope * (RPM - parameter.stater_breakaway_RPM);
+			}
+			else {
+				starter_torque = parameter.stater_max_torque;
+			}
+				
+		}
+		else {
+			starter_torque = 0.0;
+		}
+		// calculate engine output torque
+		if (RPM >= parameter.idle_RPM) {
+			density_factor = parameter.krho0 * input(PISTONENGINE_INPUT_MANIFOLD)/1.225 + parameter.krho1;
+
+			output(PISTONENGINE_OUTPUT_Q) = starter_torque + fuel_normal* density_factor*
+				mixture_powerfactor_.GetOutput(input(PISTONENGINE_INPUT_MIXTURE)) * rpm_power_.GetOutput(RPM) * throttle;
 		}
 		else {// if not, in idle state.
-
+			output(PISTONENGINE_OUTPUT_Q) = starter_torque + parameter.shaft_damping * RPM;
 		}
-
+		output(PISTONENGINE_OUTPUT_FUELRATE) = 0.0;
 	}
 
 	void PistonEngine::IncrementState()
@@ -422,6 +466,17 @@ namespace propulsionsystem {
 	void PistonEngine::DisplayParameters()
 	{
 		std::cout << "------ piston engine parameter --------  \n";
+		std::cout << " Starter breakaway RPM: " << parameter.stater_breakaway_RPM << " starter torque slope: " << starter_torque_slope 
+			<< "starter maximum torque: " << parameter.stater_max_torque<< "\n";
+		std::cout << "RPM-power chart: \n";
+		std::cout << parameter.PowerRPM_chart << "\n";
+		std::cout << "Mixture-power chart: chart: \n";
+		std::cout << parameter.PowerMixture_chart << "\n";
+		std::cout << "Mixture-sfc chart: \n";
+		std::cout << parameter.Mixture_PowerFactor_SFCfactor_chart<< "\n";
+		std::cout << "sfc :" << parameter.sfc;
+		std::cout << "density equation rho0: " << parameter.krho0 << " density equation rho1: " << parameter.krho1 << "\n";
+		std::cout << "Idel PRM: " << parameter.idle_RPM << " Shaft damping: " << parameter.shaft_damping << "\n";
 	}
 
 	void PistonEngine::DisplayInitialCondition()

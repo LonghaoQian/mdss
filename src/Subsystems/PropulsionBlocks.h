@@ -240,21 +240,23 @@ namespace propulsionsystem {
 	};
 
 	enum PistonEngineOutput {
-		PISTONENGINE_OUTPUT_STATE = 0,
-		PISTONENGINE_OUTPUT_Q, // output torque
+		PISTONENGINE_OUTPUT_Q = 0, // output torque
 		PISTONENGINE_OUTPUT_FUELRATE,
 	};
 	/*-------- piston engine model------- */
 	struct PistonEngineParameter {
 		Eigen::Matrix<double, Dynamic, 2> PowerRPM_chart;
+		Eigen::Matrix<double, Dynamic, 2> PowerMixture_chart;
 		Eigen::Matrix<double, Dynamic, 2> Mixture_PowerFactor_SFCfactor_chart;
 		double idle_RPM;
 		double shaft_damping;
-		double starter_torque;
 		double sfc;
 		double superchargerfactor;
 		double krho0;
 		double krho1;
+		double stater_max_torque;
+		double stater_breakaway_RPM;
+		double stater_zero_torque_RPM;
 	};
 
 	class PistonEngine :
@@ -264,6 +266,11 @@ namespace propulsionsystem {
 		PistonEngineParameter parameter;
 		double RPM;
 		double EngineON;
+		double starter_torque;
+		double throttle;
+		double starter_torque_slope;
+		double fuel_normal;
+		double density_factor;
 		mathauxiliary::Lookup_1D rpm_power_;
 		mathauxiliary::Lookup_1D mixture_powerfactor_;
 		mathauxiliary::Lookup_1D mixture_sfcfactor_;
