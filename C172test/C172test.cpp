@@ -16,8 +16,12 @@ int main()
 	config1.loggingconfig.uselogging = true;
 	config1.loglevel = simulationcontrol::LOGLEVEL_ERROR;
 	simulationcontrol::SimController SimInstance1(config1);
-	// 
+	// plane mass
 	double planemass = 700.0;
+	// plane CG
+	double CG_MAC = 0.25;
+	// plane initial condition
+
 	// define kinematics
 	dynamics::RigidBodyKinematicsInitialCondition initial_condition;
 	initial_condition.Euler0(0) = 0.0;
@@ -58,12 +62,18 @@ int main()
 	force_sum_param.input_dimensions = 3;
 	force_sum_param.num_of_inputs = 3; // areo gravity and thrust
 	unsigned int force_summation = SimInstance1.AddSubSystem(force_sum_param);
-	//
+	// moment summation
+
+
+	// 
 	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_AIx, planedynamics, dynamics::DYNAMICS_OUTPUT_AIx);
 	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_AIy, planedynamics, dynamics::DYNAMICS_OUTPUT_AIy);
 	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_AIz, planedynamics, dynamics::DYNAMICS_OUTPUT_AIz);
 
-	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIx, );
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIx, force_summation, 0);
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIy, force_summation, 1);
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIz, force_summation, 2);
+
 
 	// force summation : aero, gravity, and thrust 
 
