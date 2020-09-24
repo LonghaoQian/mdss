@@ -89,6 +89,17 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
+	unsigned int SimController::AddSubSystem(const linearsystem::RateLimitedActuatorParameter & parameters, const linearsystem::RateLimitedActuatorInitialCondition & IC)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new linearsystem::RateLimitedActuator(parameters,IC));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
 	unsigned int SimController::AddSubSystem(const discontinuoussystem::SaturationParameter & parameters)
 	{
 		subsystem_info system_info;
@@ -115,6 +126,28 @@ namespace simulationcontrol {
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new dynamics::RigidBody(parameters, IC));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	unsigned int SimController::AddSubSystem(const dynamics::RigidBodyKinematicsInitialCondition & IC)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new dynamics::RigidBodyKinematics(IC));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	unsigned int SimController::AddSubSystem(const dynamics::RigidBodyDynamicsParamter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new dynamics::RigidBodyDynamics(parameters));
 		system_info = subsystem_list.back()->GetSystemInfo();
 		// update number of subsystems
 		num_of_subsystems = subsystem_list.size();

@@ -140,12 +140,14 @@ namespace simulationcontrol {
 		unsigned int AddSubSystem(const linearsystem::IntegratorParameter& parameters, const linearsystem::IntegratorInitialCondition& IC);
 		unsigned int AddSubSystem(const linearsystem::TransferFunctionParameter& parameters);
 		unsigned int AddSubSystem(const linearsystem::PIDcontrollerParameter& parameters);
+		unsigned int AddSubSystem(const linearsystem::RateLimitedActuatorParameter& parameters, const linearsystem::RateLimitedActuatorInitialCondition& IC);
 		// Discontinuous
 		unsigned int AddSubSystem(const discontinuoussystem::SaturationParameter& parameters);
 		unsigned int AddSubSystem(const discontinuoussystem::SwitchParameter& parameters);
-		// To DO: rate limited 1st order system
 		// Dynamics 
 		unsigned int AddSubSystem(const dynamics::RigidBodyParameter& parameters, const dynamics::RigidBodyCondition& IC);
+		unsigned int AddSubSystem(const dynamics::RigidBodyKinematicsInitialCondition& IC);
+		unsigned int AddSubSystem(const dynamics::RigidBodyDynamicsParamter& parameters);
 		// math blocks
 		unsigned int AddSubSystem(const mathblocks::GainParameter& parameters);
 		unsigned int AddSubSystem(const mathblocks::ConstantParameter& parameters);
