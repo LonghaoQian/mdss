@@ -42,12 +42,12 @@ int main()
 	initial_condition.XI0(mathauxiliary::VECTOR_Z) = -100; // END frame
 	unsigned int planekinematics = SimInstance1.AddSubSystem(initial_condition);
 	//// define dynamics
-	//dynamics::RigidBodyDynamicsParamter dynamics_parameter;
-	//dynamics_parameter.J(0, 0) = 1285.31541660000; // kg m^2
-	//dynamics_parameter.J(1, 1) = 1824.93096070000;
-	//dynamics_parameter.J(2, 2) = 2666.89390765000;
-	//dynamics_parameter.m = planemass; //kg
-	//unsigned int planedynamics = SimInstance1.AddSubSystem(dynamics_parameter);
+	dynamics::RigidBodyDynamicsParamter dynamics_parameter;
+	dynamics_parameter.J(0, 0) = 1285.31541660000; // kg m^2
+	dynamics_parameter.J(1, 1) = 1824.93096070000;
+	dynamics_parameter.J(2, 2) = 2666.89390765000;
+	dynamics_parameter.m = planemass; //kg
+	unsigned int planedynamics = SimInstance1.AddSubSystem(dynamics_parameter);
 	// define gravity 
 	mathblocks::ConstantParameter gravity_param;
 	gravity_param.value.resize(3, 1);
@@ -63,6 +63,24 @@ int main()
 	multiple_1_param.input2_dimension(mathblocks::MATRIX_ROW) = 3;
 	multiple_1_param.input2_dimension(mathblocks::MATRIX_COL) = 1;
 	unsigned int product_1 = SimInstance1.AddSubSystem(multiple_1_param);
+
+	mathblocks::MultiplicationParam multiple_2_param;
+	multiple_2_param.Mode = mathblocks::MULTI_MATRIX;
+	multiple_2_param.input1_dimension(mathblocks::MATRIX_ROW) = 3;
+	multiple_2_param.input1_dimension(mathblocks::MATRIX_COL) = 3;
+	multiple_2_param.input2_dimension(mathblocks::MATRIX_ROW) = 3;
+	multiple_2_param.input2_dimension(mathblocks::MATRIX_COL) = 1;
+	unsigned int product_2 = SimInstance1.AddSubSystem(multiple_2_param);
+
+	mathblocks::CrossProductParameter cross_1_param;
+	cross_1_param.mode = 0;
+	unsigned int crossproduct1 = SimInstance1.AddSubSystem(cross_1_param);
+
+	mathblocks::SumParameter sum_Vb_parameter;
+	sum_Vb_parameter.input_dimensions = 3;
+	sum_Vb_parameter.SignList.push_back(mathblocks::SUM_POSITIVE);
+	sum_Vb_parameter.SignList.push_back(mathblocks::SUM_POSITIVE);
+	unsigned int sum_Vb = SimInstance1.AddSubSystem(sum_Vb_parameter);
 
 	//// define aeroangle
 	aero::AeroAngleParameter aeroangleparameter;
@@ -85,15 +103,6 @@ int main()
 	geographic::StandardAtmosphereParameter atom_param;
 	atom_param.atmoshpere_name_ = "atom_data";
 	unsigned int atmoshpere = SimInstance1.AddSubSystem(atom_param);
-	//// 
-	//SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_AIx, planedynamics, dynamics::DYNAMICS_OUTPUT_AIx);
-	//SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_AIy, planedynamics, dynamics::DYNAMICS_OUTPUT_AIy);
-	//SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_AIz, planedynamics, dynamics::DYNAMICS_OUTPUT_AIz);
-
-	//SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIx, force_summation, mathauxiliary::VECTOR_X);
-	//SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIy, force_summation, 1);
-	//SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIz, force_summation, 2);
-
 
 	// force summation : aero, gravity, and thrust 
 	source_sink::PeriodicWaveparameter signal_generator_param1;
@@ -135,11 +144,15 @@ int main()
 	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_RHO, atmoshpere, geographic::AtmDensity);
 	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_SOUNDSPEED, atmoshpere, geographic::AtmSoundSpeed);
 	
+	SimInstance1.BatchEditConnectionMatrix(crossproduct1, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, dynamics::KINEMATICS_OUTPUT_VBz);
+	SimInstance1.BatchEditConnectionMatrix(crossproduct1, 3+mathauxiliary::VECTOR_X, 3+mathauxiliary::VECTOR_Z, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
 
-	//SimInstance1.EditConnectionMatrix(product_1, 0, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00);
-	//SimInstance1.EditConnectionMatrix(product_1, 1, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB10);
-	//SimInstance1.EditConnectionMatrix(product_1, 2, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB20);
-
+	SimInstance1.BatchEditConnectionMatrix(product_2, 0, 8, planekinematics, dynamics::KINEMATICS_OUTPUT_R_BI00, dynamics::KINEMATICS_OUTPUT_R_BI22);
+	SimInstance1.BatchEditConnectionMatrix(product_2, 9, 11, planedynamics, dynamics::DYNAMICS_OUTPUT_AIx, dynamics::DYNAMICS_OUTPUT_AIz);
+	SimInstance1.BatchEditConnectionMatrix(crossproduct1, 0, 2, planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, dynamics::KINEMATICS_OUTPUT_VBz);
+	SimInstance1.BatchEditConnectionMatrix(crossproduct1, 3, 5, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+	SimInstance1.BatchEditConnectionMatrix(sum_Vb, 0, 2, product_2, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(sum_Vb, 3, 5, crossproduct1, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 		// flush connection matrix
 	SimInstance1.FlushMakeConnection();
 

@@ -199,7 +199,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	unsigned int SimController::AddSubsystem(const mathblocks::TrigonometryParameter & parameters)
+	unsigned int SimController::AddSubSystem(const mathblocks::TrigonometryParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::TrigonometricFunction(parameters));
@@ -210,7 +210,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	unsigned int SimController::AddSubsystem(const mathblocks::Lookup1DParameter & parameters)
+	unsigned int SimController::AddSubSystem(const mathblocks::Lookup1DParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Lookup1D(parameters));
@@ -221,7 +221,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	unsigned int SimController::AddSubsystem(const mathblocks::Lookup2DParameter & parameters)
+	unsigned int SimController::AddSubSystem(const mathblocks::Lookup2DParameter & parameters)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::Lookup2D(parameters));
@@ -232,7 +232,7 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
-	unsigned int SimController::AddSubsystem(const mathblocks::CrossProductParameter & param)
+	unsigned int SimController::AddSubSystem(const mathblocks::CrossProductParameter & param)
 	{
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new mathblocks::CrossProduct(param));

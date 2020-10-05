@@ -1141,19 +1141,15 @@ int main()
 
 	mathblocks::SumParameter sum_1_param;// starter torque + PID controller
 	sum_1_param.input_dimensions = 1;
-	sum_1_param.num_of_inputs = 2;
-	sum_1_param.sign_list.resize(2);
-	sum_1_param.sign_list(0) = 1.0*mathblocks::SUM_NEGATIVE;
-	sum_1_param.sign_list(1) = 1.0*mathblocks::SUM_POSITIVE;
+	sum_1_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+	sum_1_param.SignList.push_back(mathblocks::SUM_POSITIVE);
 	unsigned int  sum_1 = SimInstance1.AddSubSystem(sum_1_param);
 
 	mathblocks::SumParameter sum_2_param;// starter torque + PID controller
 	sum_2_param.input_dimensions = 1;
-	sum_2_param.num_of_inputs = 3;
-	sum_2_param.sign_list.resize(2);
-	sum_2_param.sign_list(0) = 1.0*mathblocks::SUM_POSITIVE;
-	sum_2_param.sign_list(1) = 1.0*mathblocks::SUM_NEGATIVE;
-	sum_2_param.sign_list(2) = 1.0*mathblocks::SUM_NEGATIVE;
+	sum_2_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+	sum_2_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+	sum_2_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
 	unsigned int  sum_2 = SimInstance1.AddSubSystem(sum_2_param);
 
 	discontinuoussystem::SwitchParameter switch_1_param;

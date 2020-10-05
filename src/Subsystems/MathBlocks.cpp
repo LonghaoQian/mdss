@@ -361,26 +361,29 @@ namespace mathblocks {
 	Sum::Sum(const SumParameter & param)
 	{
 		system_info.type = math_SUM;
+		system_info.category = MATH;
 		system_info.DIRECT_FEED_THROUGH = true;
 		system_info.NO_CONTINUOUS_STATE = true;
 		system_info.num_of_continuous_states = 0;
 		system_info.system_parameter_ok = 0;
 		ready_to_run = true;
 		param_ = param;
-
-		system_info.num_of_inputs = param_.input_dimensions * param_.num_of_inputs;// number of total inputs 
+		// calculate the number of total inputs 
+		system_info.num_of_inputs = param_.input_dimensions * param_.SignList.size();
+		num_of_channels = param_.SignList.size(); // number of channels
+		Sign.resize(num_of_channels); 
+		Sign.setZero();
+		// set the output dimension
 		system_info.num_of_outputs = param_.input_dimensions;
 		output.resize(system_info.num_of_outputs);
 		output.setZero();
-		for (int i = 0; i < param_.num_of_inputs; i++) {
-			if (param_.sign_list(i) > 0) {
-				param_.sign_list(i) = 1.0;
-			}
-			else {
-				param_.sign_list(i) = -1.0;
+		for (int i = 0; i < num_of_channels; i++) {
+			if (param_.SignList[i] == SUM_POSITIVE) {// positive
+				Sign(i) = 1.0;
+			} else {// otherwise negative
+				Sign(i) = -1.0;
 			}
 		}
-
 	}
 
 	void Sum::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
@@ -392,8 +395,8 @@ namespace mathblocks {
 	{
 		// reset the output to zero
 		output.setZero();
-		for (int i = 0; i < param_.num_of_inputs; i++) {
-			output += param_.sign_list(i)*input.segment(i*param_.input_dimensions, param_.input_dimensions);
+		for (int i = 0; i < num_of_channels; i++) {
+			output += Sign(i)*input.segment(i*param_.input_dimensions, param_.input_dimensions);
 		}
 	}
 
@@ -404,17 +407,20 @@ namespace mathblocks {
 
 	void Sum::DisplayParameters()
 	{
-		std::cout << "Input dimension is : " << param_.input_dimensions << '\n';
-		std::cout << "Number of inputs is : " << param_.num_of_inputs << '\n';
-		std::cout << "The sign list is : " << '\n';
-		for (int i = 0; i < param_.num_of_inputs; i++) {
-			std::cout << " Input # " << i << " is ";
-			if (param_.sign_list(i) > 0) {
-				std::cout << " + \n";
+		std::cout << "The input dimension is : " << param_.input_dimensions << '\n';
+		std::cout << "The number of channels is : " << num_of_channels << '\n';
+		std::cout << "The sign list is : \n";
+		int j = 0;
+		for (auto i : param_.SignList) {
+			std::cout << "Sign # " << j << " : ";
+			if (i == SUM_POSITIVE) {
+				std::cout << " + ";
 			}
 			else {
-				std::cout << " - \n";
+				std::cout << " - ";
 			}
+			std::cout << '\n';
+			j++;
 		}
 	}
 

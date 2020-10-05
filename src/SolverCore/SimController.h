@@ -153,11 +153,11 @@ namespace simulationcontrol {
 		unsigned int AddSubSystem(const mathblocks::ConstantParameter& parameters);
 		unsigned int AddSubSystem(const mathblocks::SumParameter& parameters);
 		unsigned int AddSubSystem(const mathblocks::MultiplicationParam& parameters);
-		unsigned int AddSubsystem(const mathblocks::TrigonometryParameter& parameters);
-		unsigned int AddSubsystem(const mathblocks::Lookup1DParameter& parameters);
-		unsigned int AddSubsystem(const mathblocks::Lookup2DParameter& parameters);
-		unsigned int AddSubsystem(const mathblocks::SpecialFunctionParameter& parameters);
-		unsigned int AddSubsystem(const mathblocks::CrossProductParameter& param);
+		unsigned int AddSubSystem(const mathblocks::TrigonometryParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::Lookup1DParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::Lookup2DParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::SpecialFunctionParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::CrossProductParameter& param);
 		// geographic libs
 		unsigned int AddSubSystem(const geographic::StandardAtmosphereParameter& parameters);
 		unsigned int AddSubSystem(const geographic::GravityModelParameter& parameters);

@@ -134,7 +134,7 @@ namespace dynamics {
 		system_info.DIRECT_FEED_THROUGH = false;
 		system_info.input_connection.resize(6, 2);
 		system_info.input_connection.setZero();
-		system_info.num_of_outputs = 24;
+		system_info.num_of_outputs = 33;
 		system_info.system_parameter_ok = true;
 		system_info.NO_CONTINUOUS_STATE = false;
 		output.resize(system_info.num_of_outputs);
@@ -162,6 +162,7 @@ namespace dynamics {
 		output.segment(KINEMATICS_OUTPUT_XIx, 3) = state.segment(KINEMATICS_STATE_XIx, 3);
 		output.segment(KINEMATICS_OUTPUT_EulerRoll,3) = mathauxiliary::GetEulerAngleFromQuaterion(state.segment(KINEMATICS_STATE_q0, 4));
 		output.segment(KINEMATICS_OUTPUT_R_IB00,9) = mathauxiliary::ConvertRotationMatrixToVector(R_IB);
+		output.segment(KINEMATICS_OUTPUT_R_BI00,9) = mathauxiliary::ConvertRotationMatrixToVector(R_IB.transpose());
 	}
 	void RigidBodyKinematics::DisplayParameters()
 	{

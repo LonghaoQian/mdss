@@ -58,8 +58,6 @@ namespace mathblocks {
 		MULTI_SCALAR
 	};
 
-
-
 	struct MultiplicationParam {
 		MultiplicationMode Mode; // select 
 		Vector2i input1_dimension; // (num_of_rows, num_of_cols)
@@ -89,6 +87,32 @@ namespace mathblocks {
 		~Multiplication();
 
 	};
+	// matrix transpose of a matrix
+	struct TransposeParam {
+		Vector2i input_dimension; // (num_of_rows, num_of_cols)
+	};
+
+	class Transpose :
+		public Subsystem
+	{
+	public:
+		Transpose(const  MultiplicationParam& _multiparameter);
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~Transpose();
+	private:
+		TransposeParam param_;
+		int num_of_elements_input;
+	};
+
 	// cross product block
 	// 0-2 A, 3-5 B, C = AxB
 	struct CrossProductParameter {
@@ -146,22 +170,20 @@ namespace mathblocks {
 		~Gain();
 	};
 	//-----------------------------------------------//
-	struct SumParameter {
-		int num_of_inputs;
-		int input_dimensions;
-		VectorXd sign_list;
-	};
 
 	enum SumSignList {
 		SUM_POSITIVE = 1,
 		SUM_NEGATIVE = -1
 	};
 
+	struct SumParameter {
+		int input_dimensions;
+		vector<SumSignList> SignList;
+	};
+
 	class Sum :
 		public Subsystem
 	{
-	private:
-		SumParameter param_;
 	public:
 		Sum(const SumParameter& param);
 		void DifferentialEquation(const double& t,
@@ -175,6 +197,10 @@ namespace mathblocks {
 		void DisplayParameters();
 		void DisplayInitialCondition();
 		~Sum();
+	private:
+		SumParameter param_;
+		VectorXd Sign;
+		int num_of_channels;
 	};
 	//-----------------------------------------------//
 	enum TrigonometryType{
