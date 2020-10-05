@@ -9,7 +9,7 @@
 #include "StandardAtmosphere.h"
 #include "MathBlocks.h"
 #include "AeroAngle.h"
-#include "AeroForceMoment1.h"
+#include "AeroForceMoment.h"
 #include "DiscontinuousSystem.h"
 #include "PropulsionBlocks.h"
 
@@ -17,27 +17,27 @@ using namespace Eigen;
 using namespace std;
 static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{aero_AROANGLE, "Aero angles block"},
-	{aero_AROFORCEMENT_1, "Aerodynamics Forces and Moments"},
-	{continous_INTEGRATOR, "Integrator"},
+	{aero_AROFORCEMENT, "Aeroforce block"},
+	{continous_INTEGRATOR, "Integrator block"},
 	{continous_LTI, "LTI"},
-	{continous_PIDcontroller, "PID controller"},
-	{continous_RIGIDBODY,"Rigid body"},
-	{continous_RIGIDDYNAMICS, "Rigid dynamics"},
-	{continous_RIGIDKINEMATICS, "Rigd Kinematics"},
-	{continous_TRANSFERFUNCTION, "Transfer function"},
+	{continous_PIDcontroller, "PID-controller block"},
+	{continous_RIGIDBODY,"Rigid-body block"},
+	{continous_RIGIDDYNAMICS, "Rigid-dynamics block"},
+	{continous_RIGIDKINEMATICS, "Rigd-Kinematics block"},
+	{continous_TRANSFERFUNCTION, "Transfer-function block"},
 	{continous_VARIABLEMASS, "Variable mass body"},
-	{discontinuous_SATURATION, "Saturation"},
-	{discontinuous_SWITCH, "Switch"},
+	{discontinuous_SATURATION, "Saturation block"},
+	{discontinuous_SWITCH, "Switch block"},
 	{geographic_ATOMSPHERE, "Standard atmopshere "},
 	{geographic_GRAVITY, "Gravity block"},
 	{math_CONSTANT, "Constant block"},
-	{math_CROSSPRODUCT, "Cross product block"},
+	{math_CROSSPRODUCT, "Cross-product block"},
 	{math_GAIN, "Gain block "},
 	{math_LOOKUP1D,"1D Lookup block"},
 	{math_LOOKUP2D,"2D Lookup block"},
 	{math_PRODUCT, "Product block"},
-	{math_SPECIALFUNCTION,"Special function block"},
-	{math_TRIGONOMETRYFUNCTION,"Special function block"},
+	{math_SPECIALFUNCTION,"Special-function block"},
+	{math_TRIGONOMETRYFUNCTION,"Trignometry-function block"},
 	{math_SUM, "Summation block"},
 	{propulsion_CFM56AUXILIARYMODEL, "CFM56 Auxiliary Model block"},
 	{propulsion_CFM56THRUST, "CFM56 Thrust block"},
@@ -157,6 +157,7 @@ namespace simulationcontrol {
 		unsigned int AddSubsystem(const mathblocks::Lookup1DParameter& parameters);
 		unsigned int AddSubsystem(const mathblocks::Lookup2DParameter& parameters);
 		unsigned int AddSubsystem(const mathblocks::SpecialFunctionParameter& parameters);
+		unsigned int AddSubsystem(const mathblocks::CrossProductParameter& param);
 		// geographic libs
 		unsigned int AddSubSystem(const geographic::StandardAtmosphereParameter& parameters);
 		unsigned int AddSubSystem(const geographic::GravityModelParameter& parameters);
@@ -178,7 +179,12 @@ namespace simulationcontrol {
 								  unsigned int from_input_ID, 
 								  unsigned int to_output_systemID, 
 								  unsigned int to_output_portID);
-
+		void BatchEditConnectionMatrix(unsigned int input_system_ID,
+									   unsigned int input_portID_start,
+									   unsigned int input_portID_end,
+									   unsigned int output_system_ID,
+									   unsigned int output_port_ID_start,
+									   unsigned int output_port_ID_end);
 		bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);// batch connection
 		bool MakeConnection(const subsystem_handle& handle);
 		bool FlushMakeConnection();

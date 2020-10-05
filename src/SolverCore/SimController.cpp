@@ -232,6 +232,17 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
+	unsigned int SimController::AddSubsystem(const mathblocks::CrossProductParameter & param)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new mathblocks::CrossProduct(param));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
 	unsigned int SimController::AddSubSystem(const  source_sink::PeriodicWaveparameter& parameters) {
 		subsystem_info system_info;
 		subsystem_list.emplace_back(new  source_sink::PeriodicWave(parameters));
@@ -348,6 +359,40 @@ namespace simulationcontrol {
 				system_handle_list[(std::size_t)handleID]->input_connection_list(from_input_ID, simulationcontrol::subsystemID)  = to_output_systemID;
 				system_handle_list[(std::size_t)handleID]->input_connection_list(from_input_ID, simulationcontrol::outputportID) = to_output_portID;
 			}
+		}
+
+	}
+
+	void SimController::BatchEditConnectionMatrix(unsigned int input_system_ID, unsigned int input_portID_start, unsigned int input_portID_end, unsigned int output_system_ID, unsigned int output_portID_start, unsigned int output_portID_end)
+	{
+		// 1 check whether the end is less than start for input 
+		if (input_portID_start > input_portID_end) {
+			if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+				std::cout << " CONNNECTION ERROR: THE INPUT PORT START ID: " << input_portID_start << " IS GEATER THAN END ID: " << input_portID_end << "\n";
+			}
+			return;
+		}
+		// 2 check whether the end is less than start for output
+		if (output_portID_start > output_portID_end) {
+			if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+				std::cout << " CONNNECTION ERROR: THE OUTPUT PORT START ID: " << output_portID_start << " IS GEATER THAN END ID: " << output_portID_end << "\n";
+			}
+			return;
+		}
+		// 3 check whether the input ID range is the same with the output ID range (range = end index - start index + 1)
+		unsigned int InputIDRange = input_portID_end - input_portID_start + 1;
+		unsigned int OutputIDRange = output_portID_end - output_portID_start + 1;
+
+		if (InputIDRange != OutputIDRange) {
+			if (solver_config.loglevel >= LOGLEVEL_ERROR) {
+				std::cout << " CONNNECTION ERROR: THE INPUT ID RANGE: " << InputIDRange << " IS EQUAL TO THE OUTPUT ID RANGE: " << OutputIDRange << "\n";
+			}
+			return;
+		}
+		// 4 if all checks are passed, connect the subsystem, 
+
+		for (unsigned int i = 0; i < InputIDRange; i++) {
+			EditConnectionMatrix(input_system_ID, i + input_portID_start, output_system_ID, i + output_portID_start);
 		}
 
 	}

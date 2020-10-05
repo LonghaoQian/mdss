@@ -19,7 +19,7 @@ enum subsystem_category {
 
 enum subsystem_type {
 	aero_AROANGLE,
-	aero_AROFORCEMENT_1,
+	aero_AROFORCEMENT,
 	continous_INTEGRATOR,
 	continous_TRANSFERFUNCTION,
 	continous_LTI,

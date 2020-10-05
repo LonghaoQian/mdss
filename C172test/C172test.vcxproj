@@ -164,7 +164,7 @@
     <ClInclude Include="..\src\SolverCore\Subsystem.h" />
     <ClInclude Include="..\src\SolverCore\TopologyAnalysis.h" />
     <ClInclude Include="..\src\Subsystems\AeroAngle.h" />
-    <ClInclude Include="..\src\Subsystems\AeroForceMoment1.h" />
+    <ClInclude Include="..\src\Subsystems\AeroForceMoment.h" />
     <ClInclude Include="..\src\Subsystems\DiscontinuousSystem.h" />
     <ClInclude Include="..\src\Subsystems\ExternalModel.h" />
     <ClInclude Include="..\src\Subsystems\LinearSystem.h" />
@@ -182,7 +182,7 @@
     <ClCompile Include="..\src\SolverCore\Subsystem.cpp" />
     <ClCompile Include="..\src\SolverCore\TopologyAnalysis.cpp" />
     <ClCompile Include="..\src\Subsystems\AeroAngle.cpp" />
-    <ClCompile Include="..\src\Subsystems\AeroForceMoment1.cpp" />
+    <ClCompile Include="..\src\Subsystems\AeroForceMoment.cpp" />
     <ClCompile Include="..\src\Subsystems\DiscontinuousSystem.cpp" />
     <ClCompile Include="..\src\Subsystems\ExternalModel.cpp" />
     <ClCompile Include="..\src\Subsystems\LinearSystem.cpp" />

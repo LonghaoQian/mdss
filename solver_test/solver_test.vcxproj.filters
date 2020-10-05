@@ -57,9 +57,6 @@
     <ClInclude Include="..\src\Subsystems\AeroAngle.h">
       <Filter>Header Files\Subsystems</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Subsystems\AeroForceMoment1.h">
-      <Filter>Header Files\Subsystems</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Subsystems\DiscontinuousSystem.h">
       <Filter>Header Files\Subsystems</Filter>
     </ClInclude>
@@ -84,6 +81,9 @@
     <ClInclude Include="..\src\Subsystems\ExternalModel.h">
       <Filter>Header Files\Subsystems</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Subsystems\AeroForceMoment.h">
+      <Filter>Header Files\Subsystems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SolverCore\RungeKuttaFamily.cpp">
@@ -102,9 +102,6 @@
       <Filter>Source Files\main</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Subsystems\AeroAngle.cpp">
-      <Filter>Source Files\Subsystems</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Subsystems\AeroForceMoment1.cpp">
       <Filter>Source Files\Subsystems</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Subsystems\DiscontinuousSystem.cpp">
@@ -135,6 +132,9 @@
       <Filter>Source Files\UtilityFunctions</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Subsystems\ExternalModel.cpp">
+      <Filter>Source Files\Subsystems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Subsystems\AeroForceMoment.cpp">
       <Filter>Source Files\Subsystems</Filter>
     </ClCompile>
   </ItemGroup>

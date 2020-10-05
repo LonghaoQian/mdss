@@ -47,20 +47,31 @@ namespace mathblocks {
 	// Define input mode
 	enum InputMode { ElementWise, Matrix, Scalar };
 
-	struct MultiplicationParam {
-		InputMode Mode;
-		Vector2i input1_dimension;
-		Vector2i input2_dimension;
+	enum DimensionIndex {
+		MATRIX_ROW = 0,
+		MATRIX_COL,
 	};
 
+	enum MultiplicationMode {
+		MULTI_ELEMENTWISE = 0,
+		MULTI_MATRIX,
+		MULTI_SCALAR
+	};
+
+
+
+	struct MultiplicationParam {
+		MultiplicationMode Mode; // select 
+		Vector2i input1_dimension; // (num_of_rows, num_of_cols)
+		Vector2i input2_dimension; // (num_of_rows, num_of_cols)
+	};
+	// 
 	class Multiplication :
 		public Subsystem
 	{
 	private:
 		MultiplicationParam param_;
-		Eigen::MatrixXd M_1;
-		Eigen::MatrixXd M_2;
-		Eigen::MatrixXd M;
+		double temp1{0.0};
 		int num_of_elements_input1;
 		int num_of_elements_input2;
 	public:
@@ -78,6 +89,38 @@ namespace mathblocks {
 		~Multiplication();
 
 	};
+	// cross product block
+	// 0-2 A, 3-5 B, C = AxB
+	struct CrossProductParameter {
+		int mode;
+	};
+
+	class CrossProduct :
+		public Subsystem
+	{
+	public:
+		CrossProduct(const  CrossProductParameter& param);
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~CrossProduct();
+	private:
+		CrossProductParameter parameter;
+	};
+	// TO DO: dot product block
+
+	// TO DO: product norm block
+
+	// TO DO: matrix norm
+
+
 	// Gain Block
 	//-----------------------------------------------//
 	struct GainParameter {
@@ -156,7 +199,7 @@ namespace mathblocks {
 	{TrigonometryType::ASIN,[](double input) { return asin(input); } },
 	{TrigonometryType::ACOS,[](double input) { return acos(input); } },
 	{TrigonometryType::ATAN,[](double input) { return atan(input); } },
-	{TrigonometryType::ACOT,[](double input) { return M_PI/2 - atan(input); } }, // source: https://colalg.math.csusb.edu/~devel/IT/main/m06_inverse/src/s02_tanflip.html
+	{TrigonometryType::ACOT,[](double input) { return M_PI/2.0 - atan(input); } }, // source: https://colalg.math.csusb.edu/~devel/IT/main/m06_inverse/src/s02_tanflip.html
 	};
 
 	static std::map<const TrigonometryType, std::string> TrigFunctionNameList{

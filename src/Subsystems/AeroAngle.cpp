@@ -8,9 +8,12 @@ aero::AeroAngle::AeroAngle(const AeroAngleParameter& parameter)
 	param_ = parameter;
 	system_info.type = aero_AROANGLE;
 	system_info.category = AERODYNAMICS;
+
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;
+
 	system_info.num_of_continuous_states = 0;
+
 	system_info.num_of_inputs = 11;
 	system_info.num_of_outputs = 10;
 
@@ -63,30 +66,50 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 	8 q_bar
 	9 r_bar
 	*/
-	output(0) = input.segment(2, 3).norm();
-	mathauxiliary::SaturationElementalWise(output(0), 10000000.0, param_.min_airspeed_); // TAS 
-	output(1) = output(0) / input(1);      // mach number
-	output(2) = atan2(input(4), input(2));  // angle of attack
-	output(3) = asin(input(3) / output(0)); // side slip anlge
-	output(4) = 0.5* input(0) * output(0) * output(0);
-	lon_normalizer = param_.c_bar_ / (2 * output(0));
-	lat_normalizer = param_.b_ / (2 * output(0));
- 	/* alpha  = atan2(w,U)
-	   beta = asin(v/TAS)  
-	   TAS_dot = Vb^T Ab / TAS
+	TAS = input.segment(AERO_INPUT_Vbx, 3).norm();
+	output(AERO_OUTPUT_TAS) = TAS;
+	if (TAS < param_.min_airspeed_) { // saturate the tas for calculation
+		TAS_cal = param_.min_airspeed_;
+	}
+	else {
+		TAS_cal = TAS;
+	}
+	output(AERO_OUTPUT_MACHNUMBER) = output(AERO_OUTPUT_TAS) / input(AERO_INPUT_SOUNDSPEED);      // mach number
+	/* alpha  = atan2(w,U)
+	   beta = asin(v/TAS)
 	*/
-	omega_b(0) = input(5);
-	omega_b(1) = input(6);
-	omega_b(2) = input(7);
-	Vb = input.segment(2, 3);
-	Vb_dot = input.segment(8, 3);
-	TAS_dot = Vb.dot(Vb_dot) / output(0);
+	// angle of attack
+	output(AERO_OUTPUT_AOA) = atan2(input(AERO_INPUT_Vbz), input(AERO_INPUT_Vbx));  
+	// side slip anlge
+	output(AERO_OUTPUT_SIDESLIP) = asin(input(AERO_INPUT_Vby) / TAS_cal); 
+	// dynamics pressure
+	output(AERO_OUTPUT_DYNAMICPRESSURE) = 0.5* input(AERO_INPUT_RHO) * TAS * TAS; 
+	// angular rate normalizer cbar/(2V), b/(2V)
+	lon_normalizer = param_.c_bar_ / (2 * TAS_cal);
+	lat_normalizer = param_.b_ / (2 * TAS_cal);
+ 	/* 
+	   TAS_dot = Vb^T Vb_dot / TAS
+	*/
+	TAS_dot = input.segment(AERO_INPUT_Vbx,3).dot(input.segment(AERO_INPUT_Vbdotx,3)) / TAS_cal;
+	TempCal_1 = input(AERO_INPUT_Vbx)*input(AERO_INPUT_Vbx) + input(AERO_INPUT_Vbz) * input(AERO_INPUT_Vbz);
 
-	output(5) = lon_normalizer * (Vb_dot(3)*input(2)- Vb_dot(0)*input(4)) / (input(2)* input(2) + input(4) * input(4));
-	output(6) = lat_normalizer * (output(0)*Vb_dot(1)-input(3)*TAS_dot) / (output(0)*output(0)*sqrt(1-(input(3)/ output(0))*(input(3)/ output(0))));
-	output(7) = lat_normalizer * input(5);
-	output(8) = lon_normalizer * input(6);
-	output(9) = lat_normalizer * input(7);
+	if (TempCal_1 < param_.min_airspeed_) { // if the velocity is lower than a threshold, then use the theshold as the velocity
+		TempCal_1 = param_.min_airspeed_;
+	}
+
+	// AOA rate
+	output(AERO_OUTPUT_AOARATE) = lon_normalizer * (input(AERO_INPUT_Vbdotz)*input(AERO_INPUT_Vbx)- input(AERO_INPUT_Vbdotx)*input(AERO_INPUT_Vbz)) / TempCal_1;
+	// beta rate
+	TempCal_2 = input(AERO_INPUT_Vby) / TAS_cal;
+	output(AERO_OUTPUT_SIDESLIPRATE) = lat_normalizer * (output(AERO_OUTPUT_TAS)*input(AERO_INPUT_Vbdoty)-input(AERO_INPUT_Vby)*TAS_dot) / (TAS_cal*TAS_cal*sqrt(1- TempCal_2* TempCal_2));
+	// normalized angular rate:
+	output(AERO_OUTPUT_Pbar) = lat_normalizer * input(AERO_INPUT_P);
+	output(AERO_OUTPUT_Qbar) = lon_normalizer * input(AERO_INPUT_Q);
+	output(AERO_OUTPUT_Rbar) = lat_normalizer * input(AERO_INPUT_R);
+
+	// TO DO: add external wind
+
+
 }
 
 void aero::AeroAngle::IncrementState()
@@ -96,7 +119,10 @@ void aero::AeroAngle::IncrementState()
 
 void aero::AeroAngle::DisplayParameters()
 {
+	std::cout << "---------------------" << std::endl;
 	std::cout << "Minimum TAS is set to : " << param_.min_airspeed_  << " m/s "<< std::endl;
+	std::cout << "Wing span is: " << param_.b_ << " m " << std::endl;
+	std::cout << "Mean chord is : " << param_.c_bar_ << " m " << std::endl;
 }
 
 void aero::AeroAngle::DisplayInitialCondition()

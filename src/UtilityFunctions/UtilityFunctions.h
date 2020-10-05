@@ -8,6 +8,25 @@ using std::string;
 using std::vector;
 namespace mathauxiliary {
 
+	enum eulerindex {
+		EULER_ROLL = 0,
+		EULER_PITCH,
+		EULER_YAW
+	};
+
+	enum vectorindex {
+		VECTOR_X = 0,
+		VECTOR_Y,
+		VECTOR_Z
+	};
+
+	enum quaterionindex {
+		QUAT_W = 0,
+		QUAT_X,
+		QUAT_Y,
+		QUAT_Z
+	};
+
 	/*----- attitude kinematics ------*/
 	Vector3d Veemap(const Matrix3d& cross_matrix);
 	Matrix3d Hatmap(const Vector3d& vector);
