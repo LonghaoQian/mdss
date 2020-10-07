@@ -26,16 +26,16 @@ namespace externalmodel {
 	class ExternalFunction :
 		public Subsystem
 	{
-	private:
-		ExternalFunctionParameter parameter;
 	public:
-		ExternalFunction();
+		ExternalFunction(const ExternalFunctionParameter& param);
 		void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
 		void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
 		void DisplayParameters();
 		void DisplayInitialCondition();
 		void IncrementState();
 		~ExternalFunction();
+	private:
+		ExternalFunctionParameter parameter;
 	};
 
 	struct ExternalSystemParameter {
@@ -46,18 +46,22 @@ namespace externalmodel {
 		unsigned int  num_of_states;
 	};
 
+	struct ExternalSystemInitialCondition {
+		VectorXd X0;
+	};
+
 	class ExternalSystem :
 		public Subsystem
 	{
-	private:
-		ExternalSystemParameter parameter;
 	public:
-		ExternalSystem();
+		ExternalSystem(const ExternalSystemParameter param, const ExternalSystemInitialCondition& initial_condition);
 		void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
 		void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);
 		void DisplayParameters();
 		void DisplayInitialCondition();
 		void IncrementState();
 		~ExternalSystem();
+	private:
+		ExternalSystemParameter parameter;
 	};
 }

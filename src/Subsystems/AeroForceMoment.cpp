@@ -10,6 +10,7 @@ aero::AeroForceMoment1::AeroForceMoment1(const AerosForceParameter& param)
 {
 	// set output dimensions
 	system_info.type = aero_AROFORCEMENT;
+	system_info.category = AERODYNAMICS;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.NO_CONTINUOUS_STATE = true;
 	system_info.num_of_continuous_states = 0;
@@ -58,7 +59,7 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 	QScbar = QS * param_.c_bar_;
 	QSb = QS * param_.b_;
 	NormalizedRelativeHeight = input(AEROFORCE_INPUT_RELATIVEHEIGHT) / param_.b_;
-
+	// get the aero input
 	refer_point_cross_ = mathauxiliary::Hatmap(input.segment(AEROFORCE_INPUT_RX,3));
 
 	// saturate the relative height
@@ -71,20 +72,23 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 	CL_ = param_.AeroCoefficient.CL0_
 		+ param_.AeroCoefficient.CLadot_  * input(AEROFORCE_INPUT_AOARATE_FILTERED)
 		+ param_.AeroCoefficient.CL_alpha_* input(AEROFORCE_INPUT_AOA)
-		+ param_.AeroCoefficient.CLq_     * input(4)
-		+ param_.AeroCoefficient.CLde_    * input(12);
+		+ param_.AeroCoefficient.CLq_     * input(AEROFORCE_INPUT_Qbar)
+		+ param_.AeroCoefficient.CLde_    * input(AEROFORCE_INPUT_ELEVATOR)
+		+ param_.AeroCoefficient.CL_alpha_squared_ * input(AEROFORCE_INPUT_AOA) * input(AEROFORCE_INPUT_AOA)
+		+ param_.AeroCoefficient.CL_alpha_cubed_ * input(AEROFORCE_INPUT_AOA) * input(AEROFORCE_INPUT_AOA) * input(AEROFORCE_INPUT_AOA);
 
 	CD_ = param_.AeroCoefficient.CD0_
-		+ param_.AeroCoefficient.CDbeta_ * abs(input(2))
-		+ param_.AeroCoefficient.CDde_ * abs(input(12))
-		+ param_.AeroCoefficient.CDDf_*input(8)
-		+ param_.AeroCoefficient.CD_alpha_*input(1);
+		+ param_.AeroCoefficient.CDbeta_   * abs(input(AEROFORCE_INPUT_SIDESLIP))
+		+ param_.AeroCoefficient.CDde_     * abs(input(AEROFORCE_INPUT_ELEVATOR))
+		+ param_.AeroCoefficient.CDDf_     *input(AEROFORCE_INPUT_FLAP)
+		+ param_.AeroCoefficient.CD_alpha_ *input(AEROFORCE_INPUT_AOA);
+		+ param_.AeroCoefficient.CD_alpha_squared_ * input(AEROFORCE_INPUT_AOA) * input(AEROFORCE_INPUT_AOA);
 
-	CY_ = param_.AeroCoefficient.CYb_ *  input(2)
-		+ param_.AeroCoefficient.CYda_ * input(11)
-		+ param_.AeroCoefficient.CYdr_ * input(13)
-		+ param_.AeroCoefficient.CYp_ *  input(3)
-		+ param_.AeroCoefficient.CYr_*   input(5);
+	CY_ = param_.AeroCoefficient.CYb_ *  input(AEROFORCE_INPUT_SIDESLIP)
+		+ param_.AeroCoefficient.CYda_ * input(AEROFORCE_INPUT_AILERON)
+		+ param_.AeroCoefficient.CYdr_ * input(AEROFORCE_INPUT_RUDDER)
+		+ param_.AeroCoefficient.CYp_ *  input(AEROFORCE_INPUT_Pbar)
+		+ param_.AeroCoefficient.CYr_*   input(AEROFORCE_INPUT_Rbar);
 
 	/*
 	Output:
@@ -99,38 +103,40 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 	F_W(mathauxiliary::VECTOR_Z) = -(QS * CL_); // lift
 
 
-	Cl_ = param_.AeroCoefficient.Clb_ * input(2)
-		+ param_.AeroCoefficient.Clda_* input(11)
-		+ param_.AeroCoefficient.Cldr_* input(13)
-		+ param_.AeroCoefficient.Clp_ *  input(3)
-		+ param_.AeroCoefficient.Clr_ * input(5);
+	Cl_ = param_.AeroCoefficient.Clb_ * input(AEROFORCE_INPUT_SIDESLIP)
+		+ param_.AeroCoefficient.Clda_* input(AEROFORCE_INPUT_AILERON)
+		+ param_.AeroCoefficient.Cldr_* input(AEROFORCE_INPUT_RUDDER)
+		+ param_.AeroCoefficient.Clp_ *  input(AEROFORCE_INPUT_Pbar)
+		+ param_.AeroCoefficient.Clr_ * input(AEROFORCE_INPUT_Rbar);
 
-	Cm_ = param_.AeroCoefficient.Cmq_     *input(4)
+	Cm_ = param_.AeroCoefficient.Cmq_     *input(AEROFORCE_INPUT_Qbar)
 		+ param_.AeroCoefficient.Cm0_
-		+ param_.AeroCoefficient.Cmadot_  * input(6)
-		+ param_.AeroCoefficient.Cmalpha_ * input(1)
-		+ param_.AeroCoefficient.Cmde_    * input(12)
-		+ param_.AeroCoefficient.CmDf_    * input(8);
+		+ param_.AeroCoefficient.Cmadot_  * input(AEROFORCE_INPUT_AOARATE_FILTERED)
+		+ param_.AeroCoefficient.Cmalpha_ * input(AEROFORCE_INPUT_AOA)
+		+ param_.AeroCoefficient.Cmde_    * input(AEROFORCE_INPUT_ELEVATOR)
+		+ param_.AeroCoefficient.CmDf_    * input(AEROFORCE_INPUT_FLAP);
 
-	Cn_ = param_.AeroCoefficient.Cnb_  * input(2)
-		+ param_.AeroCoefficient.Cnda_ * input(11)
-		+ param_.AeroCoefficient.Cndr_ * input(13)
-		+ param_.AeroCoefficient.Cnp_  * input(3)
-		+ param_.AeroCoefficient.Cnr_  * input(5);
+	Cn_ = param_.AeroCoefficient.Cnb_  * input(AEROFORCE_INPUT_SIDESLIP)
+		+ param_.AeroCoefficient.Cnda_ * input(AEROFORCE_INPUT_AILERON)
+		+ param_.AeroCoefficient.Cndr_ * input(AEROFORCE_INPUT_RUDDER)
+		+ param_.AeroCoefficient.Cnp_  * input(AEROFORCE_INPUT_Pbar)
+		+ param_.AeroCoefficient.Cnr_  * input(AEROFORCE_INPUT_Rbar);
 
+	// transfer aero forces from the wind frame to the body-fixed frame
 	output.segment(AEROFORCE_OUTPUT_FBx, 3) = R_WB.transpose() * F_W;
 
-	M_B0(0) = QSb * Cl_;
-	M_B0(1) = QScbar * Cm_;
-	M_B0(2) = QSb * Cn_;
-
-	output.segment(AEROFORCE_OUTPUT_MBx, 3) = refer_point_cross_ * output.segment(0, 3) + M_B0;
+	// the moment at the reference point
+	M_B0(mathauxiliary::VECTOR_X) = QSb * Cl_;
+	M_B0(mathauxiliary::VECTOR_Y) = QScbar * Cm_;
+	M_B0(mathauxiliary::VECTOR_Z) = QSb * Cn_;
+	// the total moment around the center of mass
+	output.segment(AEROFORCE_OUTPUT_MBx, 3) = refer_point_cross_ * output.segment(AEROFORCE_OUTPUT_FBx, 3) + M_B0;
 
 }
 
 void aero::AeroForceMoment1::IncrementState()
 {
-	// No increment state for aero force lib
+	// No increment states for aero force lib
 }
 
 void aero::AeroForceMoment1::DisplayParameters()

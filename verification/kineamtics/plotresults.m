@@ -57,7 +57,7 @@ xlabel('t(s)')
 ylabel('omega_dotz')
 grid on
 title('angular acc z diff')
-
+%%
 figure(2)
 
 subplot(3,2,1)
@@ -265,4 +265,315 @@ xlabel('t(s)')
 ylabel('g0')
 grid on
 title('g2 diff')
+%%
+figure(6)
+subplot(3,2,1)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Vbx')))
+plot(logged_data.data(:,logged_data.tagmap('t')),VB(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Vbx(m/s)')
+grid on
+title('Vbx')
 
+subplot(3,2,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),VB(:,1) - logged_data.data(:,logged_data.tagmap('Vbx')))
+xlabel('t(s)')
+ylabel('Vbx(m/s)')
+grid on
+title('Vbx diff')
+
+subplot(3,2,3)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Vby')))
+plot(logged_data.data(:,logged_data.tagmap('t')),VB(:,2))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Vby(m/s)')
+grid on
+title('Vby')
+
+subplot(3,2,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),VB(:,2) - logged_data.data(:,logged_data.tagmap('Vby')))
+xlabel('t(s)')
+ylabel('Vby(m/s)')
+grid on
+title('Vby diff')
+
+subplot(3,2,5)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Vbz')))
+plot(logged_data.data(:,logged_data.tagmap('t')),VB(:,3))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Vbz(m/s)')
+grid on
+title('Vbz')
+
+subplot(3,2,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),VB(:,3) - logged_data.data(:,logged_data.tagmap('Vbz')))
+xlabel('t(s)')
+ylabel('Vbz')
+grid on
+title('Vbz diff')
+%%
+figure(7)
+subplot(3,2,1)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('XIx')))
+plot(logged_data.data(:,logged_data.tagmap('t')),XI(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('XIx(m)')
+grid on
+title('XIx')
+
+subplot(3,2,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),XI(:,1) - logged_data.data(:,logged_data.tagmap('XIx')))
+xlabel('t(s)')
+ylabel('XIx(m)')
+grid on
+title('XIx diff')
+
+subplot(3,2,3)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('XIy')))
+plot(logged_data.data(:,logged_data.tagmap('t')),XI(:,2))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('XIy(m)')
+grid on
+title('XIy')
+
+subplot(3,2,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),XI(:,2) - logged_data.data(:,logged_data.tagmap('XIy')))
+xlabel('t(s)')
+ylabel('Vby(m/s)')
+grid on
+title('XIy diff')
+
+subplot(3,2,5)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('XIz')))
+plot(logged_data.data(:,logged_data.tagmap('t')),XI(:,3))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('XIz(m/s)')
+grid on
+title('XIz')
+
+subplot(3,2,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),XI(:,3) - logged_data.data(:,logged_data.tagmap('XIz')))
+xlabel('t(s)')
+ylabel('XIz')
+grid on
+title('XIz diff')
+%% 
+figure(8)
+subplot(3,2,1)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Vb_dotx')))
+plot(logged_data.data(:,logged_data.tagmap('t')),Vb_dot(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Vb_dotx(m/s^2)')
+grid on
+title('Vb_dotx')
+
+subplot(3,2,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),Vb_dot(:,1) - logged_data.data(:,logged_data.tagmap('Vb_dotx')))
+xlabel('t(s)')
+ylabel('Vb_dotx(m/s^2)')
+grid on
+title('Vb_dotx diff')
+
+subplot(3,2,3)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Vb_doty')))
+plot(logged_data.data(:,logged_data.tagmap('t')),Vb_dot(:,2))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Vb_doty(m/s^2)')
+grid on
+title('Vb_doty')
+
+subplot(3,2,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),Vb_dot(:,2) - logged_data.data(:,logged_data.tagmap('Vb_doty')))
+xlabel('t(s)')
+ylabel('Vb_doty(m/s^2)')
+grid on
+title('Vb_doty diff')
+
+subplot(3,2,5)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Vb_dotz')))
+plot(logged_data.data(:,logged_data.tagmap('t')),Vb_dot(:,3))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Vb_dotz(m/s^2)')
+grid on
+title('Vb_dotz')
+
+subplot(3,2,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),Vb_dot(:,3) - logged_data.data(:,logged_data.tagmap('Vb_dotz')))
+xlabel('t(s)')
+ylabel('Vb_dotz')
+grid on
+title('Vb_dotz diff')
+%%
+figure(9)
+subplot(3,2,1)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('AOA')))
+plot(logged_data.data(:,logged_data.tagmap('t')),AOA(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('AOA(rad)')
+grid on
+title('AOA')
+
+subplot(3,2,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),AOA(:,1) - logged_data.data(:,logged_data.tagmap('AOA')))
+xlabel('t(s)')
+ylabel('AOA(rad)')
+grid on
+title('AOA')
+
+subplot(3,2,3)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Sideslip')))
+plot(logged_data.data(:,logged_data.tagmap('t')),sideslip(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Sideslip(rad)')
+grid on
+title('Sideslip')
+
+subplot(3,2,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),sideslip(:,1) - logged_data.data(:,logged_data.tagmap('Sideslip')))
+xlabel('t(s)')
+ylabel('Sideslip(rad)')
+grid on
+title('Sideslip diff')
+
+subplot(3,2,5)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('TAS')))
+plot(logged_data.data(:,logged_data.tagmap('t')),TAS(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('TAS(m/s)')
+grid on
+title('TAS')
+
+subplot(3,2,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),TAS(:,1) - logged_data.data(:,logged_data.tagmap('TAS')))
+xlabel('t(s)')
+ylabel('TAS(m/s)')
+grid on
+title('TAS diff')
+%%
+figure(10)
+subplot(3,2,1)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('AOArate')))
+plot(logged_data.data(:,logged_data.tagmap('t')),AOArate(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('AOArate(rad)')
+grid on
+title('AOArate')
+
+subplot(3,2,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),AOArate(:,1) - logged_data.data(:,logged_data.tagmap('AOArate')))
+xlabel('t(s)')
+ylabel('AOArate(rad/s)')
+grid on
+title('AOArate')
+
+subplot(3,2,3)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Sidesliprate')))
+plot(logged_data.data(:,logged_data.tagmap('t')),beta_dotbar(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Sidesliprate(rad/s)')
+grid on
+title('Sidesliprate')
+
+subplot(3,2,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),beta_dotbar(:,1) - logged_data.data(:,logged_data.tagmap('Sidesliprate')))
+xlabel('t(s)')
+ylabel('beta_dotbar(rad/s)')
+grid on
+title('beta_dotbar')
+
+subplot(3,2,5)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('dynamicpressure')))
+plot(logged_data.data(:,logged_data.tagmap('t')),dynamicpressure(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('dynamicpressure(PA)')
+grid on
+title('dynamicpressure')
+
+subplot(3,2,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),dynamicpressure(:,1) - logged_data.data(:,logged_data.tagmap('dynamicpressure')))
+xlabel('t(s)')
+ylabel('dynamicpressure(PA)')
+grid on
+title('dynamicpressure')
+%%
+figure(11)
+subplot(3,2,1)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Pbar')))
+plot(logged_data.data(:,logged_data.tagmap('t')),p_q_rbar(:,1))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Pbar(rad/s)')
+grid on
+title('Pbar')
+
+subplot(3,2,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),p_q_rbar(:,1) - logged_data.data(:,logged_data.tagmap('Pbar')))
+xlabel('t(s)')
+ylabel('Pbar(rad/s)')
+grid on
+title('Pbar diff')
+
+subplot(3,2,3)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Qbar')))
+plot(logged_data.data(:,logged_data.tagmap('t')),p_q_rbar(:,2))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Qbar(rad/s)')
+grid on
+title('Qbar')
+
+subplot(3,2,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),p_q_rbar(:,2) - logged_data.data(:,logged_data.tagmap('Qbar')))
+xlabel('t(s)')
+ylabel('Qbar(rad/s)')
+grid on
+title('Qbar diff')
+
+subplot(3,2,5)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Rbar')))
+plot(logged_data.data(:,logged_data.tagmap('t')),p_q_rbar(:,3))
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('Rbar(rad/s)')
+grid on
+title('Rbar')
+
+subplot(3,2,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),p_q_rbar(:,3) - logged_data.data(:,logged_data.tagmap('Rbar')))
+xlabel('t(s)')
+ylabel('Rbar(rad/s)')
+grid on
+title('Rbar diff')

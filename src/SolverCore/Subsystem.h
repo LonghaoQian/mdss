@@ -31,6 +31,8 @@ enum subsystem_type {
 	continous_VARIABLEMASS,
 	discontinuous_SATURATION,
 	discontinuous_SWITCH,
+	external_FUNCTION,
+	external_SYSTEM,
 	geographic_ATOMSPHERE,
 	geographic_GRAVITY,
 	math_CONSTANT,

@@ -21,7 +21,7 @@ int main()
 	config1.loglevel = simulationcontrol::LOGLEVEL_ERROR;
 	simulationcontrol::SimController SimInstance1(config1);
 	// plane mass
-	double planemass = 700.0;
+	double planemass = 1.0;
 	// plane CG
 	double CG_MAC = 0.25;
 	// plane initial condition
@@ -39,14 +39,18 @@ int main()
 	initial_condition.VI0(mathauxiliary::VECTOR_Z) = 0.0;
 	initial_condition.XI0(mathauxiliary::VECTOR_X) = 0.0;
 	initial_condition.XI0(mathauxiliary::VECTOR_Y) = 0.0;
-	initial_condition.XI0(mathauxiliary::VECTOR_Z) = -100; // END frame
+	initial_condition.XI0(mathauxiliary::VECTOR_Z) = 0.0; // END frame
 	unsigned int planekinematics = SimInstance1.AddSubSystem(initial_condition);
 	//// define dynamics
 	dynamics::RigidBodyDynamicsParamter dynamics_parameter;
-	dynamics_parameter.J(0, 0) = 1285.31541660000; // kg m^2
-	dynamics_parameter.J(1, 1) = 1824.93096070000;
-	dynamics_parameter.J(2, 2) = 2666.89390765000;
-	dynamics_parameter.m = planemass; //kg
+	//dynamics_parameter.J(0, 0) = 1285.31541660000; // kg m^2
+	//dynamics_parameter.J(1, 1) = 1824.93096070000;
+	//dynamics_parameter.J(2, 2) = 2666.89390765000;
+	//dynamics_parameter.m = planemass; //kg
+	dynamics_parameter.J(0, 0) = 20.0; // kg m^2
+	dynamics_parameter.J(1, 1) = 20.0;
+	dynamics_parameter.J(2, 2) = 20.0;
+	dynamics_parameter.m = planemass;
 	unsigned int planedynamics = SimInstance1.AddSubSystem(dynamics_parameter);
 	// define gravity 
 	mathblocks::ConstantParameter gravity_param;
@@ -86,7 +90,7 @@ int main()
 	aero::AeroAngleParameter aeroangleparameter;
 	aeroangleparameter.b_ = 10.097;
 	aeroangleparameter.c_bar_ = 1.493520000000000;
-	aeroangleparameter.min_airspeed_ = 0.2;
+	aeroangleparameter.min_airspeed_ = 0.1;
 	unsigned int aeroanlge = SimInstance1.AddSubSystem(aeroangleparameter);
 
 	//// force summation
@@ -129,38 +133,54 @@ int main()
 	signal_generator_param3.waveshape = source_sink::SINE;
 	unsigned int signal_generator3 = SimInstance1.AddSubSystem(signal_generator_param3);
 
-	// define aeroforces
+	// connections
 
-	// define engine
+	// signal output to dynamics:
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIx, signal_generator1, 0);
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIy, signal_generator2, 0);
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIz, signal_generator3, 0);
 
-	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_OMEGA_DOTx, signal_generator1, 0);
-	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_OMEGA_DOTy, signal_generator2, 0);
-	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_OMEGA_DOTz, signal_generator3, 0);
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBx, signal_generator1, 0);
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBy, signal_generator2, 0);
+	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBz, signal_generator3, 0);
+
+	SimInstance1.BatchEditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_OmegaBIx, dynamics::DYNAMICS_INPUT_OmegaBIz, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+
+	// dynamics to kinematics
+	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_OMEGA_DOTx, planedynamics, dynamics::DYNAMICS_OUTPUT_OMEGA_DOTx);
+	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_OMEGA_DOTy, planedynamics, dynamics::DYNAMICS_OUTPUT_OMEGA_DOTy);
+	SimInstance1.EditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_OMEGA_DOTz, planedynamics, dynamics::DYNAMICS_OUTPUT_OMEGA_DOTz);
+	SimInstance1.BatchEditConnectionMatrix(planekinematics, dynamics::KINEMATICS_INPUT_AIx, dynamics::KINEMATICS_INPUT_AIz, planedynamics, dynamics::DYNAMICS_OUTPUT_AIx, dynamics::DYNAMICS_OUTPUT_AIz);
+	// atmoshpere block
 	SimInstance1.EditConnectionMatrix(atmoshpere, 0, height, 0);
-
-	SimInstance1.BatchEditConnectionMatrix(product_1, 0, 8, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+	// gravity in body-fixed frame
+	SimInstance1.BatchEditConnectionMatrix(product_1, 0, 8, planekinematics, dynamics::KINEMATICS_OUTPUT_R_BI00, dynamics::KINEMATICS_OUTPUT_R_BI22);
 	SimInstance1.BatchEditConnectionMatrix(product_1, 9, 11, gravity, 0, 2);
-
-	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_RHO, atmoshpere, geographic::AtmDensity);
-	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_SOUNDSPEED, atmoshpere, geographic::AtmSoundSpeed);
-	
+	// calculate Vb_dot
 	SimInstance1.BatchEditConnectionMatrix(crossproduct1, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, dynamics::KINEMATICS_OUTPUT_VBz);
 	SimInstance1.BatchEditConnectionMatrix(crossproduct1, 3+mathauxiliary::VECTOR_X, 3+mathauxiliary::VECTOR_Z, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
-
 	SimInstance1.BatchEditConnectionMatrix(product_2, 0, 8, planekinematics, dynamics::KINEMATICS_OUTPUT_R_BI00, dynamics::KINEMATICS_OUTPUT_R_BI22);
 	SimInstance1.BatchEditConnectionMatrix(product_2, 9, 11, planedynamics, dynamics::DYNAMICS_OUTPUT_AIx, dynamics::DYNAMICS_OUTPUT_AIz);
-	SimInstance1.BatchEditConnectionMatrix(crossproduct1, 0, 2, planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, dynamics::KINEMATICS_OUTPUT_VBz);
-	SimInstance1.BatchEditConnectionMatrix(crossproduct1, 3, 5, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+	// vb_dot
 	SimInstance1.BatchEditConnectionMatrix(sum_Vb, 0, 2, product_2, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 	SimInstance1.BatchEditConnectionMatrix(sum_Vb, 3, 5, crossproduct1, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
-		// flush connection matrix
+	// connect the aero angle block
+	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_RHO, atmoshpere, geographic::AtmDensity);
+	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_SOUNDSPEED, atmoshpere, geographic::AtmSoundSpeed);
+	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_P, aero::AERO_INPUT_R, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_Vbdotx, aero::AERO_INPUT_Vbdotz, sum_Vb, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_Vbx, aero::AERO_INPUT_Vbz, planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, dynamics::KINEMATICS_OUTPUT_VBz);
+	// flush connection matrix
 	SimInstance1.FlushMakeConnection();
 
 	// define the data log tag
 
-	SimInstance1.DefineDataLogging(signal_generator1, 0, "omega_dotx");
-	SimInstance1.DefineDataLogging(signal_generator2, 0, "omega_doty");
-	SimInstance1.DefineDataLogging(signal_generator3, 0, "omega_dotz");
+	SimInstance1.DefineDataLogging(planedynamics, dynamics::DYNAMICS_OUTPUT_AIx, "AIx");
+	SimInstance1.DefineDataLogging(planedynamics, dynamics::DYNAMICS_OUTPUT_AIy, "AIy");
+	SimInstance1.DefineDataLogging(planedynamics, dynamics::DYNAMICS_OUTPUT_AIz, "AIz");
+	SimInstance1.DefineDataLogging(planedynamics, dynamics::DYNAMICS_OUTPUT_OMEGA_DOTx, "omega_dotx");
+	SimInstance1.DefineDataLogging(planedynamics, dynamics::DYNAMICS_OUTPUT_OMEGA_DOTy, "omega_doty");
+	SimInstance1.DefineDataLogging(planedynamics, dynamics::DYNAMICS_OUTPUT_OMEGA_DOTz, "omega_dotz");
 
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_EulerRoll, "roll");
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_EulerPitch, "pitch");
@@ -182,6 +202,22 @@ int main()
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB21, "RIB21");
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB22, "RIB22");
 
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, "Vbx");
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_VBy, "Vby");
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_VBz, "Vbz");
+
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, "VIx");
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_VIy, "VIy");
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_VIy, "VIz");
+	
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, "XIx");
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_XIy, "XIy");
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_XIz, "XIz");
+
+	SimInstance1.DefineDataLogging(sum_Vb, mathauxiliary::VECTOR_X, "Vb_dotx");
+	SimInstance1.DefineDataLogging(sum_Vb, mathauxiliary::VECTOR_Y, "Vb_doty");
+	SimInstance1.DefineDataLogging(sum_Vb, mathauxiliary::VECTOR_Z, "Vb_dotz");
+
 	SimInstance1.DefineDataLogging(atmoshpere, geographic::AtmPressure, "pressure");
 	SimInstance1.DefineDataLogging(atmoshpere, geographic::AtmSoundSpeed, "soundspeed");
 	SimInstance1.DefineDataLogging(atmoshpere, geographic::AtmTemperature, "temperature");
@@ -190,6 +226,15 @@ int main()
 	SimInstance1.DefineDataLogging(product_1, 0, "g0");
 	SimInstance1.DefineDataLogging(product_1, 1, "g1");
 	SimInstance1.DefineDataLogging(product_1, 2, "g2");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_TAS, "TAS");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_AOA, "AOA");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_AOARATE, "AOArate");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_SIDESLIP, "Sideslip");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_SIDESLIPRATE, "Sidesliprate");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_DYNAMICPRESSURE, "dynamicpressure");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_Pbar, "Pbar");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_Qbar, "Qbar");
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_Rbar, "Rbar");
 
 	SimInstance1.DisplayLoggerTagList();// show the logged tags
 	bool flag = SimInstance1.PreRunProcess();

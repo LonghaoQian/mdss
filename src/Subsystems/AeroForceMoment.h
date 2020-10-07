@@ -96,12 +96,15 @@ namespace aero {
 		struct {
 			double CL0_;
 			double CL_alpha_;
+			double CL_alpha_squared_;
+			double CL_alpha_cubed_;
 			double CLde_;
 			double CLadot_;
 			double CLq_;
 
 			double CD0_;
 			double CD_alpha_;
+			double CD_alpha_squared_;
 			double CDde_;
 			double CDDf_;
 			double CDbeta_;

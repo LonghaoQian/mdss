@@ -2,8 +2,17 @@
 #include "ExternalModel.h"
 namespace externalmodel{
 	/*--------------- external function ---------------*/
-	ExternalFunction::ExternalFunction()
+	ExternalFunction::ExternalFunction(const ExternalFunctionParameter& param)
 	{
+		system_info.category = EXTERNAL;
+		system_info.type = external_FUNCTION;
+		system_info.DIRECT_FEED_THROUGH = true;
+		system_info.EXTERNAL_CONNECTION_ONLY = false;
+		system_info.NO_CONTINUOUS_STATE = true;
+		system_info.num_of_continuous_states = 0;
+		system_info.num_of_inputs = param.num_of_inputs;
+		system_info.num_of_outputs = param.num_of_outputs;
+		parameter = param;
 	}
 
 	void ExternalFunction::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
@@ -35,7 +44,7 @@ namespace externalmodel{
 	{
 	}
 	/*-------------------- external system ----------------------------*/
-	ExternalSystem::ExternalSystem()
+	ExternalSystem::ExternalSystem(const ExternalSystemParameter param, const ExternalSystemInitialCondition& initial_condition)
 	{
 	}
 
