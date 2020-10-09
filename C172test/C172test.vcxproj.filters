@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\C172dynamics">
+      <UniqueIdentifier>{9f37b97c-da00-4134-a6b3-4c8700f6258b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\C172dynamics">
+      <UniqueIdentifier>{275b143e-0e86-400b-b8e1-d81b1a97109a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -62,6 +68,9 @@
     </ClInclude>
     <ClInclude Include="..\src\Subsystems\AeroForceMoment.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Application\C172aircraftmodel.h">
+      <Filter>Header Files\C172dynamics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Subsystems\AeroForceMoment.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Application\C172aircraftmodel.cpp">
+      <Filter>Source Files\C172dynamics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -20,6 +20,11 @@ int main()
 	config1.loggingconfig.uselogging = true;
 	config1.loglevel = simulationcontrol::LOGLEVEL_ERROR;
 	simulationcontrol::SimController SimInstance1(config1);
+
+	double Span  = 10.097;
+	double MeanChord = 1.493520000000000;
+	double MinAirspeed = 0.1;
+	double ReferenceArea = 16.1651289600000;
 	// plane mass
 	double planemass = 1.0;
 	// plane CG
@@ -86,12 +91,67 @@ int main()
 	sum_Vb_parameter.SignList.push_back(mathblocks::SUM_POSITIVE);
 	unsigned int sum_Vb = SimInstance1.AddSubSystem(sum_Vb_parameter);
 
-	//// define aeroangle
+	// define aeroangle
 	aero::AeroAngleParameter aeroangleparameter;
-	aeroangleparameter.b_ = 10.097;
-	aeroangleparameter.c_bar_ = 1.493520000000000;
-	aeroangleparameter.min_airspeed_ = 0.1;
+	aeroangleparameter.b_ = Span;
+	aeroangleparameter.c_bar_ = MeanChord;
+	aeroangleparameter.min_airspeed_ = MinAirspeed;
 	unsigned int aeroanlge = SimInstance1.AddSubSystem(aeroangleparameter);
+
+	// define aero force
+	aero::AerosForceParameter aeroforceparam;
+
+	aeroforceparam.b_ = Span;
+	aeroforceparam.c_bar_ = MeanChord;
+	aeroforceparam.S = ReferenceArea;
+
+	aeroforceparam.AeroCoefficient.Lift.CL0_                = 0.377;;
+	aeroforceparam.AeroCoefficient.Lift.CLadot_             = 1.7;
+	aeroforceparam.AeroCoefficient.Lift.CLde_               = 0.359366356655653;
+	aeroforceparam.AeroCoefficient.Lift.CLq_                = 3.9;
+	aeroforceparam.AeroCoefficient.Lift.CL_alpha_           = 4.6564;
+	aeroforceparam.AeroCoefficient.Lift.CL_alpha_squared_   = -0.4;
+	aeroforceparam.AeroCoefficient.Lift.CL_alpha_cubed_     = -0.1;
+	aeroforceparam.AeroCoefficient.Lift.CL_flap_            = 0.5;
+	aeroforceparam.AeroCoefficient.Lift.CL_flap_squared_    = -0.2;
+
+	aeroforceparam.AeroCoefficient.Drag.CD0_ = 0.032;
+	aeroforceparam.AeroCoefficient.Drag.CDbeta_ = 0.17;
+	aeroforceparam.AeroCoefficient.Drag.CDde_ = 0.06;
+	aeroforceparam.AeroCoefficient.Drag.CD_flap_ = 0.021;
+	aeroforceparam.AeroCoefficient.Drag.CD_flap_squared_ = - 0.005;
+	aeroforceparam.AeroCoefficient.Drag.CDground_ = 0.0;
+	aeroforceparam.AeroCoefficient.Drag.CD_alpha_ = 0.5;
+	aeroforceparam.AeroCoefficient.Drag.CD_alpha_squared_ = 0.2;
+	aeroforceparam.AeroCoefficient.Drag.CD_flap_ = 0.4;
+	aeroforceparam.AeroCoefficient.Drag.CD_flap_squared_ = 0.3;
+
+	aeroforceparam.AeroCoefficient.Side.CYb_ = -0.3095;
+	aeroforceparam.AeroCoefficient.Side.CYda_ = -0.05;
+	aeroforceparam.AeroCoefficient.Side.CYdr_ = 0.098;
+	aeroforceparam.AeroCoefficient.Side.CYp_ = -0.0370;
+	aeroforceparam.AeroCoefficient.Side.CYr_ = 0.21;
+
+	aeroforceparam.AeroCoefficient.Roll.Clb_ = -0.089100000000000;
+	aeroforceparam.AeroCoefficient.Roll.Clda_ = 0.230000000000000;
+	aeroforceparam.AeroCoefficient.Roll.Cldr_ = 0.014700000000000;
+	aeroforceparam.AeroCoefficient.Roll.Clp_ = -0.470000000000000;
+	aeroforceparam.AeroCoefficient.Roll.Clr_ = 0.08;
+
+	aeroforceparam.AeroCoefficient.Pitch.Cm0_ = 0.120000000000000;
+	aeroforceparam.AeroCoefficient.Pitch.Cmadot_ = -5.200000000000000;
+	aeroforceparam.AeroCoefficient.Pitch.Cmalpha_ = -1.800000000000000;
+	aeroforceparam.AeroCoefficient.Pitch.Cmde_ = -1.180000000000000;
+	aeroforceparam.AeroCoefficient.Pitch.Cm_flap_ = -0.1;
+	aeroforceparam.AeroCoefficient.Pitch.Cm_flap_squared_ = 0.05;
+
+	aeroforceparam.AeroCoefficient.Yaw.Cnb_ = 0.065000000000000;
+	aeroforceparam.AeroCoefficient.Yaw.Cnda_ = 0.005300000000000;
+	aeroforceparam.AeroCoefficient.Yaw.Cndr_ = -0.043000000000000;
+	aeroforceparam.AeroCoefficient.Yaw.Cnp_ = -0.030000000000000;
+	aeroforceparam.AeroCoefficient.Yaw.Cnr_ = -0.099000000000000;
+
+	unsigned int aeroforce = SimInstance1.AddSubSystem(aeroforceparam);
 
 	//// force summation
 	//mathblocks::SumParameter force_sum_param;
@@ -170,6 +230,17 @@ int main()
 	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_P, aero::AERO_INPUT_R, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
 	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_Vbdotx, aero::AERO_INPUT_Vbdotz, sum_Vb, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_Vbx, aero::AERO_INPUT_Vbz, planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, dynamics::KINEMATICS_OUTPUT_VBz);
+
+	// connect the aero force block
+	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_AOA, aeroanlge, aero::AERO_OUTPUT_AOA);
+	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_SIDESLIP, aeroanlge, aero::AERO_OUTPUT_SIDESLIP);
+	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_Pbar, aeroanlge, aero::AERO_OUTPUT_Pbar);
+	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_Qbar, aeroanlge, aero::AERO_OUTPUT_Qbar);
+	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_Rbar, aeroanlge, aero::AERO_OUTPUT_Rbar);
+	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_MACHNUMBER, aeroanlge, aero::AERO_OUTPUT_MACHNUMBER);
+	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_AOARATE_FILTERED, aeroanlge, aero::AERO_OUTPUT_AOARATE);
+	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_SIDESLIPRATE_FILTERED, aeroanlge, aero::AERO_OUTPUT_SIDESLIPRATE);
+
 	// flush connection matrix
 	SimInstance1.FlushMakeConnection();
 
@@ -189,6 +260,16 @@ int main()
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, "omegax");
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIy, "omegay");
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIz, "omegaz");
+
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB00, "RWB00");
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB01, "RWB01");
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB02, "RWB02");
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB10, "RWB10");
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB11, "RWB11");
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB12, "RWB12");
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB20, "RWB20");
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB21, "RWB21");
+	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_R_WB22, "RWB22");
 
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, "RIB00");
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB01, "RIB01");

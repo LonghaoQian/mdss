@@ -86,7 +86,16 @@ namespace aero {
 		AEROFORCE_OUTPUT_FBz,
 		AEROFORCE_OUTPUT_MBx,
 		AEROFORCE_OUTPUT_MBy,
-		AEROFORCE_OUTPUT_MBz
+		AEROFORCE_OUTPUT_MBz,
+		AEROFORCE_OUTPUT_R_WB00,
+		AEROFORCE_OUTPUT_R_WB10,
+		AEROFORCE_OUTPUT_R_WB20,
+		AEROFORCE_OUTPUT_R_WB01,
+		AEROFORCE_OUTPUT_R_WB11,
+		AEROFORCE_OUTPUT_R_WB21,
+		AEROFORCE_OUTPUT_R_WB02,
+		AEROFORCE_OUTPUT_R_WB12,
+		AEROFORCE_OUTPUT_R_WB22,
 	};
 
 	struct AerosForceParameter {
@@ -94,46 +103,63 @@ namespace aero {
 		double b_;
 		double c_bar_;
 		struct {
-			double CL0_;
-			double CL_alpha_;
-			double CL_alpha_squared_;
-			double CL_alpha_cubed_;
-			double CLde_;
-			double CLadot_;
-			double CLq_;
+			struct {
+				double CL0_{0.0};
+				double CL_alpha_{ 0.0 };
+				double CL_alpha_squared_{ 0.0 };
+				double CL_alpha_cubed_{ 0.0 };
+				double CLde_{ 0.0 };
+				double CLadot_{ 0.0 };
+				double CLq_{ 0.0 };
+				double CL_flap_{ 0.0 };
+				double CL_flap_squared_{ 0.0 };
+			} Lift;
 
-			double CD0_;
-			double CD_alpha_;
-			double CD_alpha_squared_;
-			double CDde_;
-			double CDDf_;
-			double CDbeta_;
-			double CDground_;
+			struct {
+				double CD0_{ 0.0 };
+				double CD_alpha_{ 0.0 };
+				double CD_alpha_squared_{ 0.0 };
+				double CDde_{ 0.0 };
+				double CD_flap_{ 0.0 };
+				double CD_flap_squared_{ 0.0 };
+				double CDbeta_{ 0.0 };
+				double CDground_{ 0.0 };
+			} Drag;
 
-			double CYb_;
-			double CYda_;
-			double CYdr_;
-			double CYp_;
-			double CYr_;
+			struct 
+			{
+				double CYb_{ 0.0 };
+				double CYda_{ 0.0 };
+				double CYdr_{ 0.0 };
+				double CYp_{ 0.0 };
+				double CYr_{ 0.0 };
+			} Side;
 
-			double Cmalpha_;
-			double CmDf_;
-			double Cmq_;
-			double Cmadot_;
-			double Cm0_;
-			double Cmde_;
+			struct {
+				double  Clb_{ 0.0 };
+				double  Clp_{ 0.0 };
+				double  Clr_{ 0.0 };
+				double  Clda_{ 0.0 };
+				double  Cldr_{ 0.0 };
+			}Roll;
 
-			double  Clb_;
-			double  Clp_;
-			double  Clr_;
-			double  Clda_;
-			double  Cldr_;
+			struct {
+				double Cmalpha_{ 0.0 };
+				double Cm_flap_{ 0.0 };
+				double Cm_flap_squared_{ 0.0 };
+				double Cmq_{ 0.0 };
+				double Cmadot_{ 0.0 };
+				double Cm0_{ 0.0 };
+				double Cmde_{ 0.0 };
+			} Pitch;
 
-			double Cnb_;
-			double Cnp_;
-			double Cnr_;
-			double Cnda_;
-			double Cndr_;
+			struct {
+				double Cnb_{ 0.0 };
+				double Cnp_{ 0.0 };
+				double Cnr_{ 0.0 };
+				double Cnda_{ 0.0 };
+				double Cndr_{ 0.0 };
+			} Yaw;
 		}AeroCoefficient;
 	};
 	class AeroForceMoment1 :
@@ -160,6 +186,9 @@ namespace aero {
 		Vector3d ReferencePoint; // the vector point from the center of mass to the aeroforce reference point
 		Matrix3d refer_point_cross_;
 		// temp variable 
+		double AOA_square;
+		double AOA_cube;
+		double flap_square;
 		double QS; 
 		double QScbar;
 		double QSb;

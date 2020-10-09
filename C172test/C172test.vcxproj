@@ -93,7 +93,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)src\UtilityFunctions;$(SolutionDir)src\SolverCore;$(SolutionDir)src\Subsystems;$(SolutionDir)eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)src\UtilityFunctions;$(SolutionDir)src\SolverCore;$(SolutionDir)src\Subsystems;$(SolutionDir)eigen3;$(SolutionDir)src\Application;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,7 +112,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)src\UtilityFunctions;$(SolutionDir)src\SolverCore;$(SolutionDir)src\Subsystems;$(SolutionDir)eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)src\UtilityFunctions;$(SolutionDir)src\SolverCore;$(SolutionDir)src\Subsystems;$(SolutionDir)eigen3;$(SolutionDir)src\Application;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,7 +129,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)src\UtilityFunctions;$(SolutionDir)src\SolverCore;$(SolutionDir)src\Subsystems;$(SolutionDir)eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)src\UtilityFunctions;$(SolutionDir)src\SolverCore;$(SolutionDir)src\Subsystems;$(SolutionDir)eigen3;$(SolutionDir)src\Application;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,7 +148,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)src\UtilityFunctions;$(SolutionDir)src\SolverCore;$(SolutionDir)src\Subsystems;$(SolutionDir)eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src;$(SolutionDir)src\UtilityFunctions;$(SolutionDir)src\SolverCore;$(SolutionDir)src\Subsystems;$(SolutionDir)eigen3;$(SolutionDir)src\Application;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -159,6 +159,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Application\C172aircraftmodel.h" />
     <ClInclude Include="..\src\SolverCore\RungeKuttaFamily.h" />
     <ClInclude Include="..\src\SolverCore\SimController.h" />
     <ClInclude Include="..\src\SolverCore\Subsystem.h" />
@@ -177,6 +178,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\Application\C172aircraftmodel.cpp" />
     <ClCompile Include="..\src\SolverCore\RungeKuttaFamily.cpp" />
     <ClCompile Include="..\src\SolverCore\SimController.cpp" />
     <ClCompile Include="..\src\SolverCore\Subsystem.cpp" />
