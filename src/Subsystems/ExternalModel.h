@@ -14,13 +14,14 @@ _________________________________
 #include "Subsystem.h"
 
 namespace externalmodel {
+	// define the external function pointers
 	typedef std::function<void(const double& t, const VectorXd&, const VectorXd&, VectorXd&)> DerivativeFunctionPtr;
 	typedef std::function<void(const double& t, const VectorXd&, const VectorXd&, VectorXd&)> OutputFunctionPtr;
 
 	struct ExternalFunctionParameter {
-		OutputFunctionPtr output_ptr;
-		unsigned int  num_of_inputs;
-		unsigned int  num_of_outputs;
+		OutputFunctionPtr output_ptr{ NULL };
+		unsigned int  num_of_inputs{1};
+		unsigned int  num_of_outputs{1};
 	};
 
 	class ExternalFunction :
@@ -39,11 +40,13 @@ namespace externalmodel {
 	};
 
 	struct ExternalSystemParameter {
-		DerivativeFunctionPtr derivative_ptr;
-		OutputFunctionPtr output_ptr;
-		unsigned int  num_of_inputs;
-		unsigned int  num_of_outputs;
-		unsigned int  num_of_states;
+		DerivativeFunctionPtr derivative_ptr{NULL};
+		OutputFunctionPtr output_ptr{NULL};
+		unsigned int  num_of_inputs{1};
+		unsigned int  num_of_outputs{1};
+		unsigned int  num_of_states{1};
+		bool IsDirectFeedThrough{ false };
+		bool NoContiunousState{ false };
 	};
 
 	struct ExternalSystemInitialCondition {
@@ -63,5 +66,6 @@ namespace externalmodel {
 		~ExternalSystem();
 	private:
 		ExternalSystemParameter parameter;
+		VectorXd InitialCondition;
 	};
 }
