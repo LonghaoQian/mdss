@@ -72,6 +72,7 @@ namespace geographic {
 
 	void StandardAtmosphere::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
 	{
+		// no differential equation for atmosphere block
 	}
 
 	void StandardAtmosphere::OutputEquation(const double & t,
@@ -84,6 +85,7 @@ namespace geographic {
 
 	void StandardAtmosphere::IncrementState()
 	{
+		// no increment state for standard atmosphere block
 	}
 
 	void StandardAtmosphere::DisplayParameters()
@@ -94,6 +96,49 @@ namespace geographic {
 	void StandardAtmosphere::DisplayInitialCondition()
 	{
 		std::cout << "------No initial condition for atmopshere block----------" << std::endl;
+	}
+
+	/******************************************************************************************************/
+
+	DensityModel::DensityModel(const DensityModelParameter & parameter) {
+		system_info.type = geographic_DENSITYMODEL;
+		system_info.category = GEOGRAPHIC;
+		system_info.DIRECT_FEED_THROUGH = true;
+		system_info.NO_CONTINUOUS_STATE = true;
+		system_info.num_of_continuous_states = 0;
+		system_info.num_of_inputs = 2;
+		system_info.num_of_outputs = 1;
+
+		system_info.system_parameter_ok = 0;
+		ready_to_run = true;
+
+		output.resize(system_info.num_of_outputs);
+		output.setZero(system_info.num_of_outputs);
+		param = parameter;
+	}
+	DensityModel::~DensityModel()
+	{
+	}
+	void DensityModel::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+		// no differential equations for density model
+	}
+	void DensityModel::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+		output(DENSITYMODEL_OUTPUT_DENSITY) = input(DENSITYMODEL_INPUT_PRESSURE) / (param.Rg*input(DENSITYMODEL_INPUT_TEMERATURE));
+	}
+	void DensityModel::IncrementState()
+	{
+		// no increment state for density model
+	}
+	void DensityModel::DisplayParameters()
+	{
+		std::cout << "Parameter for the density model is: " << std::endl;
+		std::cout << "Rg: " << param.Rg << " J/(kg k) \n";
+	}
+	void DensityModel::DisplayInitialCondition()
+	{
+		std::cout << "------No initial condition for density model block----------" << std::endl;
 	}
 
 
@@ -182,4 +227,5 @@ namespace geographic {
 	Gravity::~Gravity()
 	{
 	}
+
 }

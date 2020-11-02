@@ -18,7 +18,8 @@ enum subsystem_category {
 };
 
 enum subsystem_type {
-	aero_AROANGLE,
+	aero_AROANGLE = 0,
+	aero_CAS,
 	aero_AROFORCEMENT,
 	continous_INTEGRATOR,
 	continous_TRANSFERFUNCTION,
@@ -34,6 +35,8 @@ enum subsystem_type {
 	external_FUNCTION,
 	external_SYSTEM,
 	geographic_ATOMSPHERE,
+	geographic_NONSTANDARDATMOSPHERE,
+	geographic_DENSITYMODEL,
 	geographic_GRAVITY,
 	math_CONSTANT,
 	math_CROSSPRODUCT,

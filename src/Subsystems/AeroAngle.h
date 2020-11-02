@@ -1,33 +1,10 @@
 /*
-Aerodynamics angle calcuations:
-
-input : 
-0 rho
-1 soundspeed
-2 Vbx
-3 Vby
-4 Vbz
-5 p
-6 q
-7 r
-8 Ab_x // Find veloity derivative in body fixed frame :Vb_dot=Ab-wXVb
-9 Ab_y // 
-10 Ab_z // 
-11 - 19 R_BI
-
-output : 
-0 TAS
-1 MachNumber
-2 alpha
-3 beta
-4 dynamic pressure
-5 alpha_dot_bar
-6 beta_dot_bar
-7 p_bar
-8 q_bar
-9 r_bar
-10 - 18 R_BW
-
+___________________________________________________________________________________________________
+Author: Longhao Qian
+Data:   2020 11 01
+1. Aerodynamics angle calculation
+2. Convert true airspeed to calibrated airspeed
+___________________________________________________________________________________________________
 */
 #pragma once
 #include "Subsystem.h"
@@ -35,18 +12,27 @@ output :
 
 namespace aero {
 
+	const double a0{ 340.6520138 }; // standard sound speed at sea level and at 15 celsius (m/s)
+	const double P0{ 101325 }; // standard pressure at sea level (P)
+
 	enum AeroAngleInput {
-		AERO_INPUT_RHO= 0,
-		AERO_INPUT_SOUNDSPEED,
-		AERO_INPUT_Vbx,
+		AERO_INPUT_RHO= 0,               // the air density
+		AERO_INPUT_SOUNDSPEED,           // the sound speed
+		AERO_INPUT_Vbx,                  // aircraft inertial velocity in the body-fixed frame
 		AERO_INPUT_Vby,
 		AERO_INPUT_Vbz,
-		AERO_INPUT_P,
-		AERO_INPUT_Q,
+		AERO_INPUT_P,                    // aircraft angular velocity in the body-fixed frame
+		AERO_INPUT_Q,          
 		AERO_INPUT_R,
-		AERO_INPUT_Vbdotx,
+		AERO_INPUT_Vbdotx,               // aircraft inertia acc in the body-fixed frame
 		AERO_INPUT_Vbdoty,
-		AERO_INPUT_Vbdotz
+		AERO_INPUT_Vbdotz,
+		AERO_INPUT_HORIZONTALWINDSPEED,  // magnitude of windspeed in (m/s) always positive
+		AERO_INPUT_WINDDIRECTION,        // the direction where the wind is blowing from, i.e. the opposite direction of where the wind travels.
+		AERO_INPUT_VERTICALWINDSPEED,    // the vertical speed of the wind, positive means upwards, and negative means downwards.
+		AERO_INPUT_VIx,
+		AERO_INPUT_VIy,
+		AERO_INPUT_VIz
 	};
 
 	enum AeroAngleOutput {
@@ -55,8 +41,8 @@ namespace aero {
 		AERO_OUTPUT_AOA,
 		AERO_OUTPUT_SIDESLIP,
 		AERO_OUTPUT_DYNAMICPRESSURE,
-		AERO_OUTPUT_AOARATE, // will return the filtered result
-		AERO_OUTPUT_SIDESLIPRATE, // will return the filtered result
+		AERO_OUTPUT_AOARATE,          // will return the filtered result
+		AERO_OUTPUT_SIDESLIPRATE,     // will return the filtered result
 		AERO_OUTPUT_Pbar,
 		AERO_OUTPUT_Qbar,
 		AERO_OUTPUT_Rbar,
@@ -67,6 +53,13 @@ namespace aero {
 		double b_;			   // wing span
 		double c_bar_;		   // min chord
 	};
+
+	/*
+		1. The aeroangle block calculates the aerodynamics angles and other important outputs for 
+		calculating the aerodynamics forces.
+	
+	*/
+
 	class AeroAngle :
 		public Subsystem
 	{
@@ -88,6 +81,8 @@ namespace aero {
 		Matrix3d R_BI;
 		Vector3d Vb_dot;
 		Vector3d Vb;
+		Vector3d WindSpeed;
+		Vector3d TASvector;
 		double lon_normalizer;
 		double lat_normalizer;
 		double TAS;
@@ -96,5 +91,48 @@ namespace aero {
 		double TempCal_1;
 		double TempCal_2;
 	};
+
+	struct CASConversionParameter {
+		int maxiteration{ 20 };// maximum iteration steps for supersonic calculation
+	};
+
+
+	enum CASConversionInput {
+		TAS2CAS_INPUT_MACHNUMBER = 0,        // mach number
+		TAS2CAS_INPUT_STATICPRESSURE,		 // static pressure
+
+	};
+
+	enum CASConversionOutput {
+		TAS2CAS_OUTPUT_CAS = 0,             // the calibrated airspeed
+		TAS2CAS_OUTPUT_IMPACTPRESSURE,      // the impact pressure
+	};
+
+	/*
+		2. The CAS block calculates the calibrated airspeed based on the machnumber and static pressure
+
+	*/
+
+	class CAS :
+		public Subsystem
+	{
+	public:
+		CAS(const CASConversionParameter& parameter);
+		~CAS();
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+	private:
+		CASConversionParameter param;
+		double qc;
+	};
+
 }
 
