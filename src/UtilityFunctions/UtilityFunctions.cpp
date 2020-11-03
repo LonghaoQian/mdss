@@ -151,6 +151,21 @@ Matrix<double, 3, 3> mathauxiliary::ConvertVectorToRotationMatrix(const Matrix<d
 	return R;
 }
 
+void mathauxiliary::ConvertVectorToRotationMatrix(const Matrix<double, 9, 1>& v, Matrix3d & R)
+{
+	R.block<3, 1>(0, 0) = v.block<3, 1>(0, 0);
+	R.block<3, 1>(0, 1) = v.block<3, 1>(3, 0);
+	R.block<3, 1>(0, 2) = v.block<3, 1>(6, 0);
+}
+/*
+void mathauxiliary::ConvertVectorToRotationMatrix(const VectorXd & v, Matrix3d & R)
+{
+	R.block<3, 1>(0, 0) = v.segment(0, 3);
+	R.block<3, 1>(0, 1) = v.segment(3, 3);
+	R.block<3, 1>(0, 2) = v.segment(6, 3);
+}
+*/
+
 Vector2i mathauxiliary::BinarySearchVector(bool isascending, 
 										   const VectorXd& p, 
 										   const double& target) {

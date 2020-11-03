@@ -37,7 +37,7 @@ namespace mathauxiliary {
 	Matrix3d GetR_IBFromQuaterion(const Vector4d& quaterion);
 	Matrix<double, 9, 1> ConvertRotationMatrixToVector(const Matrix<double,3,3>& R);
 	Matrix<double, 3, 3> ConvertVectorToRotationMatrix(const Matrix<double, 9,1>& v);
-
+	void ConvertVectorToRotationMatrix(const Matrix<double, 9, 1>& v, Matrix3d& R);
 	/*--------- topology --------------*/
 	Vector2i BinarySearchVector(bool isascending,
 								const VectorXd& p, 

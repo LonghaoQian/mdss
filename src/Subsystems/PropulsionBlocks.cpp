@@ -240,20 +240,21 @@ namespace propulsionsystem {
 
 	void PropellerChartFixedPitch::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
 	{
-		// no diferential equation for propeller chart
+		// no differential equations for propeller chart
 	}
 
 	void PropellerChartFixedPitch::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 	{
-		// 
-		if (input(PROPELLER_INPUT_V) < parameter.minimumAngularRate) {
+		// determine whether the input angular velocity is below the threshold
+		if (input(PROPELLER_INPUT_N) < parameter.minimumAngularRate) {
 			output(PROPELLER_OUTPUT_Q) = 0.0;
 			output(PROPELLER_OUTPUT_T) = 0.0;
-		}
-		else { // normal condition
+		} else { 
+			// normal condition
 			J = input(PROPELLER_INPUT_V) / (input(PROPELLER_INPUT_N)*parameter.diameter);
 			N_2 = input(PROPELLER_INPUT_N) * input(PROPELLER_INPUT_N);
-			propeller_fixed_pitch_.GetOutput(Coefficient,J); // use the first element of the input as the target height
+			// use the first element of the input as the target height
+			propeller_fixed_pitch_.GetOutput(Coefficient,J); 
 			// T = rho n^2 D^4 CT, P = rho n^3 D_5 CP, Q = P/n = rho n^2 D_5 CP
 			output(PROPELLER_OUTPUT_T) = input(PROPELLER_INPUT_RHO) * N_2 * D_4* Coefficient(0);// CT  = 0, CP = 1
 			output(PROPELLER_OUTPUT_Q) = input(PROPELLER_INPUT_RHO) * N_2 * D_5* Coefficient(1);// CT  = 0, CP = 1
@@ -394,9 +395,9 @@ namespace propulsionsystem {
 		// convert the 
 		starter_torque_slope = - parameter.stater_max_torque / (parameter.stater_zero_torque_RPM - parameter.stater_breakaway_RPM);
 		// load table data
-		rpm_power_.LoadTableData(parameter.PowerMixture_chart.col(0), parameter.PowerRPM_chart.col(1), false);
-		mixture_powerfactor_.LoadTableData(parameter.PowerMixture_chart.col(0), parameter.PowerMixture_chart.col(1), false);
-		mixture_sfcfactor_.LoadTableData(parameter.Mixture_PowerFactor_SFCfactor_chart.col(0), parameter.Mixture_PowerFactor_SFCfactor_chart.col(1), false);
+		rpm_torque_.LoadTableData(parameter.TorqueRPMChart.col(0), parameter.TorqueRPMChart.col(1), false);
+		mixture_powerfactor_.LoadTableData(parameter.PowerMixtureChart.col(0), parameter.PowerMixtureChart.col(1), false);
+		mixture_sfcfactor_.LoadTableData(parameter.MixturePowerFactorSFCfactorChart.col(0), parameter.MixturePowerFactorSFCfactorChart.col(1), false);
 		// initialize state memeory
 		output.resize(system_info.num_of_outputs);
 		system_info.input_connection.resize(system_info.num_of_inputs, 2);
@@ -410,51 +411,50 @@ namespace propulsionsystem {
 	void PistonEngine::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 	{
 		// determine whether the rpm reaches the starting rpm
-		RPM = input(PISTONENGINE_INPUT_SHAFTRPS) * 60.0;// convert rps to rps
-		// 
-	
-		// determine the throttle command
+		RPM = input(PISTONENGINE_INPUT_SHAFTRPS) * 60.0;// convert RPS to RPM
+		// bound the throttle command
 		if (input(PISTONENGINE_INPUT_THROTTLE) > 1.0) {
 			throttle = 1.0;
 		}
-		else if (input(PISTONENGINE_INPUT_THROTTLE) < 0.0){
-			throttle = 0.0;
+		else if (input(PISTONENGINE_INPUT_THROTTLE) < 0.1){
+			throttle = 0.1;
 		}
 		else {
 			throttle = input(PISTONENGINE_INPUT_THROTTLE);
 		}
 
-		// determine fuel state
+		// determine if the fuel is supplied 
 		if (input(PISTONENGINE_INPUT_FUELSTATE) > 0.0) {
 			fuel_normal = 1.0;
-		}
-		else {
+		} else {
 			fuel_normal = 0.0;
 		}
 
 		// calculate starter torque
 		if (input(PISTONENGINE_INPUT_STARTER) > 0.0) {
-			if (RPM > parameter.stater_breakaway_RPM){
-				starter_torque = starter_torque_slope * (RPM - parameter.stater_breakaway_RPM);
-			}
-			else {
+			// the curve of the torque output of the starter 
+			if (RPM > parameter.stater_breakaway_RPM){// if above the breakaway RPM, then a linear drop
+				starter_torque = starter_torque_slope * (RPM - parameter.stater_breakaway_RPM); 
+			} else {
+				// if less than the breakaway PRM, then output the maximum torque
 				starter_torque = parameter.stater_max_torque;
-			}
-				
+			}	
 		}
 		else {
 			starter_torque = 0.0;
 		}
 		// calculate engine output torque
-		if (RPM >= parameter.idle_RPM) {
+		if (RPM >= parameter.idle_RPM - 10) { // if the engine reaches a little value below idle_RPM, the engine has started
+			// calculate the density factor
 			density_factor = parameter.krho0 * input(PISTONENGINE_INPUT_MANIFOLD)/1.225 + parameter.krho1;
-
+			// calculate the output torque by lookup tables 
 			output(PISTONENGINE_OUTPUT_Q) = starter_torque + fuel_normal* density_factor*
-				mixture_powerfactor_.GetOutput(input(PISTONENGINE_INPUT_MIXTURE)) * rpm_power_.GetOutput(RPM) * throttle;
+				mixture_powerfactor_.GetOutput(input(PISTONENGINE_INPUT_MIXTURE)) * rpm_torque_.GetOutput(RPM) * throttle;
 		}
 		else {// if not, in idle state.
-			output(PISTONENGINE_OUTPUT_Q) = starter_torque + parameter.shaft_damping * RPM;
+			output(PISTONENGINE_OUTPUT_Q) = starter_torque + parameter.shaft_damping * RPM; // the damping and starter torque are present
 		}
+		// TO DO: calculate fuel rate:
 		output(PISTONENGINE_OUTPUT_FUELRATE) = 0.0;
 	}
 
@@ -468,12 +468,12 @@ namespace propulsionsystem {
 		std::cout << "------ piston engine parameter --------  \n";
 		std::cout << " Starter breakaway RPM: " << parameter.stater_breakaway_RPM << " starter torque slope: " << starter_torque_slope 
 			<< "starter maximum torque: " << parameter.stater_max_torque<< "\n";
-		std::cout << "RPM-power chart: \n";
-		std::cout << parameter.PowerRPM_chart << "\n";
-		std::cout << "Mixture-power chart: chart: \n";
-		std::cout << parameter.PowerMixture_chart << "\n";
-		std::cout << "Mixture-sfc chart: \n";
-		std::cout << parameter.Mixture_PowerFactor_SFCfactor_chart<< "\n";
+		std::cout << "RPM-Torque chart: \n";
+		std::cout << parameter.TorqueRPMChart << "\n";
+		std::cout << "Mixture-Torque chart: chart: \n";
+		std::cout << parameter.PowerMixtureChart<< "\n";
+		std::cout << "Mixture-SFC chart: \n";
+		std::cout << parameter.MixturePowerFactorSFCfactorChart<< "\n";
 		std::cout << "sfc :" << parameter.sfc;
 		std::cout << "density equation rho0: " << parameter.krho0 << " density equation rho1: " << parameter.krho1 << "\n";
 		std::cout << "Idel PRM: " << parameter.idle_RPM << " Shaft damping: " << parameter.shaft_damping << "\n";

@@ -14,7 +14,7 @@ aero::AeroAngle::AeroAngle(const AeroAngleParameter& parameter)
 
 	system_info.num_of_continuous_states = 0;
 
-	system_info.num_of_inputs = 17;
+	system_info.num_of_inputs = 23;
 	system_info.num_of_outputs = 10;
 
 	system_info.system_parameter_ok = 0;
@@ -35,9 +35,12 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 	WindSpeed(mathauxiliary::VECTOR_X) = -cos(input(AERO_INPUT_WINDDIRECTION)) * input(AERO_INPUT_HORIZONTALWINDSPEED);
 	WindSpeed(mathauxiliary::VECTOR_Y) = -sin(input(AERO_INPUT_WINDDIRECTION)) * input(AERO_INPUT_HORIZONTALWINDSPEED);
 	WindSpeed(mathauxiliary::VECTOR_Z) = -input(AERO_INPUT_VERTICALWINDSPEED);
+	// transform the windspeed to the body-fixed frame
+	mathauxiliary::ConvertVectorToRotationMatrix(input.segment(AERO_INPUT_R_BI00,9), R_BI);
+	WindSpeedBody = R_BI * WindSpeed;
 	// step. 2 calculate the true airspeed
-	TASvector = input.segment(AERO_INPUT_VIx, 3) - WindSpeed;
-	TAS = TASvector.norm();
+	TASBody = input.segment(AERO_INPUT_Vbx, 3) - WindSpeedBody; // the airspeed in the body-fixed frame  = [U v w]^T
+	TAS = TASBody.norm();
 	output(AERO_OUTPUT_TAS) = TAS;
 	// if the airspeed is below a threshold, then saturate the tas to avoid singularity in the subsequent calculation
 	if (TAS < param_.min_airspeed_) { 
@@ -53,29 +56,29 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 	   beta = asin(v/TAS)
 	*/
 	// angle of attack
-	output(AERO_OUTPUT_AOA) = atan2(input(AERO_INPUT_Vbz), input(AERO_INPUT_Vbx));  
+	output(AERO_OUTPUT_AOA) = atan2(TASBody(mathauxiliary::VECTOR_Z), TASBody(mathauxiliary::VECTOR_X));
 	// side slip anlge
-	output(AERO_OUTPUT_SIDESLIP) = asin(input(AERO_INPUT_Vby) / TAS_cal); 
+	output(AERO_OUTPUT_SIDESLIP) = asin(TASBody(mathauxiliary::VECTOR_Y)/ TAS_cal); 
 	// dynamics pressure
 	output(AERO_OUTPUT_DYNAMICPRESSURE) = 0.5* input(AERO_INPUT_RHO) * TAS * TAS; 
 	// angular rate normalizer cbar/(2V), b/(2V)
 	lon_normalizer = param_.c_bar_ / (2 * TAS_cal);
 	lat_normalizer = param_.b_ / (2 * TAS_cal);
  	/* 
-	   TAS_dot = Vb^T Vb_dot / TAS
+	   TAS_dot = Vb^T Vb_dot / TAS ( assume the rate of change of the wind speed is negligible) will modify this later
 	*/
-	TAS_dot = input.segment(AERO_INPUT_Vbx,3).dot(input.segment(AERO_INPUT_Vbdotx,3)) / TAS_cal;
-	TempCal_1 = input(AERO_INPUT_Vbx)*input(AERO_INPUT_Vbx) + input(AERO_INPUT_Vbz) * input(AERO_INPUT_Vbz);
+	TAS_dot = TASBody.dot(input.segment(AERO_INPUT_Vbdotx,3)) / TAS_cal;
+	TempCal_1 = TASBody(mathauxiliary::VECTOR_X)*TASBody(mathauxiliary::VECTOR_X) + TASBody(mathauxiliary::VECTOR_Z) * TASBody(mathauxiliary::VECTOR_Z);
 
 	if (TempCal_1 < param_.min_airspeed_) { // if the velocity is lower than a threshold, then use the theshold as the velocity
 		TempCal_1 = param_.min_airspeed_;
 	}
 	// step. 5 angular rates
 	// AOA rate
-	output(AERO_OUTPUT_AOARATE) = lon_normalizer * (input(AERO_INPUT_Vbdotz)*input(AERO_INPUT_Vbx)- input(AERO_INPUT_Vbdotx)*input(AERO_INPUT_Vbz)) / TempCal_1;
+	output(AERO_OUTPUT_AOARATE) = lon_normalizer * (input(AERO_INPUT_Vbdotz)*TASBody(mathauxiliary::VECTOR_X) - input(AERO_INPUT_Vbdotx)*TASBody(mathauxiliary::VECTOR_Z)) / TempCal_1;
 	// beta rate
-	TempCal_2 = input(AERO_INPUT_Vby) / TAS_cal;
-	output(AERO_OUTPUT_SIDESLIPRATE) = lat_normalizer * (output(AERO_OUTPUT_TAS)*input(AERO_INPUT_Vbdoty)-input(AERO_INPUT_Vby)*TAS_dot) / (TAS_cal*TAS_cal*sqrt(1- TempCal_2* TempCal_2));
+	TempCal_2 = TASBody(mathauxiliary::VECTOR_Y) / TAS_cal;
+	output(AERO_OUTPUT_SIDESLIPRATE) = lat_normalizer * (output(AERO_OUTPUT_TAS)*input(AERO_INPUT_Vbdoty)- TASBody(mathauxiliary::VECTOR_Y)*TAS_dot) / (TAS_cal*TAS_cal*sqrt(1- TempCal_2* TempCal_2));
 	// normalized angular rate:
 	output(AERO_OUTPUT_Pbar) = lat_normalizer * input(AERO_INPUT_P);
 	output(AERO_OUTPUT_Qbar) = lon_normalizer * input(AERO_INPUT_Q);
@@ -107,6 +110,7 @@ aero::AeroAngle::~AeroAngle()
 
 aero::CAS::CAS(const CASConversionParameter & parameter)
 {
+
 }
 
 aero::CAS::~CAS()
@@ -115,6 +119,7 @@ aero::CAS::~CAS()
 
 void aero::CAS::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
 {
+	// no differential equations for CAS block
 }
 
 void aero::CAS::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
@@ -138,7 +143,7 @@ void aero::CAS::OutputEquation(const double & t, const VectorXd & state, const V
 
 void aero::CAS::IncrementState()
 {
-	// No increment state for TAS2CAS conversion block
+	// No increment state for CAS conversion block
 }
 
 void aero::CAS::DisplayParameters()

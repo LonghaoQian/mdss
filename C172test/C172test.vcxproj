@@ -160,7 +160,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\Application\C172aircraftmodel.h" />
+    <ClInclude Include="..\src\Application\Aircraftmodel.h" />
     <ClInclude Include="..\src\SolverCore\RungeKuttaFamily.h" />
     <ClInclude Include="..\src\SolverCore\SimController.h" />
     <ClInclude Include="..\src\SolverCore\Subsystem.h" />
@@ -179,7 +179,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\Application\C172aircraftmodel.cpp" />
+    <ClCompile Include="..\src\Application\Aircraftmodel.cpp" />
     <ClCompile Include="..\src\SolverCore\RungeKuttaFamily.cpp" />
     <ClCompile Include="..\src\SolverCore\SimController.cpp" />
     <ClCompile Include="..\src\SolverCore\Subsystem.cpp" />

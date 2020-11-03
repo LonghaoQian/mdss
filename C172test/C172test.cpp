@@ -193,6 +193,99 @@ int main()
 	signal_generator_param3.waveshape = source_sink::SINE;
 	unsigned int signal_generator3 = SimInstance1.AddSubSystem(signal_generator_param3);
 
+	// propeller system
+	propulsionsystem::PropellerChartFixedPitchParameter propeller_param;
+	propeller_param.Chart.resize(16, 3);
+	propeller_param.Chart << 0.0    ,0.0990   , 0.0400,
+							0.1000  ,  0.0950 ,   0.0406,
+							0.2000  ,  0.0880  ,  0.0406,
+							0.3000  ,  0.0780  ,  0.0400,
+		0.4000,    0.0645,    0.0366,
+		0.5000,    0.0495,    0.0318,
+		0.6000,    0.0340,    0.0250,
+		0.7000,    0.0185,    0.0160,
+		0.8000,    0.0040,    0.0050,
+		0.9000, - 0.0160, - 0.0067,
+		1.0000, - 0.0300, - 0.0150,
+		1.1000, - 0.0400, - 0.0200,
+		1.2000, - 0.0500, - 0.0250,
+		1.5000, - 0.0550, - 0.0270,
+		1.6000, - 0.0650, - 0.0300,
+		2.0000, - 0.0750, - 0.0330;
+
+	propeller_param.diameter = 76 * 0.0254; //m
+	propeller_param.minimumAngularRate = 1.0;
+
+	unsigned int propeller_1 = SimInstance1.AddSubSystem(propeller_param);
+
+	// piston engine system
+	propulsionsystem::PistonEngineParameter pistonengine_param;
+	pistonengine_param.idle_RPM = 550.0;
+	pistonengine_param.krho0 = 1.115;
+	pistonengine_param.krho1 = -0.1146;
+	pistonengine_param.sfc = 0.435*(0.453592 / (745.7 * 3600)); // LB / BHP / HR
+	pistonengine_param.PowerMixtureChart.resize(11,2);
+	pistonengine_param.PowerMixtureChart << -1.0000, 0.0500,
+		-0.8000, 0.8000,
+		-0.6000, 0.9600,
+		-0.4000, 0.9800,
+		-0.2000, 0.9990,
+		0.00, 1.0000,
+		0.2000, 0.9990,
+		0.4000, 0.9900,
+		0.6000, 0.9700,
+		0.8000, 0.9500,
+		1.0000, 0.9300;
+	pistonengine_param.TorqueRPMChart.resize(24, 2);
+	pistonengine_param.TorqueRPMChart << 500, 76.0017440000000,
+		600, 69.5769170833333,
+		700, 64.9877550000000,
+		800, 61.5458834375000,
+		900, 58.8688722222222,
+		1000, 56.7272632500000,
+		1100, 54.9750377272727,
+		1200, 53.5148497916667,
+		1300, 52.2793061538462,
+		1400, 51.2202687500000,
+		1500, 50.3024363333333,
+		1600, 49.4993329687500,
+		1700, 48.7907123529412,
+		1800, 48.1608273611111,
+		1900, 47.5972460526316,
+		2000, 47.0900228750000,
+		2100, 46.6311066666667,
+		2200, 46.1723881818182,
+		2300, 45.4358252173913,
+		2400, 45.0651366666667,
+		2500, 44.4317888000000,
+		2600, 43.8471600000000,
+		2700, 43.0351755555556,
+		2800, 42.5421850000000;
+	pistonengine_param.MixturePowerFactorSFCfactorChart.resize(11, 2);
+	pistonengine_param.MixturePowerFactorSFCfactorChart << -1.0000 ,   0.8500,
+		- 0.8000,    0.8000,
+		- 0.6000,    0.8500,
+		- 0.4000 ,   0.9000,
+		- 0.2000 ,   0.9500,
+		0.00,    1.0000,
+		0.2000,   1.0600,
+		0.4000,   1.1200,
+		0.6000,    1.1800,
+		0.8000,    1.2400,
+		1.0000,    1.3000;
+
+	
+	unsigned int piston_engine_1 = SimInstance1.AddSubSystem(pistonengine_param);
+	// shaft dynamics
+
+	linearsystem::IntegratorParameter shaftdynamics_param;
+	shaftdynamics_param.num_of_channels = 1;
+	linearsystem::IntegratorInitialCondition shaftdynamics_IC;
+	shaftdynamics_IC.X_0.resize(1);
+	shaftdynamics_IC.X_0(0) = 0.0;
+
+	unsigned int shaftdynamics = SimInstance1.AddSubSystem(shaftdynamics_param, shaftdynamics_IC);
+
 	// connections
 
 	// signal output to dynamics:

@@ -30,9 +30,15 @@ namespace aero {
 		AERO_INPUT_HORIZONTALWINDSPEED,  // magnitude of windspeed in (m/s) always positive
 		AERO_INPUT_WINDDIRECTION,        // the direction where the wind is blowing from, i.e. the opposite direction of where the wind travels.
 		AERO_INPUT_VERTICALWINDSPEED,    // the vertical speed of the wind, positive means upwards, and negative means downwards.
-		AERO_INPUT_VIx,
-		AERO_INPUT_VIy,
-		AERO_INPUT_VIz
+		AERO_INPUT_R_BI00,               // the rotation matrix between the body-fixed frame and inertial frame
+		AERO_INPUT_R_BI10,
+		AERO_INPUT_R_BI20,
+		AERO_INPUT_R_BI01,
+		AERO_INPUT_R_BI11,
+		AERO_INPUT_R_BI21,
+		AERO_INPUT_R_BI02,
+		AERO_INPUT_R_BI12,
+		AERO_INPUT_R_BI22,
 	};
 
 	enum AeroAngleOutput {
@@ -82,7 +88,8 @@ namespace aero {
 		Vector3d Vb_dot;
 		Vector3d Vb;
 		Vector3d WindSpeed;
-		Vector3d TASvector;
+		Vector3d WindSpeedBody;
+		Vector3d TASBody;
 		double lon_normalizer;
 		double lat_normalizer;
 		double TAS;

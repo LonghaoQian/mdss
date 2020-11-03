@@ -337,6 +337,39 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
+	unsigned int SimController::AddSubSystem(const propulsionsystem::PropellerChartFixedPitchParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new propulsionsystem::PropellerChartFixedPitch(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	unsigned int SimController::AddSubSystem(const propulsionsystem::PropellerChartVariablePitchParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new propulsionsystem::PropellerChartVariablePitch(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
+	unsigned int SimController::AddSubSystem(const propulsionsystem::PistonEngineParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new propulsionsystem::PistonEngine(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
 	void SimController::EditConnectionMatrix(unsigned int handleID,
 											 unsigned int from_input_ID,
 											 unsigned int to_output_systemID, 

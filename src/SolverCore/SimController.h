@@ -171,7 +171,10 @@ namespace simulationcontrol {
 		// propulsion
 		unsigned int AddSubSystem(const  propulsionsystem::CFM56Parameter& parameters);
 		unsigned int AddSubSystem(const  propulsionsystem::CF56ThrustModelParameter& parameters);
-		// TO DO: utility blocks
+		unsigned int AddSubSystem(const  propulsionsystem::PropellerChartFixedPitchParameter& parameters);
+		unsigned int AddSubSystem(const  propulsionsystem::PropellerChartVariablePitchParameter& parameters);
+		unsigned int AddSubSystem(const  propulsionsystem::PistonEngineParameter& parameters);
+
 		// unit conversion, matrix to euler angles, matrix quaternion, quaternion euler angle
 		/*------------------------define connections between subsystems--------------------------------*/
 		bool ResetInitialCondition(); // TO DO: reset subsystem initial condition
