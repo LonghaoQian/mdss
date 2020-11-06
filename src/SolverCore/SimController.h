@@ -51,7 +51,7 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 namespace simulationcontrol {
 	typedef MatrixX2i SIMCONNECTION;
 	typedef vector<subsystem_handle>::iterator subsystemhandlePtr;
-
+	typedef unsigned int blockID;
 	enum LogMsgLevel { // log level
 		LOGLEVEL_NONE = 0,    // disp nothing
 		LOGLEVEL_ERROR,   // disp errors
@@ -92,17 +92,17 @@ namespace simulationcontrol {
 	class SimController
 	{
 	private:
-		bool system_ok;// if all good, the system is ok and ready to go.
+		bool system_ok;                                                           // if all good, the system is ok and ready to go.
 		//-------------------------- system parameters---------------------------------//
 		unsigned int num_of_subsystems;
 		unsigned int num_of_continuous_states;
 		unsigned int num_of_outputs;
 		unsigned int num_of_external_inputs;
 		SolverConfig solver_config;
-		vector<unique_ptr<Subsystem>> subsystem_list;// a list of all subsystems
-		MatrixXi connectivity;// connectivity map of the simulation
-		MatrixXi external_mapping;
-		LogMsgLevel loglevel{ LOGLEVEL_ALL };
+		vector<unique_ptr<Subsystem>> subsystem_list;                             // a list of all subsystems instances
+		MatrixXi connectivity;                                                    // connectivity map of all the subsystems
+		MatrixXi external_mapping;                                                // the matrix maps the external inputs to the subsystems: a N by 2 matrix. 1st col: ID of the subsystem, 2nd col: ID of the input port
+		LogMsgLevel loglevel{ LOGLEVEL_ALL };                                     // log display level seeting
 		// temp space for numerical integration
 		//----------------------------- Solver Variables---------------------------//
 		bool GetExternalInputs(const VectorXd& extern_input);// buffer the external inputs
@@ -134,7 +134,7 @@ namespace simulationcontrol {
 		int total_number_log = 0;
 		void LogRequestedData();
 	public:
-		/* A list of all overloadings of AddSubsystem(...) for pre-defined types of models*/
+		/* -------------- Here is a list of all overloadings of AddSubsystem(...) for pre-defined types of models --------------*/
 		// Linear system
 		unsigned int AddSubSystem(const linearsystem::LTIParameter& parameters, const linearsystem::LTIInitialCondition& IC);
 		unsigned int AddSubSystem(const linearsystem::IntegratorParameter& parameters, const linearsystem::IntegratorInitialCondition& IC);
@@ -174,32 +174,35 @@ namespace simulationcontrol {
 		unsigned int AddSubSystem(const  propulsionsystem::PropellerChartFixedPitchParameter& parameters);
 		unsigned int AddSubSystem(const  propulsionsystem::PropellerChartVariablePitchParameter& parameters);
 		unsigned int AddSubSystem(const  propulsionsystem::PistonEngineParameter& parameters);
+		/* -------------- End of AddSubsystem(...) --------------*/
 
-		// unit conversion, matrix to euler angles, matrix quaternion, quaternion euler angle
+
+
 		/*------------------------define connections between subsystems--------------------------------*/
-		bool ResetInitialCondition(); // TO DO: reset subsystem initial condition
+		bool ResetInitialCondition(blockID systemID);                                    //  **TO DO:reset subsystem initial condition
 		void EditConnectionMatrix(unsigned int handleID,
 								  unsigned int from_input_ID, 
 								  unsigned int to_output_systemID, 
-								  unsigned int to_output_portID);
+								  unsigned int to_output_portID);                        // connect an input port of a subsystem to an output port of a subsystem or external input according to the given ID
 		void BatchEditConnectionMatrix(unsigned int input_system_ID,
 									   unsigned int input_portID_start,
 									   unsigned int input_portID_end,
 									   unsigned int output_system_ID,
 									   unsigned int output_port_ID_start,
-									   unsigned int output_port_ID_end);
+									   unsigned int output_port_ID_end);                 // connect several input ports of a subsystem to output ports of the same number according to the given input-output ID range and system ID
 		bool MakeConnection(unsigned int system_ID, const MatrixX2i& connection_mapping);// batch connection
-		bool MakeConnection(const subsystem_handle& handle);
-		bool FlushMakeConnection();
-		subsystem_handle GetSystemHandle(const unsigned int system_ID);
-		/*------------------------PreRunProcess of the Connected Subystems--------------*/
-		void EditSolverConfig(const SolverConfig& config);
-		bool PreRunProcess();// check and parse the system connection relationship.
-		void DisplayTopology();
-		void ReshapeExternalInputVector(VectorXd& extern_input);
-		void DisplaySystemParameter(unsigned int system_ID);
-		void DisplaySystemInitialCondition(unsigned int system_ID);
-		/*------------------------Run Time Function -------------------------------------*/
+		bool MakeConnection(const subsystem_handle& handle);                             // connect the subsystem according to the system handle.
+		bool FlushMakeConnection();                                                      // after all inputs are connected, run this function to finalize connection before running ''PreRunProcess()''
+		subsystem_handle GetSystemHandle(const unsigned int system_ID);                  // display the information of the defined subsystems
+		/*------------------------Pre-process of the connected subystems--------------*/
+		void EditSolverConfig(const SolverConfig& config);                 // reload solver configuration 
+		bool PreRunProcess();                                              // check and parse the system connection relationship before running the simulation
+		void DisplayTopology();                                            // display the parsed system and connection
+		void ReshapeExternalInputVector(VectorXd& extern_input);           // reshape the external input vector according to the number of external inputs
+		void DisplaySystemParameter(unsigned int system_ID);               // display the system parameter according to the given system ID
+		void DisplaySystemInitialCondition(unsigned int system_ID);        // display the system initial condition according to the given system ID
+		void DisplayExternalInputMapping(blockID system_ID);               // display the external mapping of the system according to the given system ID
+		/*------------------------Run-time function -------------------------------------*/
 		int Run_Update(const VectorXd& extern_input);
 		double Run_GetSystemTime();
 		VectorXd Run_GetSubsystemOuput(const unsigned int system_ID);
@@ -210,10 +213,10 @@ namespace simulationcontrol {
 		LoggerTag GetLoggerTag(unsigned int TagIndex);
 		void DisplayLoggerTagList();
 		/*-----------------------Post run process----------------------------------------*/
-		int PostRunProcess();
-		/*-----------------------Solver definition--------------------------------------*/
-		SimController(const SolverConfig& config);
-		SimController();// default constructor
+		int PostRunProcess();                                             // run this function to terminate the simulation and 
+		/*-----------------------Solver Constructor--------------------------------------*/
+		SimController(const SolverConfig& config);// instansiate the class with config
+		SimController();                          // default constructor, a default config is loaded
 		~SimController();
 	};
 }

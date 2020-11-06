@@ -58,26 +58,26 @@ enum subsystem_type {
 };
 
 struct subsystem_handle {
-	subsystem_type type;   // type of the system
-	int ID;			       // the index this subsystem is assigned after the addsubsystem function
-	std::string label_;    // a name tag for the subsystem
-	bool isParameterOK;    // a flag indicating whether the parameter check passes
+	subsystem_type type;             // type of the system
+	int ID;			                 // the index this subsystem is assigned after the addsubsystem function
+	std::string label_;              // a name tag for the subsystem
+	bool isParameterOK;              // a flag indicating whether the parameter check passes
 	MatrixX2i input_connection_list; // connection matrix 
 };
-// subsystem info for the solver TO DO: add a mandatory function 
+// TO DO: separate the predefined variables from the 
 struct subsystem_info {
-	unsigned int num_of_continuous_states; // number of continunous states, for direct feed-through blocks, this should be 0
-	unsigned int num_of_inputs;            // number of inputs for the system
-	unsigned int num_of_external_inputs;   // number of external inputs for the system
-	unsigned int num_of_outputs;           // number of outputs for the system
-	bool system_parameter_ok;              // wether the system parameter has been correctly set
-	MatrixX2i input_connection;            // the input connection matrix, where each row represents 
-	bool NO_CONTINUOUS_STATE;              // a bool state repes wether continous state exsits
-	bool DIRECT_FEED_THROUGH;              // a bool state 
-	bool EXTERNAL_CONNECTION_ONLY;         // a bool state for whether the system connection is pure external
-	subsystem_type type;                   // the type of the system, defined in subsystem_type
-	subsystem_category category;            // the category of the system. 
-	std::string label_;	                   // an optional name given to the subsystem. 
+	unsigned int num_of_continuous_states;           // number of continunous states, for direct feed-through blocks, this should be 0
+	unsigned int num_of_inputs;                      // number of inputs for the system
+	unsigned int num_of_external_inputs;             // number of external inputs for the system
+	unsigned int num_of_outputs;                     // number of outputs for the system
+	bool system_parameter_ok;                        // wether the system parameter has been correctly set
+	MatrixX2i input_connection;                      // the input connection matrix, where each row represents 
+	bool NO_CONTINUOUS_STATE;                        // a bool state repes wether continous state exsits
+	bool DIRECT_FEED_THROUGH;                        // a bool state 
+	bool EXTERNAL_CONNECTION_ONLY;                   // a bool state for whether the system connection is pure external
+	subsystem_type type;                             // the type of the system, defined in subsystem_type
+	subsystem_category category;                     // the category of the system. 
+	std::string label_;	                             // an optional name given to the subsystem. 
 	std::map<std::string, unsigned int> input_label; // an optional map to give each input a name
 };
 class Subsystem
@@ -100,26 +100,45 @@ protected:
 	// relative error for adaptive step
 	VectorXd relative_error;
 public:
-	/*----------SystemSetUp--------------*/
+	/*--------- Interfaces that must be overrided by the derived classes--------------*/
+	/* 
+		The differential equation for subsystem with continuous states. Write an empty function if there 
+		are not continuous states.
+	*/ 
 	virtual void DifferentialEquation(const double& t, 
 									  const VectorXd& state,
 									  const VectorXd& input,
-									  VectorXd& temp_derivative) = 0;// differential equation for the system
+									  VectorXd& temp_derivative) = 0;
+	/* 
+		The output function for the subsystem (not empty)
+	*/
 	virtual void OutputEquation(const double& t,
 								const VectorXd& state, 
 								const VectorXd& input, 
-								VectorXd& output)=0;// output of the sub system
+								VectorXd& output)=0;
+	/*
+		After the derivates are determined by numerical methods, increment the continuos state. 
+		Emtpy if there are no continuous states. For variables not in vector space, such as quaternion, 
+		a normalization of that variable is also needed
+	*/
 	virtual void IncrementState() = 0;
+	/*
+		The function displaying the parameters of the subsystems. 
+	*/
 	virtual void DisplayParameters() = 0;
+	/*
+		The function displaying the initial condition of the continuous states.
+	*/
 	virtual void DisplayInitialCondition() = 0;
-	/**------------------------------------*/
-	VectorXd GetState();
-    void UpdateOutput(const double& t, const double& current_stepsize);
-	VectorXd GetOutput();
-	void SetInputConnection(const MatrixX2i& connection);
-	void OverrideDirectFeedThroughFlag(bool isDirectFeedThrough);
-	subsystem_info GetSystemInfo();
-	/**-----------SolverRelated--------*/
+	/**-----------Funtions for the subsystem base class -----------------*/
+	VectorXd GetState();                                                       // get the state for the current time
+    void UpdateOutput(const double& t, const double& current_stepsize);        // update the output function based on time and current time step
+	VectorXd GetOutput();                                                      // get the output of the system for the current time
+	void SetInputConnection(const MatrixX2i& connection);                      // save the input connection matrix
+	void OverrideDirectFeedThroughFlag(bool isDirectFeedThrough);              // override the direct feed-through flag of the system. (used in the prerunprocess function)
+	subsystem_info GetSystemInfo();                                            // get the subsystem info for calculation
+	const subsystem_info* GetSystemInfoPtr();                                  // a version that returns the pointer of the systeminfo
+	/**-----------SolverRelated  **TO DO: add comments for each function--------*/
 	void Solver_InitSolverBuffer(unsigned int num_of_kn);// Solver Init Function
 	void Solver_UpdateKiBuffer(int index, 
 							   double& current_time, 

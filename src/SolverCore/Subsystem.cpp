@@ -30,7 +30,14 @@ VectorXd Subsystem::GetOutput()
 
 void Subsystem::SetInputConnection(const MatrixX2i& connection)
 {
-	system_info.input_connection = connection;
+	system_info.input_connection = connection; // record the connection matrix 
+	// then determine the total number of external inputs for this system
+	system_info.num_of_external_inputs = 0;
+	for (unsigned int i = 0; i < system_info.num_of_inputs; i++) {
+		if (system_info.input_connection(i, 0) < 0) { // if the systemID is less than 0 (-1), the connection is external
+			system_info.num_of_external_inputs++;
+		}
+	}
 }
 
 void Subsystem::OverrideDirectFeedThroughFlag(bool isDirectFeedThrough)
@@ -161,6 +168,11 @@ void Subsystem::Solver_PreturbOutput(int index, double& current_time, double& st
 subsystem_info Subsystem::GetSystemInfo()
 {
 	return system_info;
+}
+
+const subsystem_info * Subsystem::GetSystemInfoPtr()
+{
+	return &system_info;
 }
 
 

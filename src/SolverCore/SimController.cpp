@@ -881,6 +881,22 @@ namespace simulationcontrol {
 		}
 	}
 
+	void SimController::DisplayExternalInputMapping(blockID system_ID)
+	{
+		// check whether the system has external inputs
+		if(subsystem_list[system_ID]->GetSystemInfoPtr()->num_of_external_inputs > 0) {
+
+			for (unsigned int i = 0; i < num_of_external_inputs; i++) {// show the external input mapping corresponding to the selected system
+				if (external_mapping(i, 0) == system_ID) {
+					cout <<" Subsystem # " << system_ID << ", input port # " << external_mapping(i, 1) << " mapped to external port # " << i << endl;
+				}
+			}
+		}
+		else {
+			cout << "There is no external inputs for this system. \n";
+		}
+	}
+
 
 	bool SimController::PreRunProcess()
 	{
@@ -907,9 +923,9 @@ namespace simulationcontrol {
 				}
 			}
 		}
-		external_mapping.resize(num_of_external_inputs, 2);
-		for (unsigned int i = 0; i < num_of_subsystems; i++)
-		{
+		external_mapping.resize(num_of_external_inputs, 2);                       // resize the exteranl input mapping matrix for later use
+		// record the total number of continuous states
+		for (unsigned int i = 0; i < num_of_subsystems; i++) {
 			num_of_continuous_states += subsystem_list[i]->GetSystemInfo().num_of_continuous_states;
 		}
 
@@ -919,17 +935,17 @@ namespace simulationcontrol {
 		{
 			for (unsigned int j = 0; j < subsystem_list[i]->GetSystemInfo().num_of_inputs; j++)
 			{
-				if (subsystem_list[i]->GetSystemInfo().input_connection(j, 0) < 0)// detect if this input port is an external input
+				if (subsystem_list[i]->GetSystemInfo().input_connection(j, 0) < 0)// check if this input port is an external input (the subsystem port ID is negative) 
 				{
-					external_mapping(mapping_counter, 0) = i;
-					external_mapping(mapping_counter, 1) = j;
-					mapping_counter++;
+					external_mapping(mapping_counter, 0) = i;                     // record the ID of the subsystem   **TO DO: use predefined subsystemID and outputportID
+					external_mapping(mapping_counter, 1) = j;					  // record the ID of the input port
+					mapping_counter++;											  // increase the counter
 				}
 			}
 		}
 		// step 4 update the connectivity matrix
 		connectivity.resize(num_of_subsystems, num_of_subsystems);
-		for (unsigned int i = 0; i < num_of_subsystems; i++)// initialize
+		for (unsigned int i = 0; i < num_of_subsystems; i++)                     // initialize **TO DO: use setZero**
 		{
 			for (unsigned int j = 0; j < num_of_subsystems; j++)
 			{
