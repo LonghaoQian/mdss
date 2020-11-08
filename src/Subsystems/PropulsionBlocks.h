@@ -155,6 +155,8 @@ namespace propulsionsystem {
 	enum PropellerChartOutput {
 		PROPELLER_OUTPUT_T = 0,// the output thrust
 		PROPELLER_OUTPUT_Q,    // the output required torque
+		PROPELLER_OUTPUT_CT,   // the thrust coefficient
+		PROPELLER_OUTPUT_CP,   // the power coefficient
 	};
 	/*----------------------- propeller chart fixed pitch------------------------ */
 	struct PropellerChartFixedPitchParameter {
@@ -174,6 +176,7 @@ namespace propulsionsystem {
 		double N_2; // square of rotor speed
 		VectorXd Coefficient; // CT  = 0, CP = 1
 		mathauxiliary::Lookup_1D propeller_fixed_pitch_;
+		double PI2_{ 2.0 * M_PI };// 2*pi
 	public:
 		PropellerChartFixedPitch(const PropellerChartFixedPitchParameter& param);
 		void DifferentialEquation(const double& t,
@@ -211,6 +214,7 @@ namespace propulsionsystem {
 		double D_4;// power of 4 of disc diameter
 		double D_5;// power of 5 of disc diameter
 		double N_2; // square of rotor speed
+		double PI2_{ 2.0 * M_PI };// 2*pi
 	public:
 		PropellerChartVariablePitch(const PropellerChartVariablePitchParameter& param);
 		void DifferentialEquation(const double& t,

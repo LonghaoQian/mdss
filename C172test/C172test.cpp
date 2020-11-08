@@ -46,7 +46,7 @@ int main()
 	initial_condition.XI0(mathauxiliary::VECTOR_Y) = 0.0;
 	initial_condition.XI0(mathauxiliary::VECTOR_Z) = 0.0; // END frame
 	unsigned int planekinematics = SimInstance1.AddSubSystem(initial_condition);
-	//// define dynamics
+	// define dynamics
 	dynamics::RigidBodyDynamicsParamter dynamics_parameter;
 	//dynamics_parameter.J(0, 0) = 1285.31541660000; // kg m^2
 	//dynamics_parameter.J(1, 1) = 1824.93096070000;
@@ -106,17 +106,17 @@ int main()
 	aeroforceparam.S = ReferenceArea;
 
 	aeroforceparam.AeroCoefficient.Lift.CL0_                = 0.377;
-	aeroforceparam.AeroCoefficient.Lift.CLadot_             = 1.7;
-	aeroforceparam.AeroCoefficient.Lift.CLde_               =  - 0.359366356655653;
-	aeroforceparam.AeroCoefficient.Lift.CLq_                = 3.9;
-	aeroforceparam.AeroCoefficient.Lift.CL_alpha_           = 4.6564;
-	aeroforceparam.AeroCoefficient.Lift.CL_alpha_squared_   = -0.4;
-	aeroforceparam.AeroCoefficient.Lift.CL_alpha_cubed_     = -0.1;
-	aeroforceparam.AeroCoefficient.Lift.CL_flap_            = 0.5;
-	aeroforceparam.AeroCoefficient.Lift.CL_flap_squared_    = -0.2;
+	aeroforceparam.AeroCoefficient.Lift.CLadot_             = 1.0;
+	aeroforceparam.AeroCoefficient.Lift.CLde_               = 0.0;// -0.359366356655653;
+	aeroforceparam.AeroCoefficient.Lift.CLq_ = 3.9;;// 3.9;
+	aeroforceparam.AeroCoefficient.Lift.CL_alpha_ = 4.6564;// 4.6564;
+	aeroforceparam.AeroCoefficient.Lift.CL_alpha_squared_ = -0.4;//-0.4;
+	aeroforceparam.AeroCoefficient.Lift.CL_alpha_cubed_ = -0.1;;// -0.1;
+	aeroforceparam.AeroCoefficient.Lift.CL_flap_ = 0.0;// 0.5;
+	aeroforceparam.AeroCoefficient.Lift.CL_flap_squared_ = 0.0;// -0.2;
 
 	aeroforceparam.AeroCoefficient.Drag.CD0_ = 0.032;
-	aeroforceparam.AeroCoefficient.Drag.CDbeta_ = 0.17;
+	aeroforceparam.AeroCoefficient.Drag.CDbeta_ =  0.17;
 	aeroforceparam.AeroCoefficient.Drag.CDde_ = 0.06;
 	aeroforceparam.AeroCoefficient.Drag.CD_flap_ = 0.021;
 	aeroforceparam.AeroCoefficient.Drag.CD_flap_squared_ = - 0.005;
@@ -130,7 +130,7 @@ int main()
 	aeroforceparam.AeroCoefficient.Side.CYda_ = -0.05;
 	aeroforceparam.AeroCoefficient.Side.CYdr_ = 0.098;
 	aeroforceparam.AeroCoefficient.Side.CYp_ = -0.0370;
-	aeroforceparam.AeroCoefficient.Side.CYr_ = 0.21;
+	aeroforceparam.AeroCoefficient.Side.CYr_ = 0.21;	
 
 	aeroforceparam.AeroCoefficient.Roll.Clb_ = -0.089100000000000;
 	aeroforceparam.AeroCoefficient.Roll.Clda_ = 0.230000000000000;
@@ -274,8 +274,13 @@ int main()
 		0.6000,    1.1800,
 		0.8000,    1.2400,
 		1.0000,    1.3000;
-
+	pistonengine_param.shaft_damping = -0.005;
+	pistonengine_param.superchargerfactor = 1.0;
+	pistonengine_param.stater_breakaway_RPM = 560;
+	pistonengine_param.stater_zero_torque_RPM = 1000;
 	
+
+
 	unsigned int piston_engine_1 = SimInstance1.AddSubSystem(pistonengine_param);
 	// shaft dynamics
 
@@ -313,6 +318,42 @@ int main()
 
 	unsigned int  horizontal_wind = SimInstance1.AddSubSystem(horizontal_wind_speed_param);
 
+	mathblocks::ConstantParameter fixeddensity_param;
+
+	fixeddensity_param.value.resize(1);
+	fixeddensity_param.value(0) = 1.0; // kg/m^3
+
+	unsigned int  fixeddensity = SimInstance1.AddSubSystem(fixeddensity_param);
+
+
+	mathblocks::ConstantParameter fixedrps_param;
+
+	fixedrps_param.value.resize(1);
+	fixedrps_param.value(0) = 2000.0/60.0; // 2000RPM/60
+
+	unsigned int  fixedrps = SimInstance1.AddSubSystem(fixedrps_param);
+
+	mathblocks::ConstantParameter fixedthrottle_param;
+
+	fixedthrottle_param.value.resize(1);
+	fixedthrottle_param.value(0) = 0.5;
+
+	unsigned int  fixedthrottle = SimInstance1.AddSubSystem(fixedthrottle_param);
+
+	mathblocks::ConstantParameter fixedmxiture_param;
+
+	fixedmxiture_param.value.resize(1);
+	fixedmxiture_param.value(0) = -0.2;
+
+	unsigned int  fixedmxiture = SimInstance1.AddSubSystem(fixedmxiture_param);
+
+	mathblocks::ConstantParameter fixefuelstate_param;
+
+	fixefuelstate_param.value.resize(1);
+	fixefuelstate_param.value(0) = 1.0;
+
+	unsigned int  fixefuelstate = SimInstance1.AddSubSystem(fixefuelstate_param);
+
 	// connections
 
 	// signal output to dynamics:
@@ -347,7 +388,7 @@ int main()
 	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_HORIZONTALWINDSPEED, horizontal_wind, 0);
 	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_WINDDIRECTION, horizontal_wind, 1);
 	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_VERTICALWINDSPEED, horizontal_wind, 2);
-	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_RHO, atmoshpere, geographic::AtmDensity);
+	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_RHO, fixeddensity, 0);
 	SimInstance1.EditConnectionMatrix(aeroanlge, aero::AERO_INPUT_SOUNDSPEED, atmoshpere, geographic::AtmSoundSpeed);
 	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_P, aero::AERO_INPUT_R, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
 	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_Vbdotx, aero::AERO_INPUT_Vbdotz, sum_Vb, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
@@ -366,17 +407,21 @@ int main()
 
 
 	// connect the propeller to the shaft dynamics
-	SimInstance1.EditConnectionMatrix(propeller_1, propulsionsystem::PROPELLER_INPUT_N, shaftdynamics, 0);
+	SimInstance1.EditConnectionMatrix(propeller_1, propulsionsystem::PROPELLER_INPUT_N, fixedrps, 0);
+	SimInstance1.EditConnectionMatrix(propeller_1, propulsionsystem::PROPELLER_INPUT_V, aeroanlge, aero::AERO_OUTPUT_TAS);
+	SimInstance1.EditConnectionMatrix(propeller_1, propulsionsystem::PROPELLER_INPUT_RHO, fixeddensity, 0);
+	// connect the shaft input to the total torque
 	SimInstance1.EditConnectionMatrix(shaftdynamics, 0, shaft_inertia, 0);
 	SimInstance1.EditConnectionMatrix(shaft_inertia, 0, total_torque_to_shaft, 0);
 	SimInstance1.EditConnectionMatrix(total_torque_to_shaft, 0, piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_Q);
 	SimInstance1.EditConnectionMatrix(total_torque_to_shaft, 1, propeller_1, propulsionsystem::PROPELLER_OUTPUT_Q);
-	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_SHAFTRPS, shaftdynamics, 0);
-	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_MANIFOLD, atmoshpere, geographic::AtmDensity);
+	// connect the piston engine to the shaft
 
-	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_FUELSTATE, simulationcontrol::external, 0);
-	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_MIXTURE, simulationcontrol::external, 0);
-
+	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_SHAFTRPS, fixedrps, 0);
+	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_MANIFOLD, fixeddensity, 0);
+	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, fixedthrottle, 0);
+	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_MIXTURE,  fixedmxiture, 0);
+	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_FUELSTATE,fixefuelstate, 0);
 
 	// flush connection matrix
 	SimInstance1.FlushMakeConnection();
@@ -460,7 +505,18 @@ int main()
 	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_MBx, "MBx");
 	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_MBy, "MBy");
 	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_MBz, "MBz");
+
+	SimInstance1.DefineDataLogging(propeller_1, propulsionsystem::PROPELLER_OUTPUT_T, "Thrust");
+	SimInstance1.DefineDataLogging(propeller_1, propulsionsystem::PROPELLER_OUTPUT_Q, "TorqueRequired");
+	SimInstance1.DefineDataLogging(propeller_1, propulsionsystem::PROPELLER_OUTPUT_CT, "CT");
+	SimInstance1.DefineDataLogging(propeller_1, propulsionsystem::PROPELLER_OUTPUT_CP, "CP");
+
+	SimInstance1.DefineDataLogging(piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_Q, "TorqueAvaliable");
+	SimInstance1.DefineDataLogging(piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_FUELRATE, "FuelRate");
 	// SimInstance1.DisplayLoggerTagList();// show the logged tags
+
+	SimInstance1.DisplaySystemParameter(aeroforce);
+
 	bool flag = SimInstance1.PreRunProcess();
 
 	SimInstance1.DisplayExternalInputMapping(aeroanlge);

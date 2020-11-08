@@ -809,7 +809,7 @@ subplot(4,2,6)
 plot(logged_data.data(:,logged_data.tagmap('t')),TorqueRequired - logged_data.data(:,logged_data.tagmap('TorqueRequired')))
 
 xlabel('t(s)')
-ylabel('TorqueRequired (Nm)')
+ylabel('TorqueRequired (W/rps)')
 grid on
 title('TorqueRequired diff')
 
@@ -834,16 +834,14 @@ title('CP diff')
 %%
 figure(16)
 
-subplot(2,1,1)
+subplot(2,1,2)
 
-plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('TorqueAvaliable')))
-hold on
-plot(logged_data.data(:,logged_data.tagmap('t')),TorqueAvaliable)
-legend('solver','simulink')
+plot(logged_data.data(:,logged_data.tagmap('t')),TorqueAvaliable - logged_data.data(:,logged_data.tagmap('TorqueAvaliable')))
+% 
 xlabel('t(s)')
-ylabel('TorqueAvaliable(Nm)')
+ylabel('TorqueAvaliable (Nm)')
 grid on
-
+title('TorqueAvaliable diff')
 
 subplot(2,1,2)
 

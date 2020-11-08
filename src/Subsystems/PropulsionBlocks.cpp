@@ -218,7 +218,7 @@ namespace propulsionsystem {
 		// determine the size of the system
 		system_info.num_of_continuous_states = 0;
 		system_info.num_of_inputs = 3;  
-		system_info.num_of_outputs = 2; 
+		system_info.num_of_outputs = 4; 
 		// check the compatibility of the system matrices:
 		system_info.system_parameter_ok = true;
 		system_info.DIRECT_FEED_THROUGH = true;
@@ -249,15 +249,19 @@ namespace propulsionsystem {
 		if (input(PROPELLER_INPUT_N) < parameter.minimumAngularRate) {
 			output(PROPELLER_OUTPUT_Q) = 0.0;
 			output(PROPELLER_OUTPUT_T) = 0.0;
+			output(PROPELLER_OUTPUT_CT) = 0.0;
+			output(PROPELLER_OUTPUT_CP) = 0.0;
 		} else { 
 			// normal condition
 			J = input(PROPELLER_INPUT_V) / (input(PROPELLER_INPUT_N)*parameter.diameter);
 			N_2 = input(PROPELLER_INPUT_N) * input(PROPELLER_INPUT_N);
 			// use the first element of the input as the target height
 			propeller_fixed_pitch_.GetOutput(Coefficient,J); 
-			// T = rho n^2 D^4 CT, P = rho n^3 D_5 CP, Q = P/n = rho n^2 D_5 CP
+			// T = rho n^2 D^4 CT, P = rho n^3 D_5 CP, Q = P/(2pi*n) = rho n^2 D_5 CP/(2*pi)
+			output(PROPELLER_OUTPUT_CT) = Coefficient(0);
+			output(PROPELLER_OUTPUT_CP) = Coefficient(1);
 			output(PROPELLER_OUTPUT_T) = input(PROPELLER_INPUT_RHO) * N_2 * D_4* Coefficient(0);// CT  = 0, CP = 1
-			output(PROPELLER_OUTPUT_Q) = input(PROPELLER_INPUT_RHO) * N_2 * D_5* Coefficient(1);// CT  = 0, CP = 1
+			output(PROPELLER_OUTPUT_Q) = input(PROPELLER_INPUT_RHO) * N_2 * D_5* Coefficient(1) / PI2_;// CT  = 0, CP = 1 , required torque in (Nm)
 		}
 	}
 
@@ -295,7 +299,7 @@ namespace propulsionsystem {
 		// determine the size of the system
 		system_info.num_of_continuous_states = 0;
 		system_info.num_of_inputs = 4;
-		system_info.num_of_outputs = 2;
+		system_info.num_of_outputs = 4;
 		// check the compatibility of the system matrices:
 		system_info.DIRECT_FEED_THROUGH = true;
 		system_info.EXTERNAL_CONNECTION_ONLY = false;
@@ -345,9 +349,11 @@ namespace propulsionsystem {
 			J = input(PROPELLER_INPUT_V) / (input(PROPELLER_INPUT_N)*parameter.diameter);
 			CT = propeller_table_T_.GetOutput(J, input(PROPELLER_INPUT_PITCH));
 			CP = propeller_table_P_.GetOutput(J, input(PROPELLER_INPUT_PITCH));
-			// T = rho n^2 D^4 CT, P = rho n^3 D_5 CP, Q = P/n = rho n^2 D_5 CP
+			// T = rho n^2 D^4 CT, P = rho n^3 D_5 CP, Q = P/(2*pi*n) = rho n^2 D_5 CP/(2*pi)
 			output(PROPELLER_OUTPUT_T) = input(PROPELLER_INPUT_RHO) * N_2 * D_4* CT;// CT  = 0, CP = 1
-			output(PROPELLER_OUTPUT_Q) = input(PROPELLER_INPUT_RHO) * N_2 * D_5* CP;// CT  = 0, CP = 1
+			output(PROPELLER_OUTPUT_Q) = input(PROPELLER_INPUT_RHO) * N_2 * D_5* CP /PI2_;// CT  = 0, CP = 1 , required torque in (Nm)
+			output(PROPELLER_OUTPUT_CT) = CT;
+			output(PROPELLER_OUTPUT_CP) = CP;
 		}
 	}
 
@@ -452,7 +458,7 @@ namespace propulsionsystem {
 				mixture_powerfactor_.GetOutput(input(PISTONENGINE_INPUT_MIXTURE)) * rpm_torque_.GetOutput(RPM) * throttle;
 		}
 		else {// if not, in idle state.
-			output(PISTONENGINE_OUTPUT_Q) = starter_torque + parameter.shaft_damping * RPM; // the damping and starter torque are present
+			output(PISTONENGINE_OUTPUT_Q) = starter_torque + parameter.shaft_damping * RPM* RPM; // the damping and starter torque are present
 		}
 		// TO DO: calculate fuel rate:
 		output(PISTONENGINE_OUTPUT_FUELRATE) = 0.0;

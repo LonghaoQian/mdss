@@ -79,17 +79,18 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 		+ param_.AeroCoefficient.Lift.CLde_    * input(AEROFORCE_INPUT_ELEVATOR)
 		+ param_.AeroCoefficient.Lift.CL_alpha_squared_ * AOA_square
 		+ param_.AeroCoefficient.Lift.CL_alpha_cubed_ * AOA_cube
-		+ param_.AeroCoefficient.Lift.CL_flap_ * input(AEROFORCE_INPUT_FLAP);
+		+ param_.AeroCoefficient.Lift.CL_flap_ * input(AEROFORCE_INPUT_FLAP)
 		+ param_.AeroCoefficient.Lift.CL_flap_squared_ * flap_square;
-
+	// calculate CD
 	CD_ = param_.AeroCoefficient.Drag.CD0_
 		+ param_.AeroCoefficient.Drag.CDbeta_   * abs(input(AEROFORCE_INPUT_SIDESLIP))
 		+ param_.AeroCoefficient.Drag.CDde_     * abs(input(AEROFORCE_INPUT_ELEVATOR))
 		+ param_.AeroCoefficient.Drag.CD_flap_     * input(AEROFORCE_INPUT_FLAP)
 		+ param_.AeroCoefficient.Drag.CD_flap_squared_ * flap_square
-		+ param_.AeroCoefficient.Drag.CD_alpha_ * input(AEROFORCE_INPUT_AOA);
+		+ param_.AeroCoefficient.Drag.CD_alpha_ * input(AEROFORCE_INPUT_AOA)
 		+ param_.AeroCoefficient.Drag.CD_alpha_squared_ * AOA_square;
 
+	// calcuate CY
 	CY_ = param_.AeroCoefficient.Side.CYb_ *  input(AEROFORCE_INPUT_SIDESLIP)
 		+ param_.AeroCoefficient.Side.CYda_ * input(AEROFORCE_INPUT_AILERON)
 		+ param_.AeroCoefficient.Side.CYdr_ * input(AEROFORCE_INPUT_RUDDER)
@@ -153,6 +154,7 @@ void aero::AeroForceMoment1::DisplayParameters()
 	// display aeroparameters
 	std::cout << "The parameters of the aeroforce and aeromoment are: " << std::endl;
 	std::cout << "S : " << param_.S << " m^2. Cbar : " << param_.c_bar_ <<" m. b : " << param_.b_<<" m. " << std::endl;
+	std::cout << "CDalphasquare: " << param_.AeroCoefficient.Drag.CD_alpha_squared_ << "\n";
 }
 
 void aero::AeroForceMoment1::DisplayInitialCondition()

@@ -23,17 +23,17 @@ namespace aircraft {
 	};
 
 	enum autopliotpitchmode {
-		NONE = 0,  // the pitch CAS is off
-		CAS,       // the pitch CAS is on (C star controller). Normal Acc Command Mode
-		GAMMA,     // flight path hold mode
-		ALTITUDE,  // altitude command mode
+		PITCHMODE_NONE = 0,  // the pitch CAS is off
+		PITCHMODE_CAS,       // the pitch CAS is on (C star controller). Normal Acc Command Mode
+		PITCHMODE_GAMMA,     // flight path hold mode
+		PITCHMODE_ALTITUDE,  // altitude command mode
 	};
 
 	enum autopliotrollhmode {
-		NONE = 0, // the roll CAS is off
-		CAS,      // the roll CAS is on
-		ROLLANGLE,
-		HEADINGANGLE,
+		ROLLMODE_NONE = 0, // the roll CAS is off
+		ROLLMODE_CAS,      // the roll CAS is on
+		ROLLMODE_ROLLANGLE,
+		ROLLMODE_HEADINGANGLE,
 	};
 
 	struct C172input {
@@ -52,7 +52,7 @@ namespace aircraft {
 		struct {
 			bool autopilotmaster;   // master swith of the entire autopilot system
 			struct {
-				autopliotpitchmode mode{ autopliotpitchmode::NONE };
+				autopliotpitchmode mode{ PITCHMODE_NONE };
 				double commandaltitude;
 				double commandgamma;
 			}pitchCAS;
