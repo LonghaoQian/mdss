@@ -476,8 +476,8 @@ title('TAS diff')
 %%
 figure(10)
 subplot(3,2,1)
-hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('AOArate')))
+hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),AOArate(:,1))
 legend('solver','simulink')
 xlabel('t(s)')
@@ -493,8 +493,8 @@ grid on
 title('AOArate')
 
 subplot(3,2,3)
-hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Sidesliprate')))
+hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),beta_dotbar(:,1))
 legend('solver','simulink')
 xlabel('t(s)')
@@ -512,6 +512,7 @@ title('beta_dotbar')
 subplot(3,2,5)
 hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('dynamicpressure')))
+hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),dynamicpressure(:,1))
 legend('solver','simulink')
 xlabel('t(s)')
@@ -642,3 +643,11 @@ xlabel('t(s)')
 ylabel('RWB22')
 grid on
 title('RWB22 diff')
+%%
+figure(13)
+subplot(3,3,1)
+plot(logged_data.data(:,logged_data.tagmap('t')),reshape(R_WB(1,1,:),2001,1) - logged_data.data(:,logged_data.tagmap('RWB00')))
+xlabel('t(s)')
+ylabel('RWB00')
+grid on
+title('RWB00 diff')

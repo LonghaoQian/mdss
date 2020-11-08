@@ -519,10 +519,6 @@ namespace simulationcontrol {
 
 	int SimController::Run_Update(const VectorXd& extern_input)
 	{
-		/*------------ log data ---------------------------------------*/		
-		if (solver_config.loggingconfig.uselogging) {
-			LogRequestedData();
-		}
 		int flag = 0;
 		/*Logic
 		1. update the external input to the external_input butter
@@ -531,6 +527,10 @@ namespace simulationcontrol {
 		*/
 		// step 1
 		GetExternalInputs(extern_input);// update external input
+		/*------------ log data -------------------------*/		
+		if (solver_config.loggingconfig.uselogging) {
+			LogRequestedData();
+		}
 		// step 2
 		// for each intermediate cycle, calculate increments using numerical method
 		double error_cycle = 0;
@@ -1012,8 +1012,8 @@ namespace simulationcontrol {
 				for (int j = 0; j < subsystem_list[output_sequence[i]]->GetSystemInfo().num_of_inputs; j++)
 				{
 					from_system = subsystem_list[output_sequence[i]]->GetSystemInfo().input_connection(j, 0);
-					if (from_system >= 0)// detect if this input port is an non-external input
-					{
+					// detect if this input port is an non-external input
+					if (from_system >= 0) {
 						// fetch input from the output of other subsystems
 						from_index = subsystem_list[output_sequence[i]]->GetSystemInfo().input_connection(j, 1);
 						subsystem_list[output_sequence[i]]->Solver_UpdateInputTemp(j, subsystem_list[from_system]->GetOutput()(from_index));

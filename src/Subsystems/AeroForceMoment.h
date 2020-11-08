@@ -67,7 +67,7 @@ namespace aero {
 		AEROFORCE_INPUT_RUDDER,
 		AEROFORCE_INPUT_MACHNUMBER,
 		AEROFORCE_INPUT_RELATIVEHEIGHT,
-		AEROFORCE_INPUT_RX,
+		AEROFORCE_INPUT_RX,                      // distance from the center of mass of the plane to the aerodynamics reference point
 		AEROFORCE_INPUT_RY,
 		AEROFORCE_INPUT_RZ
 	};

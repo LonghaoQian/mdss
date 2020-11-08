@@ -22,42 +22,112 @@ namespace aircraft {
 		INPUT_MIXTURE,
 	};
 
+	enum autopliotpitchmode {
+		NONE = 0,  // the pitch CAS is off
+		CAS,       // the pitch CAS is on (C star controller). Normal Acc Command Mode
+		GAMMA,     // flight path hold mode
+		ALTITUDE,  // altitude command mode
+	};
+
+	enum autopliotrollhmode {
+		NONE = 0, // the roll CAS is off
+		CAS,      // the roll CAS is on
+		ROLLANGLE,
+		HEADINGANGLE,
+	};
+
 	struct C172input {
 		struct {
-			bool starter;
-			double throttle;
-			double mixture;
+			bool starter;    // starter true: ON
+			double throttle; // normalized throttle 0-1 
+			double mixture;  // normalized mixtue position - 1 1
 		}engine;
 		struct {
-			double elevator;
-			double aileron;
-			double rudder;
-			double elevatortrim;
+			double elevator;     // normalized elevator -1 1
+			double aileron;      // normalized aileron  -1 1
+			double rudder;       // normalized rudder   -1 1
+			double elevatortrim; // elevatortrim        deg
+			double flap;         // normalized flap     0 - 1
 		}controlsurface;
 		struct {
-			bool autopilotmaster;
+			bool autopilotmaster;   // master swith of the entire autopilot system
+			struct {
+				autopliotpitchmode mode{ autopliotpitchmode::NONE };
+				double commandaltitude;
+				double commandgamma;
+			}pitchCAS;
+
+			struct {
+
+			}rollCAS;
+
 			struct {
 				bool ON;
 				double targetspeed; // target true airspeed (m/s)
 			}autothrottle;
-			struct {
-				bool ON;
-				double altcommand; // command altitude (m)
-			}altitudehold;
+
 		}autopilot;
 	};
 
-	struct aeroparameter {
+	struct aerodynamics {
 		struct {
-			double CLalpha;
+			double CLalpha{0.0};
+			double CLalpha_squared{ 0.0 };
+			double CLalpha_cubed{ 0.0 };
+			double CLq{ 0.0 };
+			double CLde{ 0.0 };
+			double CLflap{ 0.0 };
+			double CLflap_squared{ 0.0 };
+			double CLalphaflap{ 0.0 };
 		}lift;
 		struct {
-
+			double CYb{ 0.0 };
+			double CYda{ 0.0 };
+			double CYdr{ 0.0 };
+			double CYp{ 0.0 };
+			double CYr{ 0.0 };
 		}side;
 		struct {
-
+			double CD0_{ 0.0 };
+			double CD_alpha_{ 0.0 };
+			double CD_alpha_squared_{ 0.0 };
+			double CDde_{ 0.0 };
+			double CD_flap_{ 0.0 };
+			double CD_flap_squared_{ 0.0 };
+			double CDbeta_{ 0.0 };
+			double CDground_{ 0.0 };
 		}drag;
 
+		struct {
+			double  Clb_{ 0.0 };
+			double  Clp_{ 0.0 };
+			double  Clr_{ 0.0 };
+			double  Clda_{ 0.0 };
+			double  Cldr_{ 0.0 };
+		}roll;
+
+		struct {
+			double Cmalpha_{ 0.0 };
+			double Cm_flap_{ 0.0 };
+			double Cm_flap_squared_{ 0.0 };
+			double Cmq_{ 0.0 };
+			double Cmadot_{ 0.0 };
+			double Cm0_{ 0.0 };
+			double Cmde_{ 0.0 };
+		}pitch;
+
+		struct {
+			double Cnb_{ 0.0 };
+			double Cnp_{ 0.0 };
+			double Cnr_{ 0.0 };
+			double Cnda_{ 0.0 };
+			double Cndr_{ 0.0 };
+		}yaw;
+
+	};
+
+	struct autopilot {
+		
 	};
 
 	struct planeconfig {
@@ -74,7 +144,18 @@ namespace aircraft {
 			double ReferenceArea;
 		}aerogeometric;
 
+		struct {
+			Eigen::Matrix<double, Dynamic, 2> TorqueRPMChart;                         // output power versus RPM chart  an N by 2 matrix 0 RPM 1 Torque (m*s)
+			Eigen::Matrix<double, Dynamic, 2> PowerMixtureChart;                     // power factor versus mixture chart an N by 2 matrix  0 RPM  1 toque factor
+			Eigen::Matrix<double, Dynamic, 2> MixturePowerFactorSFCfactorChart;    // sfc factor versus mixture chart   an N by 2 matrix 0 RPM  1 SFC factor
+		}propeller;
+
+		struct {
+
+		}pistonengine;
+
 		double MinAirspeed;
+
 
 	};
 
