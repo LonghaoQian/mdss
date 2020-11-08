@@ -4,3 +4,4 @@
 *.mat
 **/v15/**
 **/eigen3/**
+*.autosave
