@@ -32,4 +32,4 @@ propellerchart = [
 2.0000, - 0.0750, - 0.0330];
 
 
-pistonengine_torque = C172.Engine.BHP.Table./(C172.Engine.BHP.RowRPM');
+pistonengine_torque = C172.Engine.BHP.Table./(2*pi*C172.Engine.BHP.RowRPM'/60);

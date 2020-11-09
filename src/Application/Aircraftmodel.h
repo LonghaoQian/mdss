@@ -69,11 +69,14 @@ namespace aircraft {
 		}autopilot;
 	};
 
-	struct aerodynamics {
+	struct aerodynamicsparameter {
+		double MinAirspeed;
 		struct {
+			double CL0{ 0.0 };
 			double CLalpha{0.0};
 			double CLalpha_squared{ 0.0 };
 			double CLalpha_cubed{ 0.0 };
+			double CLalpha_dot{ 0.0 };
 			double CLq{ 0.0 };
 			double CLde{ 0.0 };
 			double CLflap{ 0.0 };
@@ -126,41 +129,124 @@ namespace aircraft {
 
 	};
 
-	struct autopilot {
-		
-	};
-
-	struct planeconfig {
-		simulationcontrol::SolverConfig config;
+	struct autopilotparameter {
 		struct {
 
-		};
+		}pitchCAS;
 	};
+
+
 
 	struct modelparameter {
-		struct {
-			double WingSpan;
-			double MeanChord;
-			double ReferenceArea;
-		}aerogeometric;
 
 		struct {
-			Eigen::Matrix<double, Dynamic, 2> TorqueRPMChart;                         // output power versus RPM chart  an N by 2 matrix 0 RPM 1 Torque (m*s)
-			Eigen::Matrix<double, Dynamic, 2> PowerMixtureChart;                     // power factor versus mixture chart an N by 2 matrix  0 RPM  1 toque factor
-			Eigen::Matrix<double, Dynamic, 2> MixturePowerFactorSFCfactorChart;    // sfc factor versus mixture chart   an N by 2 matrix 0 RPM  1 SFC factor
+			Matrix<double, Eigen::Dynamic, 3> Chart; // an N by 3 matrix , first col: J, second col: CT, third col: CP
+			double diameter{ 0.0 };
+			double minimumAngularRate{0.0};
+			double shaftinertia{ 0.0 };
 		}propeller;
 
 		struct {
-
+			Eigen::Matrix<double, Dynamic, 2> TorqueRPMChart;                      // output power versus RPM chart  an N by 2 matrix 0 RPM 1 Torque (m*s)
+			Eigen::Matrix<double, Dynamic, 2> PowerMixtureChart;                   // power factor versus mixture chart an N by 2 matrix  0 RPM  1 toque factor
+			Eigen::Matrix<double, Dynamic, 2> MixturePowerFactorSFCfactorChart;    // sfc factor versus mixture chart   an N by 2 matrix 0 RPM  1 SFC factor
+			double idle_RPM{ 0.0 };                  // PRM 
+			double shaft_damping{ 0.0 };             // shaft damping below the idle RPM
+			double sfc{ 0.0 };						  // specific fuel consumption LB/(BHP*HR) pounds of fuel per break horse power per hour
+			double superchargerfactor{ 0.0 };        // the power factor by turnning on super charger
+			double krho0{ 0.0 };                     // rate parameter for manifold density amplifier 
+			double krho1{ 0.0 };					  // base parameter for manifold density amplifier  
+			double stater_max_torque{ 0.0 };         // the maximum torque the starter could provide 
+			double stater_breakaway_RPM{ 0.0 };      // the PRM where the starter torque begins to decline with RPM
+			double stater_zero_torque_RPM{ 0.0 };    // if below this torque, the engine produces no torque output
 		}pistonengine;
 
-		double MinAirspeed;
+		struct {
+			double EmptyWeight{ 0.0 }; // the empty weight of the aircraft, excluding payload, passenger and fuel
+			double Pilot1{ 0.0 };
+			double Pilot2{ 0.0 };
+			double Pilot3{ 0.0 };
+			double Pilot4{ 0.0 };
+			Matrix3d J; // moment of inertia
+		}inertia;
 
+		struct {
+			double Span{ 0.0 };
+			double MeanChord{ 0.0 };
+			double ReferenceArea = 16.1651289600000;
+		}geometry;
+
+		aerodynamicsparameter aerodynamics;
+		autopilotparameter autopilot;
+		simulationcontrol::SolverConfig Config;
+
+	};
+
+	struct modellist { // list containing all the model indexes of the system
+		struct {
+			unsigned int planekinematics{ 0 };
+			unsigned int planedynamics{ 0 };
+			unsigned int gravityinertial{ 0 };
+			//unsigned int gravity
+			unsigned int gravitybody{ 0 };
+			unsigned int Vbdot;
+			unsigned int crossproduct{ 0 };
+			unsigned int product{ 0 };
+			unsigned int height{ 0 };
+			unsigned int climbrate{ 0 };
+			unsigned int sumtotalforce{ 0 };
+		}dynamics;
+
+		struct {
+			unsigned int aeroforcemoment{ 0 };
+			unsigned int aeroangle{ 0 };
+			unsigned int atmosphere{ 0 };// use the IAS for now, will change this later
+			unsigned int filteredAOArate{ 0 };
+			unsigned int filteredBetarate{ 0 };
+		}aerodynamics;
+
+		struct {
+			unsigned int propeller{ 0 };
+			unsigned int pistonengine{ 0 };
+			unsigned int shaftdynamics{ 0 };
+			unsigned int shaftinertia{ 0 };
+			unsigned int omega2rps{ 0 };
+			unsigned int totaltorque{ 0 };
+			unsigned int propellerorientation{ 0 };
+			unsigned int thrustforce{ 0 };
+		}engine;
+
+		struct {
+
+		}autopilot;
+
+		struct {
+			unsigned int fixedthrottle;
+			unsigned int fixedmixture;
+			unsigned int fixedfuelstate;
+		}temp;
 
 	};
 
 	struct initialcondition {
+		struct {
+			double roll{ 0.0 };
+			double pitch{ 0.0 };
+			double yaw{ 0.0 };
+			double omegax{0.0};
+			double omegay{ 0.0 };
+			double omegaz{ 0.0 };
+			double inertialvelocityx{ 0.0 };
+			double inertialvelocityy{ 0.0 };
+			double inertialvelocityz{ 0.0 };
+			double inertialpositionx{ 0.0 };
+			double inertialpositiony{ 0.0 };
+			double inertialpositionz{ 0.0 };
+		}plane;
 
+		struct {
+			double propellerRPM;
+		}engine;
 	};
 
 	// wrapper to estabilish the C172 model using the solver components
@@ -178,13 +264,34 @@ namespace aircraft {
 		bool ResetParameter(const modelparameter& param);
 		// reset the simulation and initial condition if the isRunning is false. Return ture if reset successful
 		bool ResetSimulation(const  initialcondition& IC);
+		// display parameters
+		void DisplayParameters();
+		// display initial conditions
+		void DisplayInitialConditions();
 	private:
 		// a flag to show whether the simulation is running. It is set to false initially.
 		// If UpdateSimulation is executed, then it is set to true.
 		// If the EndSimulation is executed, then it is set to false.
-		bool isRunning; 
+		bool isRunning{ false };
+		bool modelok{ false };
+		modellist Modelist;
+		VectorXd extern_input;  // the external input
 		// backuped parameters and initial conditions
-		modelparameter param;
+		modelparameter parameter;
 		initialcondition currentIC;
+		simulationcontrol::SimController SimInstance1;
+		// establish the aircraft model
+		// step 1. define the rigid body
+		void DefineRigidbody();
+		// step 2. define the aerodynamics
+		void DefineAerodynamics();
+		// step 3. define the engine
+		void DefineEngine();
+		// step 4. define the autopilot
+		void DefineAutopilot();
+		// step 5. define the logging
+		void DefineLogging();
+		// connect system
+		void ConnectSystems();
 	};
 }

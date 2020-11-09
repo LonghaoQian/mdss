@@ -14,8 +14,8 @@ aero::AeroAngle::AeroAngle(const AeroAngleParameter& parameter)
 
 	system_info.num_of_continuous_states = 0;
 
-	system_info.num_of_inputs = 23;
-	system_info.num_of_outputs = 10;
+	system_info.num_of_inputs = 26;
+	system_info.num_of_outputs = 11;
 
 	system_info.system_parameter_ok = 0;
 	ready_to_run = true;
@@ -83,6 +83,12 @@ void aero::AeroAngle::OutputEquation(const double & t, const VectorXd & state, c
 	output(AERO_OUTPUT_Pbar) = lat_normalizer * input(AERO_INPUT_P);
 	output(AERO_OUTPUT_Qbar) = lon_normalizer * input(AERO_INPUT_Q);
 	output(AERO_OUTPUT_Rbar) = lat_normalizer * input(AERO_INPUT_R);
+	// step. 6 flight path angle
+	if (TAS < 0.1*param_.min_airspeed_) {
+		output(AERO_OUTPUT_GAMMA) = 0.0; // if the airspeed is too low, stop calculation
+	} else {
+		output(AERO_OUTPUT_GAMMA) = asin(-input(AERO_INPUT_VIz) / input.segment(AERO_INPUT_VIx, 3).norm());
+	}
 }
 
 void aero::AeroAngle::IncrementState()

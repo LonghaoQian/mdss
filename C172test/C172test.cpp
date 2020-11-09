@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include "SimController.h"
+#include "Aircraftmodel.h"
 #include <time.h>
 int main()
 {
@@ -20,6 +21,18 @@ int main()
 	config1.loggingconfig.uselogging = true;
 	config1.loglevel = simulationcontrol::LOGLEVEL_ERROR;
 	simulationcontrol::SimController SimInstance1(config1);
+
+
+	aircraft::initialcondition C172initialcondition;
+
+
+	aircraft::modelparameter C172parameter;
+
+
+	aircraft::AircraftDynamicModel C172aicraftmodel(C172parameter, C172initialcondition);
+
+
+
 
 	double Span  = 10.097;
 	double MeanChord = 1.493520000000000;
@@ -238,30 +251,30 @@ int main()
 		0.8000, 0.9500,
 		1.0000, 0.9300;
 	pistonengine_param.TorqueRPMChart.resize(24, 2);
-	pistonengine_param.TorqueRPMChart << 500, 76.0017440000000,
-		600, 69.5769170833333,
-		700, 64.9877550000000,
-		800, 61.5458834375000,
-		900, 58.8688722222222,
-		1000, 56.7272632500000,
-		1100, 54.9750377272727,
-		1200, 53.5148497916667,
-		1300, 52.2793061538462,
-		1400, 51.2202687500000,
-		1500, 50.3024363333333,
-		1600, 49.4993329687500,
-		1700, 48.7907123529412,
-		1800, 48.1608273611111,
-		1900, 47.5972460526316,
-		2000, 47.0900228750000,
-		2100, 46.6311066666667,
-		2200, 46.1723881818182,
-		2300, 45.4358252173913,
-		2400, 45.0651366666667,
-		2500, 44.4317888000000,
-		2600, 43.8471600000000,
-		2700, 43.0351755555556,
-		2800, 42.5421850000000;
+	pistonengine_param.TorqueRPMChart << 500,	725.763194472288, // Nm vs RPM
+		600,	664.410616734446,
+		700,	620.587346921702,
+		800,	587.719894562144,
+		900,	562.156320504710,
+		1000,	541.705461258763,
+		1100,	524.972940057533,
+		1200,	511.029172389842,
+		1300,	499.230599747950,
+		1400,	489.117537483470,
+		1500,	480.352883520921,
+		1600,	472.683811303691,
+		1700,	465.916982876723,
+		1800,	459.902024274974,
+		1900,	454.520219210251,
+		2000,	449.676594652001,
+		2100,	445.294267670726,
+		2200,	440.913828809650,
+		2300,	433.880170608433,
+		2400,	430.340355696709,
+		2500,	424.292329076107,
+		2600,	418.709535272474,
+		2700,	410.955654989650,
+		2800,	406.247941960793;
 	pistonengine_param.MixturePowerFactorSFCfactorChart.resize(11, 2);
 	pistonengine_param.MixturePowerFactorSFCfactorChart << -1.0000 ,   0.8500,
 		- 0.8000,    0.8000,
@@ -286,17 +299,25 @@ int main()
 
 	mathblocks::GainParameter shaft_inertia_param;
 	shaft_inertia_param.K.resize(1, 1);
-	shaft_inertia_param.K(0,0) = 1.2;
+	shaft_inertia_param.K(0,0) = 1.0/ 1.6700;
 	shaft_inertia_param.Mode = mathblocks::ElementWise;
 	shaft_inertia_param.num_of_inputs = 1;
 
 	unsigned int shaft_inertia = SimInstance1.AddSubSystem(shaft_inertia_param);
 
+	mathblocks::GainParameter omega_rps_param;
+	omega_rps_param.K.resize(1, 1);
+	omega_rps_param.K(0, 0) = 1.0 / (2.0*M_PI);
+	omega_rps_param.Mode = mathblocks::ElementWise;
+	omega_rps_param.num_of_inputs = 1;
+
+	unsigned int omega2rps = SimInstance1.AddSubSystem(omega_rps_param);
+
 	linearsystem::IntegratorParameter shaftdynamics_param;
 	shaftdynamics_param.num_of_channels = 1;
 	linearsystem::IntegratorInitialCondition shaftdynamics_IC;
 	shaftdynamics_IC.X_0.resize(1);
-	shaftdynamics_IC.X_0(0) = 0.0;
+	shaftdynamics_IC.X_0(0)  = 2.0 * M_PI * 2000.0 / 60.0;
 
 	unsigned int shaftdynamics = SimInstance1.AddSubSystem(shaftdynamics_param, shaftdynamics_IC);
 
@@ -393,7 +414,7 @@ int main()
 	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_P, aero::AERO_INPUT_R, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
 	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_Vbdotx, aero::AERO_INPUT_Vbdotz, sum_Vb, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_Vbx, aero::AERO_INPUT_Vbz, planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, dynamics::KINEMATICS_OUTPUT_VBz);
-
+	SimInstance1.BatchEditConnectionMatrix(aeroanlge, aero::AERO_INPUT_VIx, aero::AERO_INPUT_VIz, planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
 	// connect the aero force block
 	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_AOA, aeroanlge, aero::AERO_OUTPUT_AOA);
 	SimInstance1.EditConnectionMatrix(aeroforce, aero::AEROFORCE_INPUT_SIDESLIP, aeroanlge, aero::AERO_OUTPUT_SIDESLIP);
@@ -407,17 +428,18 @@ int main()
 
 
 	// connect the propeller to the shaft dynamics
-	SimInstance1.EditConnectionMatrix(propeller_1, propulsionsystem::PROPELLER_INPUT_N, fixedrps, 0);
+	SimInstance1.EditConnectionMatrix(propeller_1, propulsionsystem::PROPELLER_INPUT_N, omega2rps, 0);
 	SimInstance1.EditConnectionMatrix(propeller_1, propulsionsystem::PROPELLER_INPUT_V, aeroanlge, aero::AERO_OUTPUT_TAS);
 	SimInstance1.EditConnectionMatrix(propeller_1, propulsionsystem::PROPELLER_INPUT_RHO, fixeddensity, 0);
 	// connect the shaft input to the total torque
+	SimInstance1.EditConnectionMatrix(omega2rps, 0, shaftdynamics, 0); // the output of the inertial from rad/s to rps
 	SimInstance1.EditConnectionMatrix(shaftdynamics, 0, shaft_inertia, 0);
 	SimInstance1.EditConnectionMatrix(shaft_inertia, 0, total_torque_to_shaft, 0);
 	SimInstance1.EditConnectionMatrix(total_torque_to_shaft, 0, piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_Q);
 	SimInstance1.EditConnectionMatrix(total_torque_to_shaft, 1, propeller_1, propulsionsystem::PROPELLER_OUTPUT_Q);
 	// connect the piston engine to the shaft
 
-	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_SHAFTRPS, fixedrps, 0);
+	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_SHAFTRPS, omega2rps, 0);
 	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_MANIFOLD, fixeddensity, 0);
 	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, fixedthrottle, 0);
 	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_MIXTURE,  fixedmxiture, 0);
@@ -498,7 +520,7 @@ int main()
 	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_Pbar, "Pbar");
 	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_Qbar, "Qbar");
 	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_Rbar, "Rbar");
-
+	SimInstance1.DefineDataLogging(aeroanlge, aero::AERO_OUTPUT_GAMMA, "gamma");
 	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_FBx, "FBx");
 	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_FBy, "FBy");
 	SimInstance1.DefineDataLogging(aeroforce, aero::AEROFORCE_OUTPUT_FBz, "FBz");
@@ -510,7 +532,7 @@ int main()
 	SimInstance1.DefineDataLogging(propeller_1, propulsionsystem::PROPELLER_OUTPUT_Q, "TorqueRequired");
 	SimInstance1.DefineDataLogging(propeller_1, propulsionsystem::PROPELLER_OUTPUT_CT, "CT");
 	SimInstance1.DefineDataLogging(propeller_1, propulsionsystem::PROPELLER_OUTPUT_CP, "CP");
-
+	SimInstance1.DefineDataLogging(omega2rps, 0, "Shaftrps");
 	SimInstance1.DefineDataLogging(piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_Q, "TorqueAvaliable");
 	SimInstance1.DefineDataLogging(piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_FUELRATE, "FuelRate");
 	// SimInstance1.DisplayLoggerTagList();// show the logged tags

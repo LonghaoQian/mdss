@@ -455,7 +455,7 @@ namespace propulsionsystem {
 			density_factor = parameter.krho0 * input(PISTONENGINE_INPUT_MANIFOLD)/1.225 + parameter.krho1;
 			// calculate the output torque by lookup tables 
 			output(PISTONENGINE_OUTPUT_Q) = starter_torque + fuel_normal* density_factor*
-				mixture_powerfactor_.GetOutput(input(PISTONENGINE_INPUT_MIXTURE)) * rpm_torque_.GetOutput(RPM) * throttle;
+				mixture_powerfactor_.GetOutput(input(PISTONENGINE_INPUT_MIXTURE)) * rpm_torque_.GetOutput(RPM) * throttle; // ouput torque Nm
 		}
 		else {// if not, in idle state.
 			output(PISTONENGINE_OUTPUT_Q) = starter_torque + parameter.shaft_damping * RPM* RPM; // the damping and starter torque are present

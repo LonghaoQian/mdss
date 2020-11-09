@@ -475,7 +475,7 @@ grid on
 title('TAS diff')
 %%
 figure(10)
-subplot(3,2,1)
+subplot(4,2,1)
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('AOArate')))
 hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),AOArate(:,1))
@@ -485,14 +485,14 @@ ylabel('AOArate(rad)')
 grid on
 title('AOArate')
 
-subplot(3,2,2)
+subplot(4,2,2)
 plot(logged_data.data(:,logged_data.tagmap('t')),AOArate(:,1) - logged_data.data(:,logged_data.tagmap('AOArate')))
 xlabel('t(s)')
 ylabel('AOArate(rad/s)')
 grid on
 title('AOArate')
 
-subplot(3,2,3)
+subplot(4,2,3)
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('Sidesliprate')))
 hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),beta_dotbar(:,1))
@@ -502,14 +502,14 @@ ylabel('Sidesliprate(rad/s)')
 grid on
 title('Sidesliprate')
 
-subplot(3,2,4)
+subplot(4,2,4)
 plot(logged_data.data(:,logged_data.tagmap('t')),beta_dotbar(:,1) - logged_data.data(:,logged_data.tagmap('Sidesliprate')))
 xlabel('t(s)')
 ylabel('beta_dotbar(rad/s)')
 grid on
 title('beta_dotbar')
 
-subplot(3,2,5)
+subplot(4,2,5)
 hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('dynamicpressure')))
 hold on
@@ -520,12 +520,31 @@ ylabel('dynamicpressure(PA)')
 grid on
 title('dynamicpressure')
 
-subplot(3,2,6)
+subplot(4,2,6)
 plot(logged_data.data(:,logged_data.tagmap('t')),dynamicpressure(:,1) - logged_data.data(:,logged_data.tagmap('dynamicpressure')))
 xlabel('t(s)')
 ylabel('dynamicpressure(PA)')
 grid on
 title('dynamicpressure')
+
+subplot(4,2,7)
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('gamma')))
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')),gamma)
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('gamma(rad)')
+grid on
+title('gamma')
+
+subplot(4,2,8)
+plot(logged_data.data(:,logged_data.tagmap('t')),gamma - logged_data.data(:,logged_data.tagmap('gamma')))
+xlabel('t(s)')
+ylabel('gamma(rad)')
+grid on
+title('gamma')
+
 %%
 figure(11)
 subplot(3,2,1)
@@ -834,7 +853,7 @@ title('CP diff')
 %%
 figure(16)
 
-subplot(2,1,1)
+subplot(2,2,1)
 
 plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('TorqueAvaliable')))
 hold on
@@ -845,7 +864,7 @@ ylabel('TorqueAvaliable(Nm)')
 grid on
 
 
-subplot(2,1,2)
+subplot(2,2,2)
 
 plot(logged_data.data(:,logged_data.tagmap('t')),TorqueAvaliable - logged_data.data(:,logged_data.tagmap('TorqueAvaliable')))
 % 
@@ -853,3 +872,23 @@ xlabel('t(s)')
 ylabel('TorqueAvaliable (Nm)')
 grid on
 title('TorqueAvaliable diff')
+
+subplot(2,2,3)
+
+plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('Shaftrps')))
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')), sharftprs)
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('sharftprs(RPS)')
+grid on
+
+
+subplot(2,2,4)
+
+plot(logged_data.data(:,logged_data.tagmap('t')),sharftprs - logged_data.data(:,logged_data.tagmap('Shaftrps')))
+% 
+xlabel('t(s)')
+ylabel('sharftprs(Nm)')
+grid on
+title('sharftprs diff')

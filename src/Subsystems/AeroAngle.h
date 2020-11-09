@@ -39,6 +39,9 @@ namespace aero {
 		AERO_INPUT_R_BI02,
 		AERO_INPUT_R_BI12,
 		AERO_INPUT_R_BI22,
+		AERO_INPUT_VIx,                 // aircraft speed in the inertial frame (for gamma calculation)
+		AERO_INPUT_VIy,
+		AERO_INPUT_VIz,
 	};
 
 	enum AeroAngleOutput {
@@ -52,6 +55,7 @@ namespace aero {
 		AERO_OUTPUT_Pbar,
 		AERO_OUTPUT_Qbar,
 		AERO_OUTPUT_Rbar,
+		AERO_OUTPUT_GAMMA,            // flight path angle relative to the ground
 	};
 
 	struct AeroAngleParameter {
