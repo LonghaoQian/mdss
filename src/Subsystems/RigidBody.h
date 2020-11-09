@@ -152,7 +152,7 @@ namespace dynamics {
 		Eigen::Vector3d Euler0;
 		Eigen::Vector3d Omega0;
 	};
-
+	// to do: calculate theta_dot, phi_dot
 	class RigidBodyKinematics :
 		public Subsystem {
 	private:

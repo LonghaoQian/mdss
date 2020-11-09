@@ -10,21 +10,29 @@ namespace  aircraft {
 		// save the parameter
 		parameter = param;
 		// set up the model
-		void DefineRigidbody();
+		DefineRigidbody();
 
-		void DefineAerodynamics();
+		DefineAerodynamics();
 
-		void DefineEngine();
+		DefineEngine();
 
-		void DefineAutopilot();
+		DefineAutopilot();
 
-		void ConnectSystems();
+		ConnectSystems();
 
 		SimInstance1.FlushMakeConnection();
 		// define logging
-		void DefineLogging();
+		DefineLogging();
 		// run preprocess
 		modelok = SimInstance1.PreRunProcess();
+
+		//SimInstance1.DisplaySystemParameter(Modelist.dynamics.ACCxfilter);
+		//SimInstance1.DisplaySystemParameter(Modelist.dynamics.ACCyfilter);
+		//SimInstance1.DisplaySystemParameter(Modelist.dynamics.ACCzfilter);
+		SimInstance1.DisplaySystemParameter(Modelist.dynamics.planedynamics);
+		SimInstance1.DisplaySystemParameter(Modelist.dynamics.gravityinertial);
+		//SimInstance1.DisplayLoggerTagList();
+
 		if (modelok) {
 			std::cout << " All good, ready to run. Enter 1 to start.../ Enter other number to stop ..." << std::endl;
 			//get the external input ready
@@ -42,6 +50,8 @@ namespace  aircraft {
 
 	void AircraftDynamicModel::UpdateSimulation(const C172input & input)
 	{
+		
+		
 		if (modelok) { // if successful, run updates
 			isRunning = true;
 			SimInstance1.Run_Update(extern_input);
@@ -124,10 +134,9 @@ namespace  aircraft {
 		// total force
 		mathblocks::SumParameter sum_total_force_parameter;
 		sum_total_force_parameter.input_dimensions = 3;                         // force is a 3 by 1 vector 
-		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // aerodynamics force
-		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // thrust (now assumed to act on the +X axis of the body-fixed frame through center of mass)
+		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // other forces
 		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // gravity
-		Modelist.dynamics.sumtotalforce = SimInstance1.AddSubSystem(sum_Vb_parameter);
+		Modelist.dynamics.sumtotalinertialforce = SimInstance1.AddSubSystem(sum_total_force_parameter);
 		// height
 		mathblocks::GainParameter height_param;
 		height_param.K.resize(1, 1);
@@ -142,6 +151,35 @@ namespace  aircraft {
 		climbrate_param.Mode = mathblocks::ElementWise;
 		climbrate_param.num_of_inputs = 1;
 		Modelist.dynamics.climbrate= SimInstance1.AddSubSystem(climbrate_param);
+		// ACC filter 
+		linearsystem::TransferFunctionParameter ACCxfilterparam;
+		ACCxfilterparam.Numerator.resize(1);
+		ACCxfilterparam.Numerator(0) = 30.0;
+		ACCxfilterparam.Denominator.resize(2);
+		ACCxfilterparam.Denominator(0) = 1.0;
+		ACCxfilterparam.Denominator(1) = 30.0;
+		Modelist.dynamics.ACCxfilter= SimInstance1.AddSubSystem(ACCxfilterparam);
+
+		Modelist.dynamics.ACCyfilter = SimInstance1.AddSubSystem(ACCxfilterparam);
+		Modelist.dynamics.ACCzfilter = SimInstance1.AddSubSystem(ACCxfilterparam);
+
+
+		// total force
+		mathblocks::SumParameter sum_total_bodyforce_parameter;
+		sum_total_bodyforce_parameter.input_dimensions = 3;                         // 
+		sum_total_bodyforce_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // aerodynamics
+		sum_total_bodyforce_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // thrust
+		Modelist.dynamics.sumtotalbodyforce = SimInstance1.AddSubSystem(sum_total_bodyforce_parameter);
+		// from body-fixed frame to inertial frame
+		mathblocks::MultiplicationParam multiple_3_param;
+		multiple_3_param.Mode = mathblocks::MULTI_MATRIX;
+		multiple_3_param.input1_dimension(mathblocks::MATRIX_ROW) = 3;
+		multiple_3_param.input1_dimension(mathblocks::MATRIX_COL) = 3;
+		multiple_3_param.input2_dimension(mathblocks::MATRIX_ROW) = 3;
+		multiple_3_param.input2_dimension(mathblocks::MATRIX_COL) = 1;
+		Modelist.dynamics.rotation2inertialframe = SimInstance1.AddSubSystem(multiple_3_param);
+
+
 	}
 	void AircraftDynamicModel::DefineAerodynamics()
 	{
@@ -217,7 +255,7 @@ namespace  aircraft {
 		AOAfilterparam.Numerator(0) = 20.0;
 		AOAfilterparam.Denominator.resize(2);
 		AOAfilterparam.Denominator(0) = 1.0;
-		AOAfilterparam.Denominator(0) = 2.0;
+		AOAfilterparam.Denominator(1) = 20.0;
 		Modelist.aerodynamics.filteredAOArate = SimInstance1.AddSubSystem(AOAfilterparam);
 		// betarate filter
 		linearsystem::TransferFunctionParameter Betafilterparam;
@@ -225,7 +263,7 @@ namespace  aircraft {
 		Betafilterparam.Numerator(0) = 20.0;
 		Betafilterparam.Denominator.resize(2);
 		Betafilterparam.Denominator(0) = 1.0;
-		Betafilterparam.Denominator(0) = 2.0;
+		Betafilterparam.Denominator(1) = 20.0;
 		Modelist.aerodynamics.filteredBetarate = SimInstance1.AddSubSystem(Betafilterparam);
 
 	}
@@ -376,7 +414,7 @@ namespace  aircraft {
 
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, "VIx");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIy, "VIy");
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIy, "VIz");
+		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIz, "VIz");
 
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, "XIx");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIy, "XIy");
@@ -404,12 +442,12 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_Qbar, "Qbar");
 		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_Rbar, "Rbar");
 		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_GAMMA, "gamma");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AEROFORCE_OUTPUT_FBx, "FBx");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AEROFORCE_OUTPUT_FBy, "FBy");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AEROFORCE_OUTPUT_FBz, "FBz");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AEROFORCE_OUTPUT_MBx, "MBx");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AEROFORCE_OUTPUT_MBy, "MBy");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroangle, aero::AEROFORCE_OUTPUT_MBz, "MBz");
+		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBx, "FBx");
+		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBy, "FBy");
+		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBz, "FBz");
+		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBx, "MBx");
+		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBy, "MBy");
+		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBz, "MBz");
 
 		SimInstance1.DefineDataLogging(Modelist.engine.propeller, propulsionsystem::PROPELLER_OUTPUT_T, "Thrust");
 		SimInstance1.DefineDataLogging(Modelist.engine.propeller, propulsionsystem::PROPELLER_OUTPUT_Q, "TorqueRequired");
@@ -422,13 +460,17 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.engine.thrustforce, mathauxiliary::VECTOR_X, "Tbx");
 		SimInstance1.DefineDataLogging(Modelist.engine.thrustforce, mathauxiliary::VECTOR_Y, "Tby");
 		SimInstance1.DefineDataLogging(Modelist.engine.thrustforce, mathauxiliary::VECTOR_Z, "Tbz");
+
+		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_X, "TOTALX");
+		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_Y, "TOTALY");
+		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_Z, "TOTALZ");
 	}
 	void AircraftDynamicModel::ConnectSystems()
 	{
 		/*---------------------------------- connect subsystems ------------------------------*/
 		// signal output to dynamics:
 		// connect dynamics to the input forces
-		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_FIx, dynamics::DYNAMICS_INPUT_FIz,  Modelist.dynamics.sumtotalforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_FIx, dynamics::DYNAMICS_INPUT_FIz,  Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_TBx, dynamics::DYNAMICS_INPUT_TBz , Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBx, aero::AEROFORCE_OUTPUT_MBz);
 		// connect dynamics to the angular velocity
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_OmegaBIx, dynamics::DYNAMICS_INPUT_OmegaBIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
@@ -455,11 +497,13 @@ namespace  aircraft {
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.Vbdot, 0, 2, Modelist.dynamics.product, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.Vbdot, 3, 5, Modelist.dynamics.crossproduct, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
-
+		// filter the body acc
+		SimInstance1.EditConnectionMatrix(Modelist.dynamics.ACCxfilter, 0, Modelist.dynamics.Vbdot, mathauxiliary::VECTOR_X);
+		SimInstance1.EditConnectionMatrix(Modelist.dynamics.ACCyfilter, 0, Modelist.dynamics.Vbdot, mathauxiliary::VECTOR_Y);
+		SimInstance1.EditConnectionMatrix(Modelist.dynamics.ACCzfilter, 0, Modelist.dynamics.Vbdot, mathauxiliary::VECTOR_Z);
 
 		// atmoshpere block to the height of the aircraft
 		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.atmosphere, 0, Modelist.dynamics.height, 0);
-
 
 		// connect the aero angle block
 		SimInstance1.BatchEditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_R_BI00, aero::AERO_INPUT_R_BI22, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_BI00, dynamics::KINEMATICS_OUTPUT_R_BI22);
@@ -469,9 +513,11 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_RHO, Modelist.aerodynamics.atmosphere, geographic::AtmDensity);
 		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_SOUNDSPEED, Modelist.aerodynamics.atmosphere, geographic::AtmSoundSpeed);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_P, aero::AERO_INPUT_R, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
-		SimInstance1.BatchEditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_Vbdotx, aero::AERO_INPUT_Vbdotz, Modelist.dynamics.Vbdot, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_Vbx, aero::AERO_INPUT_Vbz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, dynamics::KINEMATICS_OUTPUT_VBz);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_VIx, aero::AERO_INPUT_VIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_Vbdotx, Modelist.dynamics.ACCxfilter, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_Vbdoty, Modelist.dynamics.ACCyfilter, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroangle, aero::AERO_INPUT_Vbdotz, Modelist.dynamics.ACCzfilter, 0);
 
 		// connect the AOArate and beta rate to filters
 
@@ -487,8 +533,8 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_MACHNUMBER, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_MACHNUMBER);
 		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_DYNAMICPRESSURE, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_DYNAMICPRESSURE);
 
-		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_AOARATE_FILTERED, Modelist.aerodynamics.filteredAOArate, 0);
-		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_SIDESLIPRATE_FILTERED, Modelist.aerodynamics.filteredBetarate, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_AOARATE_FILTERED, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_AOARATE);
+		// SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_SIDESLIPRATE_FILTERED, Modelist.aerodynamics.filteredBetarate, 0);
 
 		// connect engine block
 		// connect the propeller to the shaft dynamics
@@ -500,7 +546,7 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.engine.shaftdynamics, 0, Modelist.engine.shaftinertia, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.engine.shaftinertia, 0, Modelist.engine.totaltorque, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.engine.totaltorque, 0, Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_OUTPUT_Q);
-		SimInstance1.EditConnectionMatrix(Modelist.engine.totaltorque, 1, Modelist.engine.pistonengine, propulsionsystem::PROPELLER_OUTPUT_Q);
+		SimInstance1.EditConnectionMatrix(Modelist.engine.totaltorque, 1, Modelist.engine.propeller, propulsionsystem::PROPELLER_OUTPUT_Q);
 		// connect the piston engine to the shaft
 
 		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_SHAFTRPS, Modelist.engine.omega2rps, 0);
@@ -513,11 +559,17 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.engine.thrustforce, 0, Modelist.engine.propeller, propulsionsystem::PROPELLER_OUTPUT_T);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.engine.thrustforce, 1, 3, Modelist.engine.propellerorientation, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
-		// connect the total force
-		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalforce, 0, 2, Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBx, aero::AEROFORCE_OUTPUT_FBz);
-		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalforce, 3, 5, Modelist.engine.thrustforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
-		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalforce, 6, 8, Modelist.dynamics.gravitybody, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+		// connect all body forces
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalbodyforce, 0, 2, Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBx, aero::AEROFORCE_OUTPUT_FBz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalbodyforce, 3, 5, Modelist.engine.thrustforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
+		// rotate body forces to inertial frame
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.rotation2inertialframe, 0, 8, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.rotation2inertialframe, 9, 11, Modelist.dynamics.sumtotalbodyforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	
+		// connect all inertial forces
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalinertialforce, 0, 2, Modelist.dynamics.rotation2inertialframe, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalinertialforce, 3, 5, Modelist.dynamics.gravityinertial, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);	
 
 	}
 }

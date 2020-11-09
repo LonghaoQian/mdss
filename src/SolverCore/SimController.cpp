@@ -383,7 +383,7 @@ namespace simulationcontrol {
 		else {
 			if (from_input_ID >= subsystem_list[handleID]->GetSystemInfo().num_of_inputs) {
 				if (solver_config.loglevel >= LOGLEVEL_ERROR) {
-					std::cout << " CONNNECTION ERROR: THE INPUT PORT ID IS: " 
+					std::cout << " CONNNECTION ERROR: THE INPUT PORT ID FOR SYSTEM " << handleID << " IS: " 
 							  << from_input_ID << ". HOWEVER, THE TOTAL NUMBER OF INPUT FOR THE SYSTEM IS: "
 							  << subsystem_list[handleID]->GetSystemInfo().num_of_inputs << "\n";
 				}

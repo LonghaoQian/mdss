@@ -194,7 +194,12 @@ namespace aircraft {
 			unsigned int product{ 0 };
 			unsigned int height{ 0 };
 			unsigned int climbrate{ 0 };
-			unsigned int sumtotalforce{ 0 };
+			unsigned int sumtotalinertialforce{ 0 };
+			unsigned int ACCxfilter{ 0 };
+			unsigned int ACCyfilter{ 0 };
+			unsigned int ACCzfilter{ 0 };
+			unsigned int sumtotalbodyforce{ 0 };
+			unsigned int rotation2inertialframe{ 0 };
 		}dynamics;
 
 		struct {
@@ -217,8 +222,14 @@ namespace aircraft {
 		}engine;
 
 		struct {
-
-		}autopilot;
+			unsigned int Qgain1{ 0 };
+			unsigned int Qgain2{ 0 };
+			unsigned int degain{ 0 };
+			unsigned int Detrim{ 0 };
+			unsigned int Detrimlimit{ 0 };
+			unsigned int Detrimgain{ 0 };
+			unsigned int DeCom{ 0 };
+		}pitchCAS;
 
 		struct {
 			unsigned int fixedthrottle;

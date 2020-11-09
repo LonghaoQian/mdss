@@ -5,11 +5,208 @@
 #include "SimController.h"
 #include "Aircraftmodel.h"
 #include <time.h>
+
+// #define DEBUG
 int main()
 {
 	
-	clock_t t;
+#ifndef DEBUG
+
+	/*------------- define initial condition --------------------*/
+	aircraft::initialcondition C172initialcondition;
+
+	C172initialcondition.engine.propellerRPM = 2200.0; // RPM
+	C172initialcondition.plane.omegax = 0.0;
+	C172initialcondition.plane.omegay = 0.0;
+	C172initialcondition.plane.omegaz = 0.0;
+	C172initialcondition.plane.inertialpositionx = 10.0;
+	C172initialcondition.plane.inertialpositiony = 10.0;
+	C172initialcondition.plane.inertialpositionz = -1000.0;// initial height NED frame
+	C172initialcondition.plane.inertialvelocityx = 50.0; // 
+	C172initialcondition.plane.inertialvelocityy = 1.0;
+	C172initialcondition.plane.inertialvelocityz = 0.5;
+	C172initialcondition.plane.roll = 0.0;
+	C172initialcondition.plane.pitch = 5.0/57.3;
+	C172initialcondition.plane.yaw = 0.0/57.3;
+
+	/*----------------define system parameter ---------------------*/
+	simulationcontrol::SolverConfig config1;
+	config1.eposilon = 0.00001;
+	config1.adaptive_step = false;
+	config1.frame_step = 0.02;
+	config1.mim_step = 0.005;
+	config1.start_time = 0.0;
+	config1.solver_type = RungeKuttaFamily::RUNGKUTTA45;
+	config1.loggingconfig.filename = "c172log.txt";
+	config1.loggingconfig.uselogging = true;
+	config1.loglevel = simulationcontrol::LOGLEVEL_ERROR;
+
+
+	aircraft::modelparameter C172parameter;
+	C172parameter.Config = config1;
+	C172parameter.geometry.MeanChord    = 1.493520000000000; // m
+	C172parameter.geometry.ReferenceArea = 16.1651289600000; // m^2
+	C172parameter.geometry.Span = 10.097; // m
+
+	C172parameter.aerodynamics.MinAirspeed = 0.1; // m/s
+	C172parameter.aerodynamics.lift.CL0 = 0.27;
+	C172parameter.aerodynamics.lift.CLalpha = 4.6564;
+	C172parameter.aerodynamics.lift.CLalphaflap = 0.0;
+	C172parameter.aerodynamics.lift.CLalpha_cubed = 0.0;
+	C172parameter.aerodynamics.lift.CLalpha_dot = 1.7;
+	C172parameter.aerodynamics.lift.CLalpha_squared = 0.0;
+	C172parameter.aerodynamics.lift.CLde = -0.24;
+	C172parameter.aerodynamics.lift.CLflap = 0.0;
+	C172parameter.aerodynamics.lift.CLflap_squared = 0.0;
+	C172parameter.aerodynamics.lift.CLq = 3.9;
+
+	C172parameter.aerodynamics.drag.CD0_ = 0.032;
+	C172parameter.aerodynamics.drag.CDbeta_ = 0.17;
+	C172parameter.aerodynamics.drag.CDde_ = 0.06;
+	C172parameter.aerodynamics.drag.CDground_ = 0.0;
+	C172parameter.aerodynamics.drag.CD_alpha_ = 0.49;
+	C172parameter.aerodynamics.drag.CD_alpha_squared_ = 0.0;
+	C172parameter.aerodynamics.drag.CD_flap_ = 0.0;
+	C172parameter.aerodynamics.drag.CD_flap_squared_ = 0.0;
+
+	C172parameter.aerodynamics.side.CYb = -0.3095;
+	C172parameter.aerodynamics.side.CYda = -0.05; 
+	C172parameter.aerodynamics.side.CYdr = 0.098;
+	C172parameter.aerodynamics.side.CYp = -0.037;
+	C172parameter.aerodynamics.side.CYr = 0.21;
+
+	C172parameter.aerodynamics.roll.Clb_ = -0.0891;
+	C172parameter.aerodynamics.roll.Clda_ = 0.23;
+	C172parameter.aerodynamics.roll.Cldr_ = 0.0147;
+	C172parameter.aerodynamics.roll.Clr_ = 0.0147;
+	C172parameter.aerodynamics.roll.Clp_ = -0.47;
+
+	C172parameter.aerodynamics.pitch.Cm0_ = 0.1;
+	C172parameter.aerodynamics.pitch.Cmadot_ = -5.2;
+	C172parameter.aerodynamics.pitch.Cmalpha_ = -1.8;
+	C172parameter.aerodynamics.pitch.Cmde_ = -1.18;
+	C172parameter.aerodynamics.pitch.Cmq_ = -12.4;
+	C172parameter.aerodynamics.pitch.Cm_flap_ = 0.0;
+	C172parameter.aerodynamics.pitch.Cm_flap_squared_ = 0.0;
+
+	C172parameter.aerodynamics.yaw.Cnb_ = 0.0650;
+	C172parameter.aerodynamics.yaw.Cnda_ = 0.0053;
+	C172parameter.aerodynamics.yaw.Cndr_ = -0.043;
+	C172parameter.aerodynamics.yaw.Cnp_ = -0.03;
+	C172parameter.aerodynamics.yaw.Cnr_ = -0.099;
 	
+	C172parameter.inertia.EmptyWeight = 1454.0*0.453592; //kg
+	C172parameter.inertia.Pilot1 = 190 * 0.453592; //kg
+	C172parameter.inertia.Pilot2 = 190 * 0.453592; //kg
+	C172parameter.inertia.Pilot3 = 0.0;
+	C172parameter.inertia.Pilot4 = 0.0;
+	C172parameter.inertia.J.setZero();
+	C172parameter.inertia.J(0, 0) = 1285.31541660000;
+	C172parameter.inertia.J(1, 1) = 1824.93096070000;
+	C172parameter.inertia.J(2, 2) = 2666.89390765000;
+
+	C172parameter.pistonengine.idle_RPM = 550;
+	C172parameter.pistonengine.krho0 = 1.115;
+	C172parameter.pistonengine.krho1 = -0.1146;
+	C172parameter.pistonengine.sfc = 0.435*(0.453592 / (745.7 * 3600)); // LB / BHP / HR
+	C172parameter.pistonengine.MixturePowerFactorSFCfactorChart.resize(11, 2);
+	C172parameter.pistonengine.MixturePowerFactorSFCfactorChart<< -1.0000, 0.8500,
+		-0.8000, 0.8000,
+		-0.6000, 0.8500,
+		-0.4000, 0.9000,
+		-0.2000, 0.9500,
+		0.00, 1.0000,
+		0.2000, 1.0600,
+		0.4000, 1.1200,
+		0.6000, 1.1800,
+		0.8000, 1.2400,
+		1.0000, 1.3000;
+	C172parameter.pistonengine.PowerMixtureChart.resize(11, 2);
+	C172parameter.pistonengine.PowerMixtureChart<< -1.0000, 0.0500,
+		-0.8000, 0.8000,
+		-0.6000, 0.9600,
+		-0.4000, 0.9800,
+		-0.2000, 0.9990,
+		0.00, 1.0000,
+		0.2000, 0.9990,
+		0.4000, 0.9900,
+		0.6000, 0.9700,
+		0.8000, 0.9500,
+		1.0000, 0.9300;
+	C172parameter.pistonengine.TorqueRPMChart.resize(24, 2);
+	C172parameter.pistonengine.TorqueRPMChart << 500, 725.763194472288, // Nm vs RPM
+		600, 664.410616734446,
+		700, 620.587346921702,
+		800, 587.719894562144,
+		900, 562.156320504710,
+		1000, 541.705461258763,
+		1100, 524.972940057533,
+		1200, 511.029172389842,
+		1300, 499.230599747950,
+		1400, 489.117537483470,
+		1500, 480.352883520921,
+		1600, 472.683811303691,
+		1700, 465.916982876723,
+		1800, 459.902024274974,
+		1900, 454.520219210251,
+		2000, 449.676594652001,
+		2100, 445.294267670726,
+		2200, 440.913828809650,
+		2300, 433.880170608433,
+		2400, 430.340355696709,
+		2500, 424.292329076107,
+		2600, 418.709535272474,
+		2700, 410.955654989650,
+		2800, 406.247941960793;
+	C172parameter.pistonengine.shaft_damping = -0.005;
+	C172parameter.pistonengine.superchargerfactor = 1.0;
+	C172parameter.pistonengine.stater_breakaway_RPM = 560;
+	C172parameter.pistonengine.stater_zero_torque_RPM = 700;
+
+	C172parameter.propeller.Chart.resize(16, 3);
+	C172parameter.propeller.Chart << 0.0, 0.0990, 0.0400,
+		0.1000, 0.0950, 0.0406,
+		0.2000, 0.0880, 0.0406,
+		0.3000, 0.0780, 0.0400,
+		0.4000, 0.0645, 0.0366,
+		0.5000, 0.0495, 0.0318,
+		0.6000, 0.0340, 0.0250,
+		0.7000, 0.0185, 0.0160,
+		0.8000, 0.0040, 0.0050,
+		0.9000, -0.0160, -0.0067,
+		1.0000, -0.0300, -0.0150,
+		1.1000, -0.0400, -0.0200,
+		1.2000, -0.0500, -0.0250,
+		1.5000, -0.0550, -0.0270,
+		1.6000, -0.0650, -0.0300,
+		2.0000, -0.0750, -0.0330;
+
+	C172parameter.propeller.diameter = 76 * 0.0254; //m
+	C172parameter.propeller.minimumAngularRate = 1.0;
+	C172parameter.propeller.shaftinertia = 1.6700/(2.0*M_PI);
+
+	aircraft::C172input controlinput;
+
+
+	aircraft::AircraftDynamicModel C172aicraftmodel(C172parameter, C172initialcondition);
+	int start = 0;
+	std::cin >> start;
+	if (start != 1) {
+		std::cout << " Abort... " << std::endl;
+		return 0;
+	}
+	int N_steps = 1000;
+	for (int i = 0; i < N_steps; i++) {
+		C172aicraftmodel.UpdateSimulation(controlinput);
+	}
+
+	C172aicraftmodel.EndSimulation();
+#endif
+
+#ifdef DEBUG
+
+	clock_t t;
+
 	simulationcontrol::SolverConfig config1;
 	config1.eposilon = 0.00001;
 	config1.adaptive_step = false;
@@ -21,17 +218,6 @@ int main()
 	config1.loggingconfig.uselogging = true;
 	config1.loglevel = simulationcontrol::LOGLEVEL_ERROR;
 	simulationcontrol::SimController SimInstance1(config1);
-
-
-	aircraft::initialcondition C172initialcondition;
-
-
-	aircraft::modelparameter C172parameter;
-
-
-	aircraft::AircraftDynamicModel C172aicraftmodel(C172parameter, C172initialcondition);
-
-
 
 
 	double Span  = 10.097;
@@ -569,6 +755,7 @@ int main()
 	}
 
 	SimInstance1.PostRunProcess();
+#endif // DEBUG
 	getchar();
 	return 0;
 }

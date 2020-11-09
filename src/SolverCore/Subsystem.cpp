@@ -48,7 +48,9 @@ void Subsystem::OverrideDirectFeedThroughFlag(bool isDirectFeedThrough)
 void Subsystem::Solver_InitSolverBuffer(unsigned int num_of_kn)
 {
 	solver_buffer_output_temp.resize(system_info.num_of_outputs);
+	solver_buffer_output_temp.setZero();
 	solver_buffer_input_temp.resize(system_info.num_of_inputs);
+	solver_buffer_input_temp.setZero();
 	// initialize the increment first
 	solver_buffer_state_increment1.setZero(system_info.num_of_continuous_states);
 	solver_buffer_state_increment2.setZero(system_info.num_of_continuous_states);
@@ -58,6 +60,7 @@ void Subsystem::Solver_InitSolverBuffer(unsigned int num_of_kn)
 	{
 		solver_buffer_k_sequence.resize(1, 1);
 		system_info.NO_CONTINUOUS_STATE = true;
+		solver_buffer_k_sequence.setZero();
 	}
 	else {
 		solver_buffer_k_sequence.resize(system_info.num_of_continuous_states, num_of_kn);
@@ -65,7 +68,8 @@ void Subsystem::Solver_InitSolverBuffer(unsigned int num_of_kn)
 
 		solver_buffer_state_temp.resize(system_info.num_of_continuous_states);
 		solver_buffer_Ki_temp.resize(system_info.num_of_continuous_states);
-
+		solver_buffer_state_temp.setZero();
+		solver_buffer_Ki_temp.setZero();
 		system_info.NO_CONTINUOUS_STATE = false;
 	}
 }
