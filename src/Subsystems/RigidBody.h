@@ -126,6 +126,9 @@ namespace dynamics {
 		KINEMATICS_OUTPUT_R_BI02,
 		KINEMATICS_OUTPUT_R_BI12,
 		KINEMATICS_OUTPUT_R_BI22,
+		KINEMATICS_OUTPUT_PHIDOT,    // time deriavtive of the roll angle
+		KINEMATICS_OUTPUT_THETADOT,  // time derivative of the pitch angle 
+		KINEMATICS_OUTPUT_PSIDOT,    // time derivative of the yaw angle
 	};
 
 	enum RigidBodyKinematicsState {
@@ -159,6 +162,10 @@ namespace dynamics {
 		RigidBodyKinematicsInitialCondition InitialCondition;
 		Vector4d quaternion;
 		Matrix3d R_IB;
+		double sin_phi{ 0.0 };
+		double cos_phi{ 0.0 };
+		double tan_theta{ 0.0 };
+		double sec_theta{ 0.0 };
 	public:
 		void DifferentialEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& derivative);
 		void OutputEquation(const double& t, const VectorXd& state, const VectorXd& input, VectorXd& output);

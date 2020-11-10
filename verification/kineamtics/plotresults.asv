@@ -894,8 +894,8 @@ grid on
 title('sharftprs diff')
 %%
 
-figure(17)
-subplot(3,2,1)
+figure(16)
+subplot(4,2,1)
 
 plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('phidot')))
 hold on
@@ -906,58 +906,11 @@ ylabel('phi_dot(rad/s)')
 grid on
 title('phi_dot')
 
-subplot(3,2,2)
+subplot(4,2,4)
 
-plot(logged_data.data(:,logged_data.tagmap('t')), phi_dot - logged_data.data(:,logged_data.tagmap('phidot')))
+plot(logged_data.data(:,logged_data.tagmap('t')),sharftprs - logged_data.data(:,logged_data.tagmap('Shaftrps')))
 % 
 xlabel('t(s)')
-ylabel('phi_dot(rad/s)')
+ylabel('sharftprs(Nm)')
 grid on
-title('phi_dot diff')
-
-subplot(3,2,3)
-
-plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('thetadot')))
-hold on
-plot(logged_data.data(:,logged_data.tagmap('t')), theta_dot)
-legend('solver','simulink')
-xlabel('t(s)')
-ylabel('thetadot(rad/s)')
-grid on
-title('thetadot')
-
-subplot(3,2,4)
-
-plot(logged_data.data(:,logged_data.tagmap('t')),theta_dot - logged_data.data(:,logged_data.tagmap('thetadot')))
-% 
-xlabel('t(s)')
-ylabel('thetadot(rad/s)')
-grid on
-title('thetadot diff')
-
-subplot(3,2,5)
-
-plot(logged_data.data(:,logged_data.tagmap('t')), phi_dot - logged_data.data(:,logged_data.tagmap('psidot')))
-% 
-xlabel('t(s)')
-ylabel('phi_dot(rad/s)')
-grid on
-title('phi_dot diff')
-
-plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('psidot')))
-hold on
-plot(logged_data.data(:,logged_data.tagmap('t')), psi_dot)
-legend('solver','simulink')
-xlabel('t(s)')
-ylabel('psi_dott(rad/s)')
-grid on
-title('psi_dot')
-
-subplot(3,2,6)
-
-plot(logged_data.data(:,logged_data.tagmap('t')),psi_dot - logged_data.data(:,logged_data.tagmap('psidot')))
-% 
-xlabel('t(s)')
-ylabel('psi_dot(rad/s)')
-grid on
-title('psi_dot diff')
+title('sharftprs diff')

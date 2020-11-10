@@ -134,7 +134,7 @@ namespace dynamics {
 		system_info.DIRECT_FEED_THROUGH = false;
 		system_info.input_connection.resize(6, 2);
 		system_info.input_connection.setZero();
-		system_info.num_of_outputs = 33;
+		system_info.num_of_outputs = 36;
 		system_info.system_parameter_ok = true;
 		system_info.NO_CONTINUOUS_STATE = false;
 		output.resize(system_info.num_of_outputs);
@@ -163,6 +163,27 @@ namespace dynamics {
 		output.segment(KINEMATICS_OUTPUT_EulerRoll,3) = mathauxiliary::GetEulerAngleFromQuaterion(state.segment(KINEMATICS_STATE_q0, 4));
 		output.segment(KINEMATICS_OUTPUT_R_IB00,9) = mathauxiliary::ConvertRotationMatrixToVector(R_IB);
 		output.segment(KINEMATICS_OUTPUT_R_BI00,9) = mathauxiliary::ConvertRotationMatrixToVector(R_IB.transpose());
+		// calculate euler angle rate. reference: http://www.stengel.mycpanel.princeton.edu/Quaternions.pdf
+		sin_phi = sin(output(KINEMATICS_OUTPUT_EulerRoll));
+		cos_phi = cos(output(KINEMATICS_OUTPUT_EulerRoll));
+		if (abs(abs(output(KINEMATICS_OUTPUT_EulerPitch)) - M_PI / 2.0) < 0.0087) { // 0.5 deg in rad
+			if (output(KINEMATICS_OUTPUT_EulerPitch) > 0) {
+				tan_theta = 113.09; // tan(89.5 deg)
+			} else {
+				tan_theta = - 113.09; // tan(89.5 deg)
+			}
+			sec_theta = 113.09; // sec(89.5 deg)
+		} else {
+			tan_theta = tan(output(KINEMATICS_OUTPUT_EulerPitch));
+			sec_theta = 1.0 / cos(output(KINEMATICS_OUTPUT_EulerPitch));
+		}
+
+		// q cos phi  - r sin phi = theta_dot
+		output(KINEMATICS_OUTPUT_THETADOT) = output(KINEMATICS_OUTPUT_OmegaBIy) * cos_phi - output(KINEMATICS_OUTPUT_OmegaBIz) * sin_phi;
+		// p + q sin phi tan theta + r cos phi tan theta
+		output(KINEMATICS_OUTPUT_PHIDOT) = output(KINEMATICS_OUTPUT_OmegaBIx) + sin_phi * tan_theta * output(KINEMATICS_OUTPUT_OmegaBIy) + cos_phi * tan_theta * output(KINEMATICS_OUTPUT_OmegaBIz);
+		// q sin phi sec theta + r cos phi sec theta
+		output(KINEMATICS_OUTPUT_PSIDOT) = output(KINEMATICS_OUTPUT_OmegaBIy) *sin_phi * sec_theta + cos_phi * sec_theta * output(KINEMATICS_OUTPUT_OmegaBIz);
 	}
 	void RigidBodyKinematics::DisplayParameters()
 	{

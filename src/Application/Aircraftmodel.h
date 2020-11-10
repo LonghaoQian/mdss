@@ -200,6 +200,8 @@ namespace aircraft {
 			unsigned int ACCzfilter{ 0 };
 			unsigned int sumtotalbodyforce{ 0 };
 			unsigned int rotation2inertialframe{ 0 };
+			unsigned int planecurrentweight{ 0 };
+			unsigned int loadfactor{ 0 };
 		}dynamics;
 
 		struct {

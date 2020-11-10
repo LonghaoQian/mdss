@@ -6,7 +6,7 @@
 #include "Aircraftmodel.h"
 #include <time.h>
 
-// #define DEBUG
+#define DEBUG
 int main()
 {
 	
@@ -189,6 +189,7 @@ int main()
 
 
 	aircraft::AircraftDynamicModel C172aicraftmodel(C172parameter, C172initialcondition);
+	clock_t t; // measure the time used
 	int start = 0;
 	std::cin >> start;
 	if (start != 1) {
@@ -684,6 +685,10 @@ int main()
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, "XIx");
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_XIy, "XIy");
 	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_XIz, "XIz");
+
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_PHIDOT, "phidot");
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_THETADOT, "thetadot");
+	SimInstance1.DefineDataLogging(planekinematics, dynamics::KINEMATICS_OUTPUT_PSIDOT, "psidot");
 
 	SimInstance1.DefineDataLogging(sum_Vb, mathauxiliary::VECTOR_X, "Vb_dotx");
 	SimInstance1.DefineDataLogging(sum_Vb, mathauxiliary::VECTOR_Y, "Vb_doty");

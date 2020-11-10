@@ -26,12 +26,7 @@ namespace  aircraft {
 		// run preprocess
 		modelok = SimInstance1.PreRunProcess();
 
-		//SimInstance1.DisplaySystemParameter(Modelist.dynamics.ACCxfilter);
-		//SimInstance1.DisplaySystemParameter(Modelist.dynamics.ACCyfilter);
-		//SimInstance1.DisplaySystemParameter(Modelist.dynamics.ACCzfilter);
-		SimInstance1.DisplaySystemParameter(Modelist.dynamics.planedynamics);
-		SimInstance1.DisplaySystemParameter(Modelist.dynamics.gravityinertial);
-		//SimInstance1.DisplayLoggerTagList();
+		//SimInstance1.DisplayLoggerTagList(); // logge tag list display
 
 		if (modelok) {
 			std::cout << " All good, ready to run. Enter 1 to start.../ Enter other number to stop ..." << std::endl;
