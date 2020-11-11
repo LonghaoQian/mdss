@@ -6,7 +6,7 @@
 #include "Aircraftmodel.h"
 #include <time.h>
 
-#define DEBUG
+//#define DEBUG
 int main()
 {
 	
@@ -197,10 +197,13 @@ int main()
 		return 0;
 	}
 	int N_steps = 1000;
+	t = clock();
 	for (int i = 0; i < N_steps; i++) {
 		C172aicraftmodel.UpdateSimulation(controlinput);
 	}
-
+	t = clock() - t;
+	std::cout << "Calculation Takes " << t << " clicks " << ((float)t) / CLOCKS_PER_SEC << " seconds \n";
+	std::cout << "The speed  ratio is " << (double)N_steps * config1.frame_step / (((double)t) / CLOCKS_PER_SEC) << '\n';
 	C172aicraftmodel.EndSimulation();
 #endif
 

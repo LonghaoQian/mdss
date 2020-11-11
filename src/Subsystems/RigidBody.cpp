@@ -82,18 +82,19 @@ namespace dynamics {
 
 	void RigidBody::DisplayParameters()
 	{
-		std::cout << "---------------------" << std::endl;
-		std::cout << "rigidbody parameter:" << std::endl;
-		std::cout << "J = " << std::endl << J << std::endl;
-		std::cout << "m = " << std::endl << m << std::endl;
+		std::cout << "--------- Rigid-body block parameters ------------" << std::endl;
+		std::cout << "Moment of inertia J = " << std::endl << J << std::endl;
+		std::cout << "Mass m = " << std::endl << m << std::endl;
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void RigidBody::DisplayInitialCondition()
 	{
-		std::cout << "---------------------" << std::endl;
+		std::cout << "-------- Rigid-body block initial conditions --------" << std::endl;
 		std::cout << "Rigidbody initial condition X_0:" << std::endl;
 		std::cout << "The initial condition is:  " << std::endl;
 		std::cout << state << std::endl;
+		std::cout << "-------- End of initial conditions --------" << std::endl;
 	}
 
 	void RigidBody::IncrementState()
@@ -187,15 +188,16 @@ namespace dynamics {
 	}
 	void RigidBodyKinematics::DisplayParameters()
 	{
-		std::cout << "-------NO parameters for kinematics block-------" << std::endl;
+		std::cout << "-------- No parameters for kinematics block --------" << std::endl;
 	}
 	void RigidBodyKinematics::DisplayInitialCondition()
 	{
-		std::cout << "---------------------" << std::endl;
+		std::cout << "-------- Kinematics block parameters --------" << std::endl;
 		std::cout << "Initial Velocity: " << InitialCondition.VI0 << std::endl;
 		std::cout << "Initial Position: " << InitialCondition.XI0 << std::endl;
 		std::cout << "Initial Omega: " << InitialCondition.Omega0<< std::endl;
 		std::cout << "Initial Euler: " << InitialCondition.Euler0 << std::endl;
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 	void RigidBodyKinematics::IncrementState()
 	{
@@ -253,15 +255,16 @@ namespace dynamics {
 
 	void RigidBodyDynamics::DisplayParameters()
 	{
-		std::cout << "---------------------" << std::endl;
+		std::cout << "-------- Rigid-body dynamics block paramters --------" << std::endl;
 		std::cout << "Mass: " << m << std::endl;
 		std::cout << "Moment of inertia: " << std::endl;
 		std::cout << J << std::endl;
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void RigidBodyDynamics::DisplayInitialCondition()
 	{
-		std::cout << "------- No initial condition for rigid dynamics -------" << std::endl;
+		std::cout << "-------- No initial condition for rigid-body dynamics block --------" << std::endl;
 	}
 
 	void RigidBodyDynamics::IncrementState()

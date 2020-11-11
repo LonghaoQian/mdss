@@ -152,14 +152,15 @@ void aero::AeroForceMoment1::IncrementState()
 void aero::AeroForceMoment1::DisplayParameters()
 {
 	// display aeroparameters
-	std::cout << "The parameters of the aeroforce and aeromoment are: " << std::endl;
+	std::cout << "--------- Aeroforce and aeromoment block parameters ---------" << std::endl;
 	std::cout << "S : " << param_.S << " m^2. Cbar : " << param_.c_bar_ <<" m. b : " << param_.b_<<" m. " << std::endl;
 	std::cout << "CDalphasquare: " << param_.AeroCoefficient.Drag.CD_alpha_squared_ << "\n";
+	std::cout << "-------- End of block parameters -------- \n" << std::endl;
 }
 
 void aero::AeroForceMoment1::DisplayInitialCondition()
 {
-	std::cout << "No Initial Condition for aero force and moment block" << std::endl;
+	std::cout << "--------- No initial condition for aero force and moment block ---------" << std::endl;
 }
 void aero::AeroForceMoment1::CalculateR_BW(const double & alpha_, const double & beta_)
 {

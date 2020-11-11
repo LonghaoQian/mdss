@@ -24,6 +24,9 @@ namespace  aircraft {
 		// define logging
 		DefineLogging();
 		// run preprocess
+
+		SimInstance1.DisplaySystemParameter(Modelist.dynamics.loadfactorfluy);
+
 		modelok = SimInstance1.PreRunProcess();
 
 		//SimInstance1.DisplayLoggerTagList(); // logge tag list display
@@ -98,7 +101,7 @@ namespace  aircraft {
 		gravity_param.value.resize(3, 1);
 		gravity_param.value(0) = 0.0;
 		gravity_param.value(1) = 0.0;
-		gravity_param.value(2) = 9.81*dynamics_parameter.m;
+		gravity_param.value(2) = gravityacc *dynamics_parameter.m;
 		Modelist.dynamics.gravityinertial = SimInstance1.AddSubSystem(gravity_param);
 		// define gravity in body fixed frame
 		mathblocks::MultiplicationParam multiple_1_param;
@@ -146,20 +149,18 @@ namespace  aircraft {
 		climbrate_param.Mode = mathblocks::ElementWise;
 		climbrate_param.num_of_inputs = 1;
 		Modelist.dynamics.climbrate= SimInstance1.AddSubSystem(climbrate_param);
-		// ACC filter 
+		// acceleration filter, to 
 		linearsystem::TransferFunctionParameter ACCxfilterparam;
 		ACCxfilterparam.Numerator.resize(1);
 		ACCxfilterparam.Numerator(0) = 30.0;
 		ACCxfilterparam.Denominator.resize(2);
 		ACCxfilterparam.Denominator(0) = 1.0;
 		ACCxfilterparam.Denominator(1) = 30.0;
+		// use the same parameters for all three filters
 		Modelist.dynamics.ACCxfilter= SimInstance1.AddSubSystem(ACCxfilterparam);
-
 		Modelist.dynamics.ACCyfilter = SimInstance1.AddSubSystem(ACCxfilterparam);
 		Modelist.dynamics.ACCzfilter = SimInstance1.AddSubSystem(ACCxfilterparam);
-
-
-		// total force
+		// the total force
 		mathblocks::SumParameter sum_total_bodyforce_parameter;
 		sum_total_bodyforce_parameter.input_dimensions = 3;                         // 
 		sum_total_bodyforce_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // aerodynamics
@@ -173,8 +174,27 @@ namespace  aircraft {
 		multiple_3_param.input2_dimension(mathblocks::MATRIX_ROW) = 3;
 		multiple_3_param.input2_dimension(mathblocks::MATRIX_COL) = 1;
 		Modelist.dynamics.rotation2inertialframe = SimInstance1.AddSubSystem(multiple_3_param);
-
-
+		// the current mass TO DO: change it to varying mass later..
+		mathblocks::ConstantParameter planecurrentmass_param;
+		planecurrentmass_param.value.resize(1);
+		planecurrentmass_param.value(0) = 1.0 /(gravityacc*dynamics_parameter.m);
+		Modelist.dynamics.planecurrentweight = SimInstance1.AddSubSystem(planecurrentmass_param);
+		// calculate the load factor in body-fixed frame
+		mathblocks::MultiplicationParam loadfactorbody_param;
+		loadfactorbody_param.Mode = mathblocks::MULTI_SCALAR;
+		loadfactorbody_param.input1_dimension(mathblocks::LOOKUP_INPUT_ROW) = 1;
+		loadfactorbody_param.input1_dimension(mathblocks::LOOKUP_INPUT_COL) = 1;
+		loadfactorbody_param.input2_dimension(mathblocks::LOOKUP_INPUT_ROW) = 3;
+		loadfactorbody_param.input2_dimension(mathblocks::LOOKUP_INPUT_COL) = 1;
+		Modelist.dynamics.loadfactor = SimInstance1.AddSubSystem(loadfactorbody_param);
+		// invert the y and z value to get the load factor in Forward-Left-Up frame
+		mathblocks::GainParameter  loadfactorfluy_param;
+		loadfactorfluy_param.K.resize(1, 1);
+		loadfactorfluy_param.K(0, 0) = -1.0;
+		loadfactorfluy_param.Mode = mathblocks::ElementWise;
+		loadfactorfluy_param.num_of_inputs = 1;
+		Modelist.dynamics.loadfactorfluy = SimInstance1.AddSubSystem(loadfactorfluy_param);
+		Modelist.dynamics.loadfactorfluz = SimInstance1.AddSubSystem(loadfactorfluy_param); // use the same paramter for z direction
 	}
 	void AircraftDynamicModel::DefineAerodynamics()
 	{
@@ -326,7 +346,6 @@ namespace  aircraft {
 		propellerorientation_param.value(0) = 1.0;
 		propellerorientation_param.value(1) = 0.0;
 		propellerorientation_param.value(2) = 0.0;
-
 		Modelist.engine.propellerorientation = SimInstance1.AddSubSystem(propellerorientation_param);
 
 
@@ -336,8 +355,6 @@ namespace  aircraft {
 		thrustforce_param.input1_dimension(mathblocks::MATRIX_COL) = 1;
 		thrustforce_param.input2_dimension(mathblocks::MATRIX_ROW) = 3;
 		thrustforce_param.input2_dimension(mathblocks::MATRIX_COL) = 1;
-
-
 		Modelist.engine.thrustforce = SimInstance1.AddSubSystem(thrustforce_param);
 
 		/* ------------------------------ some temp blocks -----------------------------*/
@@ -459,6 +476,11 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_X, "TOTALX");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_Y, "TOTALY");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_Z, "TOTALZ");
+
+		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactor, mathauxiliary::VECTOR_X, "loadfactorbodyx");
+		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactorfluy, 0, "loadfactorbodyy");
+		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactorfluz, 0, "loadfactorbodyz");
+
 	}
 	void AircraftDynamicModel::ConnectSystems()
 	{
@@ -566,5 +588,12 @@ namespace  aircraft {
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalinertialforce, 0, 2, Modelist.dynamics.rotation2inertialframe, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalinertialforce, 3, 5, Modelist.dynamics.gravityinertial, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);	
 
+		// connect load factor
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.loadfactor, 1, 3, Modelist.dynamics.sumtotalbodyforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+		SimInstance1.EditConnectionMatrix(Modelist.dynamics.loadfactor, 0, Modelist.dynamics.planecurrentweight, 0);
+		
+		// invert the y and z components of the load factor
+		SimInstance1.EditConnectionMatrix(Modelist.dynamics.loadfactorfluy, 0, Modelist.dynamics.loadfactor, mathauxiliary::VECTOR_Y);
+		SimInstance1.EditConnectionMatrix(Modelist.dynamics.loadfactorfluz, 0, Modelist.dynamics.loadfactor, mathauxiliary::VECTOR_Z);
 	}
 }

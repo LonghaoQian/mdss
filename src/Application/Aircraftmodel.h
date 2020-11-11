@@ -9,6 +9,9 @@ ________________________________________________________________________________
 #pragma once
 #include "SimController.h"
 namespace aircraft {
+
+	const double gravityacc{9.81};
+
 	enum stickinput {
 		INPUT_AILERON = 0,
 		INPUT_ELEVATOR,
@@ -202,6 +205,8 @@ namespace aircraft {
 			unsigned int rotation2inertialframe{ 0 };
 			unsigned int planecurrentweight{ 0 };
 			unsigned int loadfactor{ 0 };
+			unsigned int loadfactorfluy{0};
+			unsigned int loadfactorfluz{ 0 };
 		}dynamics;
 
 		struct {
@@ -232,6 +237,11 @@ namespace aircraft {
 			unsigned int Detrimgain{ 0 };
 			unsigned int DeCom{ 0 };
 		}pitchCAS;
+
+		struct
+		{
+
+		}autothrottle;
 
 		struct {
 			unsigned int fixedthrottle;

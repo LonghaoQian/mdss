@@ -40,6 +40,7 @@ enum subsystem_type {
 	geographic_GRAVITY,
 	math_CONSTANT,
 	math_CROSSPRODUCT,
+	math_DIVISION,
 	math_GAIN,
 	math_LOOKUP1D,
 	math_LOOKUP2D,

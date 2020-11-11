@@ -169,7 +169,7 @@ namespace mathblocks {
 		void DisplayInitialCondition();
 		~Gain();
 	};
-	//-----------------------------------------------//
+	//------------------ sum block ---------------------//
 
 	enum SumSignList {
 		SUM_POSITIVE = 1,
@@ -202,7 +202,42 @@ namespace mathblocks {
 		VectorXd Sign;
 		int num_of_channels;
 	};
-	//-----------------------------------------------//
+	/*------------------- product-division block -----------------*/
+	enum DivisionList {
+		PRODUCT = 1,
+		DIVISION = -1
+	};
+
+	struct DivisionParameter {
+		int input_dimensions;
+		vector<DivisionList> SignList;
+	};
+	class Division :
+		public Subsystem
+	{
+	public:
+		Division(const  DivisionParameter & param);
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~Division();
+	private:
+		DivisionParameter param_;
+		VectorXd Product;
+		VectorXd Divide;
+		int num_of_product;
+		int num_of_divide;
+		int num_of_channels;
+	};
+
+	//---------------- trigonometry functions--------------------//
 	enum TrigonometryType{
 		SIN = 0,
 		COS,
@@ -241,8 +276,8 @@ namespace mathblocks {
 	};
 
 	struct TrigonometryParameter {
-		int num_of_channels;
-		TrigonometryType type;
+		int num_of_channels;    // the total dimensions of signals passing through this block
+		TrigonometryType type;  // 
 	};
 
 	class TrigonometricFunction :

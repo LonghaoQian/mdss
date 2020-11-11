@@ -39,13 +39,15 @@ namespace mathblocks {
 
 	void Constant::DisplayParameters()
 	{
+		std::cout << "--------- Constant block parameters ------------" << std::endl;
 		std::cout << "Constant Value is :" << std::endl;
 		std::cout << "V = " << std::endl << param_.value << std::endl;
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void Constant::DisplayInitialCondition()
 	{
-		std::cout << "------No initial condition for constant block----------" << std::endl;
+		std::cout << "--------- No initial condition for constant block ---------" << std::endl;
 	}
 
 
@@ -172,6 +174,7 @@ namespace mathblocks {
 
 	void Multiplication::DisplayParameters()
 	{
+		std::cout << "--------- Product block parameters ------------" << std::endl;
 		switch (param_.Mode) {
 		case MULTI_MATRIX:
 			std::cout << "Mode is : Matrix " << std::endl;
@@ -191,11 +194,12 @@ namespace mathblocks {
 		}
 		std::cout << "the dimension of the 1st input is set to: " << param_.input1_dimension(MATRIX_ROW) << " X " << param_.input1_dimension(MATRIX_COL) << std::endl;
 		std::cout << "the dimension of the 2nd input is set to: " << param_.input2_dimension(MATRIX_ROW) << " X " << param_.input2_dimension(MATRIX_COL) << std::endl;
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void Multiplication::DisplayInitialCondition()
 	{
-		std::cout << "------No initial condition for product block----------" << std::endl;
+		std::cout << "--------- No initial condition for product block ---------" << std::endl;
 	}
 
 
@@ -245,12 +249,12 @@ namespace mathblocks {
 
 	void CrossProduct::DisplayParameters()
 	{
-		std::cout << " No parameter for cross-product block \n";
+		std::cout << "--------- No parameter for cross-product block --------- \n";
 	}
 
 	void CrossProduct::DisplayInitialCondition()
 	{
-		std::cout << "------No initial condition for cross-product block----------" << std::endl;
+		std::cout << "--------- No initial condition for cross-product block ----------" << std::endl;
 	}
 
 	CrossProduct::~CrossProduct()
@@ -329,6 +333,7 @@ namespace mathblocks {
 
 	void Gain::DisplayParameters()
 	{
+		std::cout << "--------- Gain block parameters ---------" << std::endl;
 		std::cout << "Gain is :" << std::endl;
 		std::cout << "K = " << std::endl << K << std::endl;
 		switch (Mode) {
@@ -344,10 +349,11 @@ namespace mathblocks {
 		default:
 			break;
 		}
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 	void Gain::DisplayInitialCondition()
 	{
-		std::cout << "------No initial condition for gain block----------" << std::endl;
+		std::cout << "-------- No initial condition for gain block --------" << std::endl;
 	}
 
 	Gain::~Gain()
@@ -407,6 +413,7 @@ namespace mathblocks {
 
 	void Sum::DisplayParameters()
 	{
+		std::cout << "--------- Sum block parameters ------------" << std::endl;
 		std::cout << "The input dimension is : " << param_.input_dimensions << '\n';
 		std::cout << "The number of channels is : " << num_of_channels << '\n';
 		std::cout << "The sign list is : \n";
@@ -422,11 +429,12 @@ namespace mathblocks {
 			std::cout << '\n';
 			j++;
 		}
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void Sum::DisplayInitialCondition()
 	{
-		std::cout << "------No initial condition for sum block----------" << std::endl;
+		std::cout << "-------- No initial condition for sum block --------" << std::endl;
 	}
 
 	Sum::~Sum()
@@ -480,6 +488,7 @@ namespace mathblocks {
 
 	void Lookup1D::DisplayParameters()
 	{
+		std::cout << "--------- Lookup 1D block parameters ------------" << std::endl;
 		if (system_info.system_parameter_ok == 0) {
 			std::cout << "The lookup reference data is:  " << std::endl;
 			std::cout << param_.reference << std::endl;
@@ -489,6 +498,7 @@ namespace mathblocks {
 		else {
 			std::cout << "Incorrect Table File!  " << std::endl;
 		}
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void Lookup1D::DisplayInitialCondition()
@@ -553,6 +563,7 @@ namespace mathblocks {
 
 	void Lookup2D::DisplayParameters()
 	{
+		std::cout << "--------- Lookup 2D block parameters ------------" << std::endl;
 		if (system_info.system_parameter_ok == 0) {
 			std::cout << "The lookup row reference data is:  " << std::endl;
 			std::cout << param_.reference_row << std::endl;
@@ -564,11 +575,12 @@ namespace mathblocks {
 		else {
 			std::cout << "Incorrect Table File!  " << std::endl;
 		}
+		std::cout << "-------- End of initial conditions --------" << std::endl;
 	}
 
 	void Lookup2D::DisplayInitialCondition()
 	{
-		std::cout << "------No initial condition for lookup block----------" << std::endl;
+		std::cout << "-------- No initial condition for lookup block --------" << std::endl;
 	}
 
 	Lookup2D::~Lookup2D()
@@ -621,7 +633,7 @@ namespace mathblocks {
 	{
 		if (param_.type == TrigonometryType::ATAN2) {
 			for (int i = 0; i < param_.num_of_channels; i++) {
-				output(i) = atan2(input(i), input(param_.num_of_channels + i));// for atan 2 i and i + number of input channel are y and x inputs
+				output(i) = atan2(input(i), input(param_.num_of_channels + i));// for atan2 function i and i + number of input channel are y and x inputs
 			}
 		}
 		else
@@ -640,15 +652,58 @@ namespace mathblocks {
 
 	void TrigonometricFunction::DisplayParameters()
 	{
-		std::cout << "The function is selected as: " << TrigFunctionNameList[param_.type] << std::endl;
+		std::cout << "--------- Trigonometric block parameters ------------" << std::endl;
+		std::cout << " The function is selected as: " << TrigFunctionNameList[param_.type] << std::endl;
+		std::cout << " The total number of inputs is: " << system_info.num_of_inputs << '\n';
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void TrigonometricFunction::DisplayInitialCondition()
 	{
-		std::cout << "------No initial condition for trigonometric function block----------" << std::endl;
+		std::cout << "-------- No initial condition for trigonometric function block --------" << std::endl;
 	}
 
 	TrigonometricFunction::~TrigonometricFunction()
+	{
+	}
+	/*------------------------------- Division block -----------------------------------*/
+	Division::Division(const DivisionParameter & param)
+	{
+
+	}
+
+	void Division::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
+	{
+	}
+
+	void Division::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
+	{
+		output(0) = 1.0; // reset output
+		for (int i = 0; i < num_of_product; i++) {
+			output(0) *= input(Product(i));        // make the multiplication first
+		}
+		for (int i = 0; i < num_of_divide; i++) {  // then make the division
+			output(0) /= input(Divide(i));
+		}
+
+	}
+
+	void Division::IncrementState()
+	{
+		// no increment state for division block
+	}
+
+	void Division::DisplayParameters()
+	{
+		
+	}
+
+	void Division::DisplayInitialCondition()
+	{
+
+	}
+
+	Division::~Division()
 	{
 	}
 

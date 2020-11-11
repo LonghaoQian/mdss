@@ -315,5 +315,29 @@ xlabel('t(s)')
 ylabel('Force (N)')
 grid on
 title('Total inerita force Z')
+%%
+figure(9)
+
+subplot(3,2,1)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('loadfactorbodyx')))
+xlabel('t(s)')
+ylabel('loadfactorbodyx')
+grid on
+title('loadfactorbodyx')
+
+subplot(3,2,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('loadfactorbodyy')))
+xlabel('t(s)')
+ylabel('loadfactorbodyy')
+grid on
+title('loadfactorbodyy')
+
+subplot(3,2,3)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('loadfactorbodyz')))
+xlabel('t(s)')
+ylabel('loadfactorbodyz')
+grid on
+title('loadfactorbodyz')
+
 
 

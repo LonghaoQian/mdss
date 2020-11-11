@@ -19,7 +19,7 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{aero_AROANGLE, "Aero angles block"},
 	{aero_AROFORCEMENT, "Aeroforce block"},
 	{continous_INTEGRATOR, "Integrator block"},
-	{continous_LTI, "LTI"},
+	{continous_LTI, "LTI block"},
 	{continous_PIDcontroller, "PID-controller block"},
 	{continous_RIGIDBODY,"Rigid-body block"},
 	{continous_RIGIDDYNAMICS, "Rigid-dynamics block"},
@@ -32,19 +32,20 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{geographic_GRAVITY, "Gravity block"},
 	{math_CONSTANT, "Constant block"},
 	{math_CROSSPRODUCT, "Cross-product block"},
+	{math_DIVISION, "Division block"},
 	{math_GAIN, "Gain block "},
 	{math_LOOKUP1D,"1D Lookup block"},
 	{math_LOOKUP2D,"2D Lookup block"},
 	{math_PRODUCT, "Product block"},
-	{math_SPECIALFUNCTION,"Special-function block"},
-	{math_TRIGONOMETRYFUNCTION,"Trignometry-function block"},
+	{math_SPECIALFUNCTION,"Special-function block  block"},
+	{math_TRIGONOMETRYFUNCTION,"Trignometry-function block  block"},
 	{math_SUM, "Summation block"},
-	{propulsion_CFM56AUXILIARYMODEL, "CFM56 Auxiliary Model block"},
+	{propulsion_CFM56AUXILIARYMODEL, "CFM56 Auxiliary Model block  block"},
 	{propulsion_CFM56THRUST, "CFM56 Thrust block"},
-	{propulsion_PROPELLERCHARTFIXEDPITCH, "Propeller chart fixed pitch"},
-	{propulsion_PROPELLERCHARTVARIABLEPITCH, "Propeller chart variable pitch" },
-	{propulsion_PISTONENGINE,"Piston engine"},
-	{source_SINGALGENERATOR, "Signal Generator "},
+	{propulsion_PROPELLERCHARTFIXEDPITCH, "Propeller chart fixed pitch  block"},
+	{propulsion_PROPELLERCHARTVARIABLEPITCH, "Propeller chart variable pitch  block" },
+	{propulsion_PISTONENGINE,"Piston engine block"},
+	{source_SINGALGENERATOR, "Signal Generator block"},
 	{source_STEP, "Step block"},
 	{source_RAMP, "Ramp block"}
 };
@@ -151,6 +152,7 @@ namespace simulationcontrol {
 		// math blocks
 		unsigned int AddSubSystem(const mathblocks::GainParameter& parameters);
 		unsigned int AddSubSystem(const mathblocks::ConstantParameter& parameters);
+		unsigned int AddSubSystem(const mathblocks::DivisionParameter& parameters);
 		unsigned int AddSubSystem(const mathblocks::SumParameter& parameters);
 		unsigned int AddSubSystem(const mathblocks::MultiplicationParam& parameters);
 		unsigned int AddSubSystem(const mathblocks::TrigonometryParameter& parameters);
