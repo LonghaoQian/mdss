@@ -67,12 +67,12 @@ struct subsystem_handle {
 };
 // TO DO: separate the predefined variables from the 
 struct subsystem_info {
-	unsigned int num_of_continuous_states;           // number of continunous states, for direct feed-through blocks, this should be 0
-	unsigned int num_of_inputs;                      // number of inputs for the system
-	unsigned int num_of_external_inputs;             // number of external inputs for the system
-	unsigned int num_of_outputs;                     // number of outputs for the system
-	bool system_parameter_ok;                        // wether the system parameter has been correctly set
-	MatrixX2i input_connection;                      // the input connection matrix, where each row represents 
+	unsigned int num_of_continuous_states{0};           // number of continunous states, for direct feed-through blocks, this should be 0
+	unsigned int num_of_inputs{0};                      // number of inputs for the system
+	unsigned int num_of_external_inputs{0};             // number of external inputs for the system
+	unsigned int num_of_outputs{0};                     // number of outputs for the system
+	bool system_parameter_ok{false};                    // wether the system parameter has been correctly set
+	MatrixX2i input_connection;                         // the input connection matrix, where each row represents 
 	bool NO_CONTINUOUS_STATE;                        // a bool state repes wether continous state exsits
 	bool DIRECT_FEED_THROUGH;                        // a bool state 
 	bool EXTERNAL_CONNECTION_ONLY;                   // a bool state for whether the system connection is pure external

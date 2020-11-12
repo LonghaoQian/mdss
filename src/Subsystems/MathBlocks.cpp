@@ -669,21 +669,48 @@ namespace mathblocks {
 	/*------------------------------- Division block -----------------------------------*/
 	Division::Division(const DivisionParameter & param)
 	{
+		system_info.type = math_DIVISION;
+		system_info.category = MATH;
+		system_info.DIRECT_FEED_THROUGH = true;
+		system_info.NO_CONTINUOUS_STATE = true;
+		system_info.num_of_continuous_states = 0;
+		param_ = param;
 
+		// determine the number of system inputs
+		system_info.num_of_inputs = param.SignList.size();
+		for (unsigned int i = 0; i < system_info.num_of_inputs; i++) {
+			if (param_.SignList[i] == DIVISION_PRODUCT) {
+				// if the signlist is production, then add the index to the product index sequence
+				Product.push_back(i);
+			}
+			else {
+				// if the signlist is division, then add the index to the division index sequence
+				Divide.push_back(i);
+			}
+		}
+		num_of_product = Product.size();
+		num_of_divide = Divide.size();
+		// the output of the system is set to 1
+		system_info.system_parameter_ok = true;
+		ready_to_run = true;
+		system_info.num_of_outputs = 1;
+		output.resize(system_info.num_of_outputs);
+		output.setZero();
 	}
 
 	void Division::DifferentialEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & derivative)
 	{
+		// no differential equations for divisin block
 	}
 
 	void Division::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 	{
 		output(0) = 1.0; // reset output
-		for (int i = 0; i < num_of_product; i++) {
-			output(0) *= input(Product(i));        // make the multiplication first
+		for (unsigned int i = 0; i < num_of_product; i++) {
+			output(0) *= input(Product[i]);        // make the multiplication first
 		}
-		for (int i = 0; i < num_of_divide; i++) {  // then make the division
-			output(0) /= input(Divide(i));
+		for (unsigned int i = 0; i < num_of_divide; i++) {  // then make the division
+			output(0) /= input(Divide[i]);
 		}
 
 	}
@@ -695,12 +722,22 @@ namespace mathblocks {
 
 	void Division::DisplayParameters()
 	{
-		
+		std::cout << "--------- Division block parameters ------------" << std::endl;
+		std::cout << " The total number of inputs is: " << system_info.num_of_inputs << std::endl;
+		std::cout << " The total number of product is: " << num_of_product << '\n';
+		std::cout << " The total number of divde is: " << num_of_divide << '\n';
+		for (int i = 0; i < num_of_product; i++) {
+			std::cout << " Input # " << Product[i] << " is product \n";
+		}
+		for (int i = 0; i < num_of_divide; i++) {
+			std::cout << " Input # " << Divide[i] << " is divide \n";
+		}
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void Division::DisplayInitialCondition()
 	{
-
+		std::cout << "-------- No initial condition for division block --------" << std::endl;
 	}
 
 	Division::~Division()

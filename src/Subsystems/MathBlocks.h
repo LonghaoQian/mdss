@@ -204,12 +204,11 @@ namespace mathblocks {
 	};
 	/*------------------- product-division block -----------------*/
 	enum DivisionList {
-		PRODUCT = 1,
-		DIVISION = -1
+		DIVISION_PRODUCT = 1,
+		DIVISION_DIVISION = -1
 	};
 
 	struct DivisionParameter {
-		int input_dimensions;
 		vector<DivisionList> SignList;
 	};
 	class Division :
@@ -230,11 +229,10 @@ namespace mathblocks {
 		~Division();
 	private:
 		DivisionParameter param_;
-		VectorXd Product;
-		VectorXd Divide;
-		int num_of_product;
-		int num_of_divide;
-		int num_of_channels;
+		vector<unsigned int> Product;
+		vector<unsigned int> Divide;
+		unsigned int num_of_product{0};
+		unsigned int num_of_divide{0};
 	};
 
 	//---------------- trigonometry functions--------------------//

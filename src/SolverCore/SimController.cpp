@@ -177,6 +177,17 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
+	unsigned int SimController::AddSubSystem(const mathblocks::DivisionParameter & parameters)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new mathblocks::Division(parameters));
+		system_info = subsystem_list.back()->GetSystemInfo();
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
 	unsigned int SimController::AddSubSystem(const mathblocks::SumParameter & parameters)
 	{
 		subsystem_info system_info;
