@@ -347,4 +347,17 @@ ylabel('ThrottleCmd')
 grid on
 title('ThrottleCmd')
 
+subplot(3,2,5)
+plot(logged_data.data(:,logged_data.tagmap('t')),196.85039370078738*logged_data.data(:,logged_data.tagmap('climbrate')))
+xlabel('t(s)')
+ylabel('climbrate (fpm)')
+grid on
+title('climbrate')
+
+subplot(3,2,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('height')))
+xlabel('t(s)')
+ylabel('height (m)')
+grid on
+title('height')
 

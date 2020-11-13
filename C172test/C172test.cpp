@@ -21,7 +21,7 @@ int main()
 	C172initialcondition.plane.omegaz = 0.0;
 	C172initialcondition.plane.inertialpositionx = 10.0;
 	C172initialcondition.plane.inertialpositiony = 10.0;
-	C172initialcondition.plane.inertialpositionz = -1000.0;// initial height NED frame
+	C172initialcondition.plane.inertialpositionz = -500.0;// initial height NED frame
 	C172initialcondition.plane.inertialvelocityx = 50.0; // 
 	C172initialcondition.plane.inertialvelocityy = 1.0;
 	C172initialcondition.plane.inertialvelocityz = 0.5;
@@ -191,9 +191,9 @@ int main()
 	C172parameter.autopilot.autothrottle.Ki = 0.04;
 	C172parameter.autopilot.autothrottle.Kp = 15.0;
 	// altitude command parameters
-	C172parameter.autopilot.pitchCAS.AltitudeErrorLimit = 30.0;
-	C172parameter.autopilot.pitchCAS.AltitudeErrorToVSGain = 0.07;
-	C172parameter.autopilot.pitchCAS.VSGain = -1.0 / 9.0;
+	C172parameter.autopilot.pitchCAS.AltitudeErrorLimit = 10.0;
+	C172parameter.autopilot.pitchCAS.AltitudeErrorToVSGain = 0.3556;
+	C172parameter.autopilot.pitchCAS.VSGain = -1.5 / 9.0;
 	C172parameter.autopilot.pitchCAS.GainDeCom = -2.0;
 	C172parameter.autopilot.pitchCAS.GainThetadot1 = 1.0;
 	C172parameter.autopilot.pitchCAS.GainThetadot2 = 5.612;
@@ -203,6 +203,7 @@ int main()
 
 	/*------------ define control inputs ----------------------*/
 	aircraft::C172input controlinput;
+	controlinput.autopilot.pitchCAS.commandaltitude = 600.0;//m
 	controlinput.autopilot.autothrottle.ON = 1.0;
 	controlinput.autopilot.autothrottle.targetspeed = 50.0;// m / s
 	controlinput.autopilot.autothrottle.trimthrottle = 0.6;
@@ -214,7 +215,7 @@ int main()
 		std::cout << " Abort... " << std::endl;
 		return 0;
 	}
-	int N_steps = 1000;
+	int N_steps = 3000;
 	t = clock();
 	for (int i = 0; i < N_steps; i++) {
 		C172aicraftmodel.UpdateSimulation(controlinput);

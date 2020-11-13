@@ -32,7 +32,7 @@ namespace  aircraft {
 		speedcommandindex = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTASError, 1);
 		trimthrottle = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTotoalThrottle, 1);
 		autothrottlePIDenable = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.PIDThrottleCom, 0);
-
+		altcommand = SimInstance1.GetExternalInputIndex(Modelist.pitchCAS.SumAltitError, 0);
 		//SimInstance1.DisplayLoggerTagList(); // logge tag list display
 
 		if (modelok) {
@@ -52,10 +52,11 @@ namespace  aircraft {
 
 	void AircraftDynamicModel::UpdateSimulation(const C172input & input)
 	{
-		extern_input(speedcommandindex) = input.autopilot.autothrottle.targetspeed;
-		extern_input(trimthrottle) = input.autopilot.autothrottle.trimthrottle;
-		extern_input(autothrottlePIDenable) = input.autopilot.autothrottle.ON;
 		if (modelok) { // if successful, run updates
+			extern_input(speedcommandindex) =     input.autopilot.autothrottle.targetspeed;
+			extern_input(trimthrottle) =          input.autopilot.autothrottle.trimthrottle;
+			extern_input(autothrottlePIDenable) = input.autopilot.autothrottle.ON;
+			extern_input(altcommand) =            input.autopilot.pitchCAS.commandaltitude;
 			isRunning = true;
 			SimInstance1.Run_Update(extern_input);
 		}else {
@@ -465,22 +466,44 @@ namespace  aircraft {
 		cosphilimit_param.upper_bound = 1.0;
 		Modelist.pitchCAS.SaturationCosPhi = SimInstance1.AddSubSystem(cosphilimit_param);
 
+		// define the altitude holding
+		mathblocks::GainParameter GainVS_param;
+		GainVS_param.K.resize(1, 1);
+		GainVS_param.K(0,0) = parameter.autopilot.pitchCAS.VSGain;
+		GainVS_param.Mode = mathblocks::ElementWise;
+		GainVS_param.num_of_inputs = 1;
+		Modelist.pitchCAS.GainVS = SimInstance1.AddSubSystem(GainVS_param);
 
-		//unsigned int GainVS{ 0 };
-		//unsigned int GainAltitError{ 0 };
-		//unsigned int SaturationAltit{ 0 };
-		//unsigned int SumAltitError{ 0 };
-		//unsigned int SumVSError{ 0 };
+		mathblocks::GainParameter GainAltitError_param;
+		GainAltitError_param.K.resize(1, 1);
+		GainAltitError_param.K(0, 0) = parameter.autopilot.pitchCAS.AltitudeErrorToVSGain;
+		GainAltitError_param.Mode = mathblocks::ElementWise;
+		GainAltitError_param.num_of_inputs = 1;
+		Modelist.pitchCAS.GainAltitError = SimInstance1.AddSubSystem(GainAltitError_param);
+
+		discontinuoussystem::SaturationParameter SaturationAltit_param;
+		SaturationAltit_param.type = discontinuoussystem::SATURATION_BOTH;
+		SaturationAltit_param.num_of_channels = 1;
+		SaturationAltit_param.upper_bound = parameter.autopilot.pitchCAS.AltitudeErrorLimit;
+		SaturationAltit_param.lower_bound = -parameter.autopilot.pitchCAS.AltitudeErrorLimit;
+		Modelist.pitchCAS.SaturationAltit = SimInstance1.AddSubSystem(SaturationAltit_param);
+
+		mathblocks::SumParameter SumAltitError_param;
+		SumAltitError_param.input_dimensions = 1;
+		SumAltitError_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		SumAltitError_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+		Modelist.pitchCAS.SumAltitError = SimInstance1.AddSubSystem(SumAltitError_param);
+	
+
+		mathblocks::SumParameter  SumVSError_param;
+		SumVSError_param.input_dimensions = 1;
+		SumVSError_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		SumVSError_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+		Modelist.pitchCAS.SumVSError = SimInstance1.AddSubSystem(SumVSError_param);
+
 
 		// define the auto throttle
-		/*
-		
-		unsigned int SumTASError{ 0 };
-		unsigned int SaturateTASError{ 0 };
-		unsigned int GainTASError{ 0 };
-		unsigned int PIDThrottleCom{ 0 };
-		unsigned int SumTotoalThrottle{ 0 };		
-		*/
+
 		mathblocks::SumParameter  SumTASError_param;
 		SumTASError_param.input_dimensions = 1;
 		SumTASError_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
@@ -532,7 +555,7 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, "omegax");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIy, "omegay");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIz, "omegaz");
-
+		/*
 		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB00, "RWB00");
 		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB01, "RWB01");
 		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB02, "RWB02");
@@ -554,7 +577,7 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB20, "RIB20");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB21, "RIB21");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB22, "RIB22");
-
+		*/
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, "Vbx");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VBy, "Vby");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VBz, "Vbz");
@@ -566,7 +589,7 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, "XIx");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIy, "XIy");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIz, "XIz");
-
+		SimInstance1.DefineDataLogging(Modelist.dynamics.climbrate, 0, "climbrate");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.Vbdot, mathauxiliary::VECTOR_X, "Vb_dotx");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.Vbdot, mathauxiliary::VECTOR_Y, "Vb_doty");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.Vbdot, mathauxiliary::VECTOR_Z, "Vb_dotz");
@@ -617,7 +640,7 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactorfluz, 0, "loadfactorbodyz");
 
 		SimInstance1.DefineDataLogging(Modelist.autothrottle.SumTotoalThrottle, 0, "ThrottleCmd");
-
+		SimInstance1.DefineDataLogging(Modelist.dynamics.height, 0, "height");
 	}
 	void AircraftDynamicModel::ConnectSystems()
 	{
@@ -744,7 +767,7 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainThetadot1, 0, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_THETADOT);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainThetadot2, 0, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_THETADOT);
 		//
-		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainDeCom, 0, simulationcontrol::external, 0);
+		
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumCstar1, 0, Modelist.pitchCAS.GainDeCom, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumCstar1, 1, Modelist.pitchCAS.GainThetadot2, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumCstar1, 2, Modelist.pitchCAS.SumDeltaDz, 0);
@@ -767,5 +790,15 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTotoalThrottle, 0, Modelist.autothrottle.PIDThrottleCom, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTotoalThrottle, 1, simulationcontrol::external, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, Modelist.autothrottle.SumTotoalThrottle, 0);
+		// connect the altitude controller
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumAltitError, 0, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumAltitError, 1, Modelist.dynamics.height, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SaturationAltit, 0, Modelist.pitchCAS.SumAltitError, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainAltitError, 0, Modelist.pitchCAS.SaturationAltit, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumVSError, 0, Modelist.pitchCAS.GainAltitError, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumVSError, 1, Modelist.dynamics.climbrate, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainVS, 0, Modelist.pitchCAS.SumVSError, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainDeCom, 0, Modelist.pitchCAS.GainVS, 0);
+
 	}
 }
