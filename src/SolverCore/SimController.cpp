@@ -904,8 +904,36 @@ namespace simulationcontrol {
 			}
 		}
 		else {
-			cout << "There is no external inputs for this system. \n";
+			cout << "There are no external inputs for this system. \n";
 		}
+	}
+
+	unsigned int SimController::GetExternalInputIndex(blockID system_ID, unsigned int input_port_ID)
+	{
+		// check whether the system has external inputs
+		if (subsystem_list[system_ID]->GetSystemInfoPtr()->num_of_external_inputs > 0) {
+			// then check whether the specified input port ID is mapped to the 
+			unsigned int index = 0;
+			bool indexfound = false;
+			for (unsigned int i = 0; i < num_of_external_inputs; i++) {// show the external input mapping corresponding to the selected system
+				if ((external_mapping(i, simulationcontrol::subsystemID) == system_ID)&&(external_mapping(i, 1)== input_port_ID)) {
+					index = i; // if both the system_ID and input_port_ID matches the external mapping
+					indexfound = true;
+					break;
+				}
+			}
+			if (indexfound){// if index has been modifed, means the input_port is mapped to an external port
+				return index;
+			} else {
+				cout << "The specified port is not mapped to external inputs. \n";
+				return -1;
+			}
+		}
+		else {
+			cout << "There are no external inputs for this system. \n";
+			return -1;
+		}
+		
 	}
 
 

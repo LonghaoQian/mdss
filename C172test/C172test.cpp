@@ -184,10 +184,28 @@ int main()
 	C172parameter.propeller.diameter = 76 * 0.0254; //m
 	C172parameter.propeller.minimumAngularRate = 1.0;
 	C172parameter.propeller.shaftinertia = 1.6700/(2.0*M_PI);
+	// auto throttle parameters
+	C172parameter.autopilot.autothrottle.TASErrorLimit = 10.0;
+	C172parameter.autopilot.autothrottle.TASErrorGain = 0.1;
+	C172parameter.autopilot.autothrottle.Kd = 0.0;
+	C172parameter.autopilot.autothrottle.Ki = 0.04;
+	C172parameter.autopilot.autothrottle.Kp = 15.0;
+	// altitude command parameters
+	C172parameter.autopilot.pitchCAS.AltitudeErrorLimit = 30.0;
+	C172parameter.autopilot.pitchCAS.AltitudeErrorToVSGain = 0.07;
+	C172parameter.autopilot.pitchCAS.VSGain = -1.0 / 9.0;
+	C172parameter.autopilot.pitchCAS.GainDeCom = -2.0;
+	C172parameter.autopilot.pitchCAS.GainThetadot1 = 1.0;
+	C172parameter.autopilot.pitchCAS.GainThetadot2 = 5.612;
+	C172parameter.autopilot.pitchCAS.GainDeIntegral = 0.4;
+	C172parameter.autopilot.pitchCAS.SaturationDeIntegral = 0.4;
+	// heading command
 
+	/*------------ define control inputs ----------------------*/
 	aircraft::C172input controlinput;
-
-
+	controlinput.autopilot.autothrottle.ON = 1.0;
+	controlinput.autopilot.autothrottle.targetspeed = 50.0;// m / s
+	controlinput.autopilot.autothrottle.trimthrottle = 0.6;
 	aircraft::AircraftDynamicModel C172aicraftmodel(C172parameter, C172initialcondition);
 	clock_t t; // measure the time used
 	int start = 0;
@@ -565,6 +583,27 @@ int main()
 
 	unsigned int  fixefuelstate = SimInstance1.AddSubSystem(fixefuelstate_param);
 
+	mathblocks::DivisionParameter division_param;
+	division_param.SignList.push_back(mathblocks::DIVISION_PRODUCT);
+	division_param.SignList.push_back(mathblocks::DIVISION_DIVISION);
+
+	unsigned int division = SimInstance1.AddSubSystem(division_param);
+
+	discontinuoussystem::SaturationParameter saturation_param;
+	saturation_param.lower_bound = 0.6;
+	saturation_param.upper_bound = 1.0;
+	saturation_param.num_of_channels = 1;
+	saturation_param.type = discontinuoussystem::SATURATION_BOTH;
+
+	unsigned int saturation = SimInstance1.AddSubSystem(saturation_param);
+
+	mathblocks::TrigonometryParameter trig_param;
+	trig_param.num_of_channels = 1;
+	trig_param.type = mathblocks::COS;
+	unsigned int  trig_cos1 = SimInstance1.AddSubSystem(trig_param);
+
+	unsigned int  trig_cos2 = SimInstance1.AddSubSystem(trig_param);
+
 	// connections
 
 	// signal output to dynamics:
@@ -634,6 +673,13 @@ int main()
 	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, fixedthrottle, 0);
 	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_MIXTURE,  fixedmxiture, 0);
 	SimInstance1.EditConnectionMatrix(piston_engine_1, propulsionsystem::PISTONENGINE_INPUT_FUELSTATE,fixefuelstate, 0);
+
+	// connect the cos
+	SimInstance1.EditConnectionMatrix(trig_cos1, 0, planekinematics, dynamics::KINEMATICS_OUTPUT_THETADOT);
+	SimInstance1.EditConnectionMatrix(trig_cos2, 0, planekinematics, dynamics::KINEMATICS_OUTPUT_EulerRoll);
+	SimInstance1.EditConnectionMatrix(saturation, 0, trig_cos2, 0);
+	SimInstance1.EditConnectionMatrix(division, 0, trig_cos1, 0);
+	SimInstance1.EditConnectionMatrix(division, 1, trig_cos2, 0);
 
 	// flush connection matrix
 	SimInstance1.FlushMakeConnection();
@@ -729,6 +775,9 @@ int main()
 	SimInstance1.DefineDataLogging(omega2rps, 0, "Shaftrps");
 	SimInstance1.DefineDataLogging(piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_Q, "TorqueAvaliable");
 	SimInstance1.DefineDataLogging(piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_FUELRATE, "FuelRate");
+
+	SimInstance1.DefineDataLogging(division, 0, "ans_1");
+
 	// SimInstance1.DisplayLoggerTagList();// show the logged tags
 
 	SimInstance1.DisplaySystemParameter(aeroforce);

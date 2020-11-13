@@ -19,7 +19,7 @@ _________________________________
 #include "Subsystem.h"
 #include "UtilityFunctions.h"
 namespace discontinuoussystem {
-
+	/*------------------- saturation block -------------------------*/
 	enum SaturationType{
 		SATURATION_UPPER,
 		SATURATION_LOWER,
@@ -52,9 +52,7 @@ namespace discontinuoussystem {
 		void DisplayInitialCondition();
 		~Saturation();
 	};
-	//--------------------------------------------------
-	// 
-
+	/*------------------- switch block -------------------------*/
 	enum {
 		SWITCH_INPUT = 0
 	};
@@ -82,4 +80,5 @@ namespace discontinuoussystem {
 		void DisplayInitialCondition();
 		~Switch();
 	};
+	/*------------------- TO DO: Hysteresis block -------------------------*/
 }

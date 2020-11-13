@@ -52,7 +52,7 @@ namespace discontinuoussystem {
 				
 			}
 			break;
-		default:// both
+		default:// default is set to both
 			for (int i = 0; i < param_.num_of_channels; i++) {
 				output(i) = mathauxiliary::SaturationElementalWise(input(i),
 					param_.upper_bound,
@@ -69,6 +69,7 @@ namespace discontinuoussystem {
 
 	void Saturation::DisplayParameters()
 	{
+		std::cout << "--------- Saturation block parameters ------------" << std::endl;
 		std::cout << "saturation type is: ";
 		switch (param_.type)
 		{
@@ -85,13 +86,14 @@ namespace discontinuoussystem {
 			std::cout << "both" << std::endl;
 			break;
 		}
-		std::cout << "upper limit is: " << param_.upper_bound << " lower limit is: " << param_.lower_bound << std::endl;
-		std::cout << "number of channels is: " << param_.num_of_channels << std::endl;
+		std::cout << "the upper limit is: " << param_.upper_bound << ", the lower limit is: " << param_.lower_bound << std::endl;
+		std::cout << "the number of channels is: " << param_.num_of_channels << std::endl;
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void Saturation::DisplayInitialCondition()
 	{
-		std::cout << "------No initial condition for saturation ----------" << std::endl;
+		std::cout << "-------- No initial condition for saturation block --------" << std::endl;
 	}
 
 	Saturation::~Saturation()

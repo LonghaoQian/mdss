@@ -1,7 +1,7 @@
 /*
 ___________________________________________________________________________________________________
 Author: Longhao Qian
-Data:   2020 11 01
+Data:   2020 11 12
 
 the wrapper class for the fixed-wing aircraft simulation 
 ___________________________________________________________________________________________________
@@ -12,28 +12,15 @@ namespace aircraft {
 
 	const double gravityacc{9.81};
 
-	enum stickinput {
-		INPUT_AILERON = 0,
-		INPUT_ELEVATOR,
-		INPUT_RUDDER,
-		INPUT_FLAP,
-	};
-
-	enum engineinput {
-		INPUT_STARTER = 0,
-		INPUT_THROTTLE,
-		INPUT_MIXTURE,
-	};
-
 	enum autopliotpitchmode {
-		PITCHMODE_NONE = 0,  // the pitch CAS is off
+		PITCHMODE_DIRECT = 0,  // the pitch CAS is off
 		PITCHMODE_CAS,       // the pitch CAS is on (C star controller). Normal Acc Command Mode
 		PITCHMODE_GAMMA,     // flight path hold mode
 		PITCHMODE_ALTITUDE,  // altitude command mode
 	};
 
 	enum autopliotrollhmode {
-		ROLLMODE_NONE = 0, // the roll CAS is off
+		ROLLMODE_DIRECT = 0, // the roll CAS is off
 		ROLLMODE_CAS,      // the roll CAS is on
 		ROLLMODE_ROLLANGLE,
 		ROLLMODE_HEADINGANGLE,
@@ -55,18 +42,21 @@ namespace aircraft {
 		struct {
 			bool autopilotmaster;   // master swith of the entire autopilot system
 			struct {
-				autopliotpitchmode mode{ PITCHMODE_NONE };
-				double commandaltitude;
-				double commandgamma;
+				autopliotpitchmode mode{ PITCHMODE_DIRECT };
+				double commandaltitude{0.0};
+				double commandgamma{0.0};
 			}pitchCAS;
 
 			struct {
-
+				autopliotrollhmode mode{ ROLLMODE_DIRECT };
+				double commandrollangle{ 0.0 };
+				double commandheadingangle{ 0.0 };
 			}rollCAS;
 
 			struct {
-				bool ON;
-				double targetspeed; // target true airspeed (m/s)
+				double ON; // 1.0 on 
+				double targetspeed{0.0}; // target true airspeed (m/s)
+				double trimthrottle{0.0}; // the trim throttle to the 
 			}autothrottle;
 
 		}autopilot;
@@ -134,8 +124,32 @@ namespace aircraft {
 
 	struct autopilotparameter {
 		struct {
-
+			double AltitudeErrorLimit{ 0.0 };
+			double AltitudeErrorToVSGain{ 0.0 };
+			double VSGain{ 0.0 };
+			double GainThetadot1{ 0.0 };
+			double GainThetadot2{ 0.0 };
+			double GainDeCom{ 0.0 };
+			double GainDeIntegral{ 0.0 };
+			double SaturationDeIntegral{ 0.0 };
 		}pitchCAS;
+
+		struct {
+			double TASErrorLimit{ 0.0 };
+			double TASErrorGain{ 0.0 };
+			double Kp{ 0.0 };
+			double Ki{ 0.0 };
+			double Kd{ 0.0 };
+		}autothrottle;
+
+		struct {
+
+		}rollCAS;
+
+		struct {
+
+		}yawCAS;
+
 	};
 
 
@@ -178,9 +192,10 @@ namespace aircraft {
 			double MeanChord{ 0.0 };
 			double ReferenceArea = 16.1651289600000;
 		}geometry;
-
+		// autopilot parameters
 		aerodynamicsparameter aerodynamics;
 		autopilotparameter autopilot;
+		// solver configuration
 		simulationcontrol::SolverConfig Config;
 
 	};
@@ -229,20 +244,34 @@ namespace aircraft {
 		}engine;
 
 		struct {
-			unsigned int Qgain1{ 0 };
-			unsigned int Qgain2{ 0 };
-			unsigned int degain{ 0 };
-			unsigned int Detrim{ 0 };
-			unsigned int Detrimlimit{ 0 };
-			unsigned int Detrimgain{ 0 };
-			unsigned int DeCom{ 0 };
+			unsigned int GainThetadot1{ 0 };
+			unsigned int GainThetadot2{ 0 };
+			unsigned int GainDeCom{ 0 };
+			unsigned int Deintegral{ 0 };
+			unsigned int SaturationDeIntegral{ 0 };
+			unsigned int GainDeIntegral{ 0 };
+			unsigned int SumDeCom{ 0 };
+			unsigned int SumDeltaDz{ 0 };
+			unsigned int SumCstar1{ 0 };
+			unsigned int ProductGammaPhi{ 0 };
+			unsigned int CosGammaRoll{ 0 }; // 0 for gamma, 1 for roll
+			unsigned int SaturationCosPhi{ 0 };
+			unsigned int GainVS{ 0 };
+			unsigned int GainAltitError{ 0 };
+			unsigned int SaturationAltit{ 0 };
+			unsigned int SumAltitError{ 0 };
+			unsigned int SumVSError{ 0 };
 		}pitchCAS;
 
 		struct
 		{
-
+			unsigned int SumTASError{ 0 };
+			unsigned int SaturateTASError{ 0 };
+			unsigned int GainTASError{ 0 };
+			unsigned int PIDThrottleCom{ 0 };
+			unsigned int SumTotoalThrottle{ 0 };
 		}autothrottle;
-
+		// some temporary blocks
 		struct {
 			unsigned int fixedthrottle;
 			unsigned int fixedmixture;
@@ -303,6 +332,11 @@ namespace aircraft {
 		modelparameter parameter;
 		initialcondition currentIC;
 		simulationcontrol::SimController SimInstance1;
+		// input mapping index
+		unsigned int speedcommandindex{ 0 };
+		unsigned int trimthrottle{ 0 };
+		unsigned int altcommand{ 0 };
+		unsigned int autothrottlePIDenable{ 0 };
 		// establish the aircraft model
 		// step 1. define the rigid body
 		void DefineRigidbody();

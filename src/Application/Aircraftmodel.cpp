@@ -28,6 +28,10 @@ namespace  aircraft {
 		SimInstance1.DisplaySystemParameter(Modelist.dynamics.loadfactorfluy);
 
 		modelok = SimInstance1.PreRunProcess();
+		// get the external input mapping for specific inputs
+		speedcommandindex = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTASError, 1);
+		trimthrottle = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTotoalThrottle, 1);
+		autothrottlePIDenable = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.PIDThrottleCom, 0);
 
 		//SimInstance1.DisplayLoggerTagList(); // logge tag list display
 
@@ -48,8 +52,9 @@ namespace  aircraft {
 
 	void AircraftDynamicModel::UpdateSimulation(const C172input & input)
 	{
-		
-		
+		extern_input(speedcommandindex) = input.autopilot.autothrottle.targetspeed;
+		extern_input(trimthrottle) = input.autopilot.autothrottle.trimthrottle;
+		extern_input(autothrottlePIDenable) = input.autopilot.autothrottle.ON;
 		if (modelok) { // if successful, run updates
 			isRunning = true;
 			SimInstance1.Run_Update(extern_input);
@@ -380,6 +385,136 @@ namespace  aircraft {
 	}
 	void AircraftDynamicModel::DefineAutopilot()
 	{
+		// define the subsystem for pitch autopilot
+
+		mathblocks::GainParameter GainThetadot1_param;
+		GainThetadot1_param.K.resize(1, 1);
+		GainThetadot1_param.K(0, 0) = parameter.autopilot.pitchCAS.GainThetadot1;
+		GainThetadot1_param.Mode = mathblocks::ElementWise;
+		GainThetadot1_param.num_of_inputs = 1;
+		Modelist.pitchCAS.GainThetadot1 = SimInstance1.AddSubSystem(GainThetadot1_param);
+
+		mathblocks::GainParameter GainThetadot2_param;
+		GainThetadot2_param.K.resize(1, 1);
+		GainThetadot2_param.K(0, 0) = parameter.autopilot.pitchCAS.GainThetadot2;
+		GainThetadot2_param.Mode = mathblocks::ElementWise;
+		GainThetadot2_param.num_of_inputs = 1;
+		Modelist.pitchCAS.GainThetadot2 = SimInstance1.AddSubSystem(GainThetadot2_param);
+
+		mathblocks::GainParameter GainDeCom_param;
+		GainDeCom_param.K.resize(1, 1);
+		GainDeCom_param.K(0, 0) = parameter.autopilot.pitchCAS.GainDeCom;
+		GainDeCom_param.Mode = mathblocks::ElementWise;
+		GainDeCom_param.num_of_inputs = 1;
+		Modelist.pitchCAS.GainDeCom = SimInstance1.AddSubSystem(GainDeCom_param);
+
+		linearsystem::IntegratorParameter Deintegral_param;
+		Deintegral_param.num_of_channels = 1;
+		linearsystem::IntegratorInitialCondition Deintegral_IC;
+		Deintegral_IC.X_0.resize(1);
+		Deintegral_IC.X_0(0) = 0.0;
+		Modelist.pitchCAS.Deintegral = SimInstance1.AddSubSystem(Deintegral_param, Deintegral_IC);
+
+		discontinuoussystem::SaturationParameter SaturationDeIntegral_param;
+		SaturationDeIntegral_param.type = discontinuoussystem::SATURATION_BOTH;
+		SaturationDeIntegral_param.num_of_channels = 1;
+		SaturationDeIntegral_param.lower_bound = -parameter.autopilot.pitchCAS.SaturationDeIntegral;
+		SaturationDeIntegral_param.upper_bound = parameter.autopilot.pitchCAS.SaturationDeIntegral;
+		Modelist.pitchCAS.SaturationDeIntegral = SimInstance1.AddSubSystem(SaturationDeIntegral_param);
+
+		mathblocks::GainParameter GainDeIntegral_param;
+		GainDeIntegral_param.K.resize(1, 1);
+		GainDeIntegral_param.K(0, 0) = parameter.autopilot.pitchCAS.GainDeIntegral;
+		GainDeIntegral_param.Mode = mathblocks::ElementWise;
+		GainDeIntegral_param.num_of_inputs = 1;
+		Modelist.pitchCAS.GainDeIntegral = SimInstance1.AddSubSystem(GainDeIntegral_param);
+
+		mathblocks::SumParameter  SumDeCom_param;
+		SumDeCom_param.input_dimensions = 1;
+		SumDeCom_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		SumDeCom_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+		Modelist.pitchCAS.SumDeCom = SimInstance1.AddSubSystem(SumDeCom_param);
+
+		mathblocks::SumParameter  SumDeltaDz_param;
+		SumDeltaDz_param.input_dimensions = 1;
+		SumDeltaDz_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+		SumDeltaDz_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		Modelist.pitchCAS.SumDeltaDz = SimInstance1.AddSubSystem(SumDeltaDz_param);
+
+		mathblocks::DivisionParameter  ProductGammaPhi_param;
+		ProductGammaPhi_param.SignList.push_back(mathblocks::DIVISION_PRODUCT);
+		ProductGammaPhi_param.SignList.push_back(mathblocks::DIVISION_DIVISION);
+		Modelist.pitchCAS.ProductGammaPhi = SimInstance1.AddSubSystem(ProductGammaPhi_param);
+
+		mathblocks::TrigonometryParameter CosGamma_param;
+		CosGamma_param.num_of_channels = 2;
+		CosGamma_param.type = mathblocks::COS;
+		Modelist.pitchCAS.CosGammaRoll = SimInstance1.AddSubSystem(CosGamma_param);
+
+		mathblocks::SumParameter  SumCstar1_param;
+		SumCstar1_param.input_dimensions = 1;
+		SumCstar1_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		SumCstar1_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+		SumCstar1_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+		Modelist.pitchCAS.SumCstar1 = SimInstance1.AddSubSystem(SumCstar1_param);
+
+		discontinuoussystem::SaturationParameter cosphilimit_param;
+		cosphilimit_param.type = discontinuoussystem::SATURATION_BOTH;
+		cosphilimit_param.num_of_channels = 1;
+		cosphilimit_param.lower_bound = 0.5;
+		cosphilimit_param.upper_bound = 1.0;
+		Modelist.pitchCAS.SaturationCosPhi = SimInstance1.AddSubSystem(cosphilimit_param);
+
+
+		//unsigned int GainVS{ 0 };
+		//unsigned int GainAltitError{ 0 };
+		//unsigned int SaturationAltit{ 0 };
+		//unsigned int SumAltitError{ 0 };
+		//unsigned int SumVSError{ 0 };
+
+		// define the auto throttle
+		/*
+		
+		unsigned int SumTASError{ 0 };
+		unsigned int SaturateTASError{ 0 };
+		unsigned int GainTASError{ 0 };
+		unsigned int PIDThrottleCom{ 0 };
+		unsigned int SumTotoalThrottle{ 0 };		
+		*/
+		mathblocks::SumParameter  SumTASError_param;
+		SumTASError_param.input_dimensions = 1;
+		SumTASError_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
+		SumTASError_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		Modelist.autothrottle.SumTASError = SimInstance1.AddSubSystem(SumTASError_param);
+
+		discontinuoussystem::SaturationParameter SaturateTASError_param;
+		SaturateTASError_param.type = discontinuoussystem::SATURATION_BOTH;
+		SaturateTASError_param.num_of_channels = 1;
+		SaturateTASError_param.upper_bound = parameter.autopilot.autothrottle.TASErrorLimit;
+		SaturateTASError_param.lower_bound = - parameter.autopilot.autothrottle.TASErrorLimit;
+		Modelist.autothrottle.SaturateTASError = SimInstance1.AddSubSystem(SaturateTASError_param);
+
+		mathblocks::GainParameter GainTASError_param;
+		GainTASError_param.K.resize(1, 1);
+		GainTASError_param.K(0, 0) = parameter.autopilot.autothrottle.TASErrorGain;
+		GainTASError_param.Mode = mathblocks::ElementWise;
+		GainTASError_param.num_of_inputs = 1;
+		Modelist.autothrottle.GainTASError = SimInstance1.AddSubSystem(GainTASError_param);
+
+		linearsystem::PIDcontrollerParameter PIDThrottleCom_param;
+		PIDThrottleCom_param.integration_control_on = false;
+		PIDThrottleCom_param.Kd = parameter.autopilot.autothrottle.Kd;
+		PIDThrottleCom_param.Ki = parameter.autopilot.autothrottle.Ki;
+		PIDThrottleCom_param.Kp = parameter.autopilot.autothrottle.Kp;
+		PIDThrottleCom_param.num_of_channels = 1;
+		PIDThrottleCom_param.Tf = 100.0;
+		Modelist.autothrottle.PIDThrottleCom = SimInstance1.AddSubSystem(PIDThrottleCom_param);
+
+		mathblocks::SumParameter SumTotoalThrottle_param;
+		SumTotoalThrottle_param.input_dimensions = 1;
+		SumTotoalThrottle_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		SumTotoalThrottle_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		Modelist.autothrottle.SumTotoalThrottle = SimInstance1.AddSubSystem(SumTotoalThrottle_param);
 	}
 	void AircraftDynamicModel::DefineLogging()
 	{
@@ -481,6 +616,8 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactorfluy, 0, "loadfactorbodyy");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactorfluz, 0, "loadfactorbodyz");
 
+		SimInstance1.DefineDataLogging(Modelist.autothrottle.SumTotoalThrottle, 0, "ThrottleCmd");
+
 	}
 	void AircraftDynamicModel::ConnectSystems()
 	{
@@ -568,7 +705,7 @@ namespace  aircraft {
 
 		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_SHAFTRPS, Modelist.engine.omega2rps, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_MANIFOLD, Modelist.aerodynamics.atmosphere, geographic::AtmDensity);
-		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, Modelist.temp.fixedthrottle, 0);
+		//SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, Modelist.temp.fixedthrottle, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_MIXTURE,  Modelist.temp.fixedmixture, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_FUELSTATE,Modelist.temp.fixedfuelstate, 0);
 
@@ -595,5 +732,40 @@ namespace  aircraft {
 		// invert the y and z components of the load factor
 		SimInstance1.EditConnectionMatrix(Modelist.dynamics.loadfactorfluy, 0, Modelist.dynamics.loadfactor, mathauxiliary::VECTOR_Y);
 		SimInstance1.EditConnectionMatrix(Modelist.dynamics.loadfactorfluz, 0, Modelist.dynamics.loadfactor, mathauxiliary::VECTOR_Z);
+
+		// connect the pitch CAS
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.CosGammaRoll, 0, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_GAMMA);// 0 for gamma
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.CosGammaRoll, 1, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerRoll);// 1 for roll
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SaturationCosPhi, 0, Modelist.pitchCAS.CosGammaRoll, 1);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.ProductGammaPhi, 0, Modelist.pitchCAS.CosGammaRoll, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.ProductGammaPhi, 1, Modelist.pitchCAS.SaturationCosPhi, 0); // 1 from saturation
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumDeltaDz, 0, Modelist.pitchCAS.ProductGammaPhi, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumDeltaDz, 1, Modelist.dynamics.loadfactorfluz, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainThetadot1, 0, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_THETADOT);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainThetadot2, 0, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_THETADOT);
+		//
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainDeCom, 0, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumCstar1, 0, Modelist.pitchCAS.GainDeCom, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumCstar1, 1, Modelist.pitchCAS.GainThetadot2, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumCstar1, 2, Modelist.pitchCAS.SumDeltaDz, 0);
+		// 
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.Deintegral, 0, Modelist.pitchCAS.SumCstar1, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SaturationDeIntegral, 0, Modelist.pitchCAS.Deintegral, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumDeCom, 0, Modelist.pitchCAS.GainThetadot1, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumDeCom, 1, Modelist.pitchCAS.SaturationDeIntegral, 0);
+		// connect the controller to aircraft input
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_ELEVATOR, Modelist.pitchCAS.SumDeCom,0);
+		// connect the 
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTASError, 0, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_TAS);
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTASError, 1, simulationcontrol::external, 0);
+
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SaturateTASError, 0, Modelist.autothrottle.SumTASError, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.GainTASError, 0, Modelist.autothrottle.SaturateTASError, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.PIDThrottleCom, 0, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.PIDThrottleCom, 1, Modelist.autothrottle.GainTASError, 0);
+
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTotoalThrottle, 0, Modelist.autothrottle.PIDThrottleCom, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTotoalThrottle, 1, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, Modelist.autothrottle.SumTotoalThrottle, 0);
 	}
 }

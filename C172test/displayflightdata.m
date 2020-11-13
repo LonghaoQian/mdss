@@ -340,4 +340,11 @@ grid on
 title('loadfactorbodyz')
 
 
+subplot(3,2,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('ThrottleCmd')))
+xlabel('t(s)')
+ylabel('ThrottleCmd')
+grid on
+title('ThrottleCmd')
+
 

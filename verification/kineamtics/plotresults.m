@@ -961,3 +961,24 @@ xlabel('t(s)')
 ylabel('psi_dot(rad/s)')
 grid on
 title('psi_dot diff')
+%%
+figure(18)
+subplot(3,2,1)
+
+plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('ans_1')))
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')), ans_1)
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('ans_1(rad)')
+grid on
+title('ans_1')
+
+subplot(3,2,2)
+
+plot(logged_data.data(:,logged_data.tagmap('t')), ans_1 - logged_data.data(:,logged_data.tagmap('ans_1')))
+% 
+xlabel('t(s)')
+ylabel('ans_1(rad)')
+grid on
+title('ans_1 diff')

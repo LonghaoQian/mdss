@@ -197,25 +197,26 @@ namespace simulationcontrol {
 		bool FlushMakeConnection();                                                      // after all inputs are connected, run this function to finalize connection before running ''PreRunProcess()''
 		subsystem_handle GetSystemHandle(const unsigned int system_ID);                  // display the information of the defined subsystems
 		/*------------------------Pre-process of the connected subystems--------------*/
-		void EditSolverConfig(const SolverConfig& config);                 // reload solver configuration 
-		bool PreRunProcess();                                              // check and parse the system connection relationship before running the simulation
-		void DisplayTopology();                                            // display the parsed system and connection
-		void ReshapeExternalInputVector(VectorXd& extern_input);           // reshape the external input vector according to the number of external inputs
-		void DisplaySystemParameter(unsigned int system_ID);               // display the system parameter according to the given system ID
-		void DisplaySystemInitialCondition(unsigned int system_ID);        // display the system initial condition according to the given system ID
-		void DisplayExternalInputMapping(blockID system_ID);               // display the external mapping of the system according to the given system ID
+		void EditSolverConfig(const SolverConfig& config);                                // reload solver configuration 
+		bool PreRunProcess();                                                             // check and parse the system connection relationship before running the simulation
+		void DisplayTopology();                                                           // display the parsed system and connection
+		void ReshapeExternalInputVector(VectorXd& extern_input);                          // reshape the external input vector according to the number of external inputs
+		void DisplaySystemParameter(unsigned int system_ID);                              // display the system parameter according to the given system ID
+		void DisplaySystemInitialCondition(unsigned int system_ID);                       // display the system initial condition according to the given system ID
+		void DisplayExternalInputMapping(blockID system_ID);                              // display the external mapping of the system according to the given system ID
+		unsigned int GetExternalInputIndex(blockID system_ID, unsigned int input_port_ID);// if the input port of the system given is mapped to the external input vector, then return the index of the corresponding external input vector index
 		/*------------------------Run-time function -------------------------------------*/
-		int Run_Update(const VectorXd& extern_input);
-		double Run_GetSystemTime();
+		int Run_Update(const VectorXd& extern_input);                                     // update the simulation based on the configuration parameters and external inputs
+		double Run_GetSystemTime();														  // 
 		VectorXd Run_GetSubsystemOuput(const unsigned int system_ID);
 		/*------------------------Data logging--------------------------------------*/
 		bool DefineDataLogging(const unsigned int output_system_ID,
 							   const unsigned int output_port_ID,
 							   string tag);
 		LoggerTag GetLoggerTag(unsigned int TagIndex);
-		void DisplayLoggerTagList();
+		void DisplayLoggerTagList();													  // display the logger tags defined 
 		/*-----------------------Post run process----------------------------------------*/
-		int PostRunProcess();                                             // run this function to terminate the simulation and 
+		int PostRunProcess();                                                             // run this function to terminate the simulation and 
 		/*-----------------------Solver Constructor--------------------------------------*/
 		SimController(const SolverConfig& config);// instansiate the class with config
 		SimController();                          // default constructor, a default config is loaded

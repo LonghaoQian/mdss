@@ -85,7 +85,8 @@ namespace linearsystem {
 		void DisplayInitialCondition();
 		~TransferFunction();
 	};
-
+	/*-------------------the rate limited acutator can simulate signals with a constant rate of change 
+	 such as the flap position vs flap command response -------- */
 	struct RateLimitedActuatorParameter {
 		double shape_factor;
 		double steady_speed;
@@ -115,12 +116,12 @@ namespace linearsystem {
 	};
 	// TO DO; add another mode where the integration is done normally
 	struct PIDcontrollerParameter {
-		double Kp;
-		double Ki;
-		double Kd;
-		double Tf;
-		int num_of_channels;
-		bool integration_control_on;// if this is true, the first input is a switch to enable the controller. mode is reset
+		double Kp{0.0};
+		double Ki{0.0};
+		double Kd{0.0};
+		double Tf{100.0};                    // the filtering constant of the PID control. (default is 100)
+		int num_of_channels{1};              // number of control channels. Each channel is independent of each other
+		bool integration_control_on{ false };// if this is true, the first input is a switch to enable the controller. mode is reset
 	};
 
 	struct PIDcontrollerInitialCondition{
