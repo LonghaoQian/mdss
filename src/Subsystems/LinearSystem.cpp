@@ -90,8 +90,7 @@ namespace linearsystem {
 	}
 	void LTIsystem::DisplayParameters()
 	{
-		cout << "---------------------" << endl;
-		cout << "LTI system parameter:" << endl;
+		std::cout << "--------- LTI block parameters ------------" << std::endl;
 		cout << "A = " << endl << A << endl;
 		cout << "----" << endl;
 		cout << "B = " << endl << B << endl;
@@ -99,14 +98,15 @@ namespace linearsystem {
 		cout << "C = " << endl << C << endl;
 		cout << "----" << endl;
 		cout << "D = " << endl << D << endl;
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void LTIsystem::DisplayInitialCondition()
 	{
-		cout << "---------------------" << endl;
-		cout << "LTI system initial condition X_0:" << endl;
+		std::cout << "-------- LTI block initial conditions --------" << std::endl;
 		cout << "The initial condition is:  " << endl;
 		cout << state << endl;
+		std::cout << "-------- End of initial conditions --------" << std::endl;
 	}
 
 	Integrator::Integrator()
@@ -156,16 +156,17 @@ namespace linearsystem {
 
 	void Integrator::DisplayParameters()
 	{
-		cout << "-------------" << endl;
-		cout << "Number of Channel is :" << parameter.num_of_channels << "\n";
+		std::cout << "--------- Integral block parameters ------------" << std::endl;
+		cout << "The number of Channel is :" << parameter.num_of_channels << "\n";
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void Integrator::DisplayInitialCondition()
 	{
-		cout << "---------------------" << endl;
-		cout << "Integration initial condition X_0:" << endl;
+		std::cout << "-------- Integrator block initial conditions --------" << std::endl;
 		cout << "The initial condition is:  " << endl;
 		cout << state << endl;
+		std::cout << "-------- End of initial conditions --------" << std::endl;
 	}
 
 	Integrator::~Integrator()
@@ -284,8 +285,7 @@ namespace linearsystem {
 
 	void TransferFunction::DisplayParameters()
 	{
-		cout << "---------------------" << endl;
-		cout << "The transfer function entered is: \n";
+		std::cout << "--------- Transfer function block parameters ------------" << std::endl;
 
 		int num_1 = parameter.Numerator.size();
 		int dem_1 = parameter.Denominator.size();
@@ -313,7 +313,7 @@ namespace linearsystem {
 		else {
 			cout << " Incorrect transfer function coefficients, check the numerator order \n ";
 		}
-
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void TransferFunction::DisplayInitialCondition()
@@ -383,15 +383,17 @@ namespace linearsystem {
 
 	void RateLimitedActuator::DisplayParameters()
 	{
-		cout << " Parameter of rate limited block is: \n";
-		cout << " number of channel is: " << param_.num_of_channels << "\n";
-		cout << " shape factor is: " << param_.shape_factor << " steady speed is: " << param_.steady_speed << "\n";
+		cout << "--------- Rate limited first-order block parameters ------------" << endl;
+		cout << " The number of channel is: " << param_.num_of_channels << "\n";
+		cout << " The shape factor is: " << param_.shape_factor << ", the steady speed is: " << param_.steady_speed << "\n";
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void RateLimitedActuator::DisplayInitialCondition()
 	{
-		cout << " Initial condition for the rate limited block is: \n ";
+		std::cout << "-------- Rate limited first-order block initial conditions --------" << std::endl;
 		cout << X0 << "\n";
+		std::cout << "-------- End of initial conditions --------" << std::endl;
 	}
 
 	RateLimitedActuator::~RateLimitedActuator()
@@ -490,16 +492,18 @@ namespace linearsystem {
 
 	void PIDcontroller::DisplayParameters()
 	{
-		cout << "kp :" << param_.Kp << "ki :" << param_.Ki << " kd : " << param_.Kd << endl;
+		std::cout << "--------- PID block parameters ------------" << std::endl;
+		cout << " kp :" << param_.Kp << "ki :" << param_.Ki << " kd : " << param_.Kd << endl;
 		cout << " A : " << A << endl;
 		cout << " B : " << B << endl;
 		cout << " C : " << C << endl;
 		cout << " D : " << D << endl;
+		std::cout << "-------- End of block parameters -------- \n" << std::endl;
 	}
 
 	void PIDcontroller::DisplayInitialCondition()
 	{
-		cout << " The initial condition of PID is set to zero " << endl;
+		cout << "--------  The initial condition of PID is set to zero -------- " << endl;
 	}
 
 	PIDcontroller::~PIDcontroller()
