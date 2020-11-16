@@ -84,6 +84,9 @@
     <ClInclude Include="..\src\Subsystems\AeroForceMoment.h">
       <Filter>Header Files\Subsystems</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Subsystems\GroundContact.h">
+      <Filter>Header Files\Subsystems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\SolverCore\RungeKuttaFamily.cpp">
@@ -135,6 +138,9 @@
       <Filter>Source Files\Subsystems</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Subsystems\AeroForceMoment.cpp">
+      <Filter>Source Files\Subsystems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Subsystems\GroundContact.cpp">
       <Filter>Source Files\Subsystems</Filter>
     </ClCompile>
   </ItemGroup>

@@ -12,7 +12,7 @@
 #include "AeroForceMoment.h"
 #include "DiscontinuousSystem.h"
 #include "PropulsionBlocks.h"
-
+#include "GroundContact.h"
 using namespace Eigen;
 using namespace std;
 static const std::map<subsystem_type, std::string> subsystem_type_list{
