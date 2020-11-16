@@ -1,19 +1,19 @@
-﻿# C++ 模块化仿真系统
+﻿# Modularized Dynamical System Simulator 模块化仿真系统
+
+<img src="images/mdss.png">
 
  [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity) 
 
+## 运行库简介
+
+>  基于子系统的仿真程序，利用C++编程实现模块化仿真功能。自动解析系统给子系统的串并联结构，实现数值求解微分方程。
+>  支持仿真参数和结果的读写。
+
 ## 正在开发中，目前已经实现多模块拓扑分析，规划和计算功能。
 
-> 1. 基于子系统的仿真程序，利用C++编程实现simulink的基本模块化仿真功能。飞机由各子系统构成，子系统定义在XML文件或者MATLAB  .mat 文件中。程序读取文件，自动解析系统给子系统的串并联结构，实现数值求解微分方程。
-> 2. 目前求解器构架已经完成，并且通过多次测试，与Simulink 的计算结果做到完全吻合。
-> 3. 正在加入测试更多模块，计划实现simulink aerosapce blockset 的全部模块功能。
-> 4. 计划加入 Gaussian Regression 的实现模块，为以后利用机器学习进行QTG系统辨识做基础。
-> 5. 求解器自带数据记录功能，同时也编写了MATLAB读取与数据画图脚本。
-
-## 下一个时间点：2020 10月，目标：实现 XML文件载入和仿真预处理优化算法
-
-> 1. 实现利用XML定义模型文件，然后自动读取文件生成仿真模型的功能。
-> 2. 实现在预处理阶段进行模型优化的功能。
+> 1. 目前求解器构架已经完成，并且通过多次测试，与Simulink 的计算结果做到完全吻合。
+> 2. 正在加入测试更多模块，计划实现simulink aerosapce blockset 的全部模块功能。
+> 3. 计划加入 Gaussian Regression 的实现模块，为以后利用机器学习进行QTG系统辨识做基础。
 
 ## 文件目录如下：
 |文件目录    |内容                        |
