@@ -30,6 +30,7 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{discontinuous_SWITCH, "Switch block"},
 	{geographic_ATOMSPHERE, "Standard atmopshere "},
 	{geographic_GRAVITY, "Gravity block"},
+	{groundcontact_SIMPLENORMAL, "Ground contact block"},
 	{math_CONSTANT, "Constant block"},
 	{math_CROSSPRODUCT, "Cross-product block"},
 	{math_DIVISION, "Division block"},
@@ -163,6 +164,8 @@ namespace simulationcontrol {
 		// geographic libs
 		unsigned int AddSubSystem(const geographic::StandardAtmosphereParameter& parameters);
 		unsigned int AddSubSystem(const geographic::GravityModelParameter& parameters);
+		// ground effect
+		unsigned int AddSubSystem(const groundcontact::SimpleGearNormalForceParameter& parameter);
 		// aerodynamics
 		unsigned int AddSubSystem(const aero::AerosForceParameter& parameters);
 		unsigned int AddSubSystem(const aero::AeroAngleParameter& parameters);

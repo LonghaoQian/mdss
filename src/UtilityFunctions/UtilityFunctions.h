@@ -28,14 +28,23 @@ namespace mathauxiliary {
 	};
 
 	/*----- attitude kinematics ------*/
+	// the function maps a cross-product matrix back to the vector
 	Vector3d Veemap(const Matrix3d& cross_matrix);
+	// the lie algebra of  a vector, or the cross-product matrix of a vector
 	Matrix3d Hatmap(const Vector3d& vector);
+	// get the Euler angles by a given quaternion
 	Vector3d GetEulerAngleFromQuaterion(const Vector4d& quaterion);
+	// given a set of Euler angles, compute the corresponding quaternion
 	Vector4d GetQuaterionFromRulerAngle(const Vector3d& Euler);
+	// the L auxiliary matrix of a quaternion
 	Matrix<double, 3, 4> GetLmatrixFromQuaterion(const Vector4d& quaterion);
+	// the R auxiliary matrix of a quaternion
 	Matrix<double, 3, 4> GetRmatrixFromQuaterion(const Vector4d& quaterion);
+	// compute the rotation matrix corresponding to a quaternion
 	Matrix3d GetR_IBFromQuaterion(const Vector4d& quaterion);
+	// distribute the columns of a rotation matrix into a 9 by 1 vector 
 	Matrix<double, 9, 1> ConvertRotationMatrixToVector(const Matrix<double,3,3>& R);
+	// form a rotation matrix with a 9 by 1 vector by columns
 	Matrix<double, 3, 3> ConvertVectorToRotationMatrix(const Matrix<double, 9,1>& v);
 	void ConvertVectorToRotationMatrix(const Matrix<double, 9, 1>& v, Matrix3d& R);
 	/*--------- topology --------------*/

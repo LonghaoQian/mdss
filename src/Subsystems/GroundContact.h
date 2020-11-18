@@ -1,5 +1,6 @@
 #pragma once
 #include "Subsystem.h"
+#include "UtilityFunctions.h"
 namespace groundcontact {
 	/*--------------  simple gear contact force based on point contact model ---------------------*/
 	struct SimpleGearNormalForceParameter{
@@ -8,7 +9,9 @@ namespace groundcontact {
 		double kCompress{0.0};    // the stiffness parameter of impact phase
 		double kRebound{0.0};     // the stiffness parameter of the rebound phase
 		double dCompress{0.0};    // the damping parameter of the impact phase
-		double dRebound{0.};     // the damping parameter of the rebound phase
+		double dRebound{0.0};     // the damping parameter of the rebound phase
+		double MaxHeight{ 1.0 };   // the maximum height where the gear block starts calculation NED frame
+		double MinNz{ 0.0 };      // gear block  will stop calculation when the third component of the z axis of the aircraft body fixed frame is lower than this value
 	};
 
 	enum GearNormalForceInput {
@@ -33,16 +36,48 @@ namespace groundcontact {
 		GEARNORMAL_INPUT_R_IB22,
 		GEARNORMAL_INPUT_H,        // the ground height at the projected contact point (NED)
 		GEARNORMAL_INPUT_Hdot,     // the rate change of the ground height at the projected contact point (NED)
+		GEARNORMAL_INPUT_NGx,     // the ground normal vector in local inertial frame
+		GEARNORMAL_INPUT_NGy,
+		GEARNORMAL_INPUT_NGz,
 	};
 
 	enum GearNormalForceOutput {
 		GEARNORMAL_OUTPUT_COMPRESSION = 0, // the compression distance of the landing gear;
 		GEARNORMAL_OUTPUT_COMPRESSIONRATE, // the compression rate of the landing gear;
-		GEARNORMAL_OUTPUT_N,               // the normal force of the landing gear relative to the ground
+		GEARNORMAL_OUTPUT_Nbx,               // the normal force of the landing gear relative to the ground in body-fixed frame
+		GEARNORMAL_OUTPUT_Nby,
+		GEARNORMAL_OUTPUT_Nbz,
 		GEARNORMAL_OUTPUT_F,               // the force along the landing gear suspension relative to the aircraft
 	};
 
+	class SimpleGearNormalForce:
+		public Subsystem
+	{
+	private:
+		SimpleGearNormalForceParameter param_;
+		Vector3d re;
+		Vector3d ne;
+		Matrix3d R_IB;
+		Matrix3d R_IB_dot;
+		Vector3d re_dot;
+		Vector3d ne_dot;
+	public:
+		SimpleGearNormalForce(const SimpleGearNormalForceParameter& param);
+		void DifferentialEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input,
+			VectorXd& derivative);
+		void OutputEquation(const double& t,
+			const VectorXd& state,
+			const VectorXd& input, VectorXd& output);
+		void IncrementState();
+		void DisplayParameters();
+		void DisplayInitialCondition();
+		~SimpleGearNormalForce();
+	};
 	/*--------------  simple gear friction force based on LuGre model ---------------------*/
-
+	struct LuGreFrictionParameter {
+		double rollingfriction{ 0.0 };
+	};
 	/*--------------  TO DO: ground height model ---------------------*/
 }
