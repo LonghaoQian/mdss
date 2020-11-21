@@ -283,6 +283,16 @@ namespace simulationcontrol {
 		return CreateSystemHandle(system_info, subsystem_list);
 	}
 
+	unsigned int SimController::AddSubSystem(const groundcontact::SimpleGearNormalForceParameter & parameter)
+	{
+		subsystem_info system_info;
+		subsystem_list.emplace_back(new groundcontact::SimpleGearNormalForce(parameter));
+		// update number of subsystems
+		num_of_subsystems = subsystem_list.size();
+		// returen subystem handle
+		return CreateSystemHandle(system_info, subsystem_list);
+	}
+
 	unsigned int SimController::AddSubSystem(const aero::AerosForceParameter& parameters)
 	{
 		subsystem_info system_info;

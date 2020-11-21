@@ -10,7 +10,7 @@ figure(1)
 subplot(3,2,1)
 hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('omega_dotx')))
-plot(logged_data.data(:,logged_data.tagmap('t')),Omega_dot(:,1))
+plot(logged_data.data(:,logged_data.tagmap('t')),reshape(Omega_dot(1,:,:),2001,1))
 legend('solver','simulink')
 xlabel('t(s)')
 ylabel('omega_dotx')
@@ -18,7 +18,7 @@ grid on
 title('angular acc x')
 
 subplot(3,2,2)
-plot(logged_data.data(:,logged_data.tagmap('t')),Omega_dot(:,1) - logged_data.data(:,logged_data.tagmap('omega_dotx')))
+plot(logged_data.data(:,logged_data.tagmap('t')),reshape(Omega_dot(1,:,:),2001,1) - logged_data.data(:,logged_data.tagmap('omega_dotx')))
 xlabel('t(s)')
 ylabel('omega_dotx')
 grid on
@@ -27,7 +27,7 @@ title('angular acc x diff')
 subplot(3,2,3)
 hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('omega_doty')))
-plot(logged_data.data(:,logged_data.tagmap('t')),Omega_dot(:,2))
+plot(logged_data.data(:,logged_data.tagmap('t')),reshape(Omega_dot(2,:,:),2001,1))
 legend('solver','simulink')
 xlabel('t(s)')
 ylabel('omega_doty')
@@ -35,7 +35,7 @@ grid on
 title('angular acc y')
 
 subplot(3,2,4)
-plot(logged_data.data(:,logged_data.tagmap('t')),Omega_dot(:,2) - logged_data.data(:,logged_data.tagmap('omega_doty')))
+plot(logged_data.data(:,logged_data.tagmap('t')),reshape(Omega_dot(2,:,:),2001,1) - logged_data.data(:,logged_data.tagmap('omega_doty')))
 xlabel('t(s)')
 ylabel('omega_doty')
 grid on
@@ -44,7 +44,7 @@ title('angular acc y diff')
 subplot(3,2,5)
 hold on
 plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('omega_dotz')))
-plot(logged_data.data(:,logged_data.tagmap('t')),Omega_dot(:,3))
+plot(logged_data.data(:,logged_data.tagmap('t')),reshape(Omega_dot(3,:,:),2001,1))
 legend('solver','simulink')
 xlabel('t(s)')
 ylabel('omega_dotz')
@@ -52,7 +52,7 @@ grid on
 title('angular acc z')
 
 subplot(3,2,6)
-plot(logged_data.data(:,logged_data.tagmap('t')),Omega_dot(:,3) - logged_data.data(:,logged_data.tagmap('omega_dotz')))
+plot(logged_data.data(:,logged_data.tagmap('t')),reshape(Omega_dot(3,:,:),2001,1) - logged_data.data(:,logged_data.tagmap('omega_dotz')))
 xlabel('t(s)')
 ylabel('omega_dotz')
 grid on
@@ -312,7 +312,7 @@ grid on
 title('Vbz')
 
 subplot(3,2,6)
-plot(logged_data.data(:,logged_data.tagmap('t')),VB(:,3) - logged_data.data(:,logged_data.tagmap('Vbz')))
+plot(logged_data.data(:,logged_data.tagmap('t')),VB(:,3)- logged_data.data(:,logged_data.tagmap('Vbz')))
 xlabel('t(s)')
 ylabel('Vbz')
 grid on
@@ -965,20 +965,64 @@ title('psi_dot diff')
 figure(18)
 subplot(3,2,1)
 
-plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('ans_1')))
+plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('Snose')))
 hold on
-plot(logged_data.data(:,logged_data.tagmap('t')), ans_1)
+plot(logged_data.data(:,logged_data.tagmap('t')), S0)
 legend('solver','simulink')
 xlabel('t(s)')
-ylabel('ans_1(rad)')
+ylabel('compression (m)')
 grid on
-title('ans_1')
+title('compression nose gear')
 
 subplot(3,2,2)
 
-plot(logged_data.data(:,logged_data.tagmap('t')), ans_1 - logged_data.data(:,logged_data.tagmap('ans_1')))
+plot(logged_data.data(:,logged_data.tagmap('t')), S0 - logged_data.data(:,logged_data.tagmap('Snose')))
 % 
 xlabel('t(s)')
-ylabel('ans_1(rad)')
+ylabel('compression (m)')
 grid on
-title('ans_1 diff')
+title('compression nose gear diff')
+
+
+subplot(3,2,3)
+
+plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('Sleft')))
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')), S1)
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('compression (m)')
+grid on
+title('compression left gear')
+
+subplot(3,2,4)
+
+plot(logged_data.data(:,logged_data.tagmap('t')), S1 - logged_data.data(:,logged_data.tagmap('Sleft')))
+% 
+xlabel('t(s)')
+ylabel('compression (m)')
+grid on
+title('compression left gear diff')
+
+subplot(3,2,5)
+
+plot(logged_data.data(:,logged_data.tagmap('t')), logged_data.data(:,logged_data.tagmap('Sright')))
+hold on
+plot(logged_data.data(:,logged_data.tagmap('t')), S2)
+legend('solver','simulink')
+xlabel('t(s)')
+ylabel('compression (m)')
+grid on
+title('compression right gear')
+
+subplot(3,2,6)
+
+plot(logged_data.data(:,logged_data.tagmap('t')), S2 - logged_data.data(:,logged_data.tagmap('Sright')))
+% 
+xlabel('t(s)')
+ylabel('compression (m)')
+grid on
+title('compression right gear diff')
+%%
+
+

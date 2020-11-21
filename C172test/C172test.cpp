@@ -6,7 +6,7 @@
 #include "Aircraftmodel.h"
 #include <time.h>
 
-//#define DEBUG
+#define DEBUG
 int main()
 {
 	
@@ -248,7 +248,7 @@ int main()
 	double MinAirspeed = 0.1;
 	double ReferenceArea = 16.1651289600000;
 	// plane mass
-	double planemass = 1.0;
+	double planemass = 1454.0*0.453592;
 	// plane CG
 	double CG_MAC = 0.25;
 	// plane initial condition
@@ -256,8 +256,8 @@ int main()
 	// define kinematics
 	dynamics::RigidBodyKinematicsInitialCondition initial_condition;
 	initial_condition.Euler0(mathauxiliary::EULER_ROLL) = 0.0;
-	initial_condition.Euler0(mathauxiliary::EULER_PITCH) = 5.0/57.3;
-	initial_condition.Euler0(mathauxiliary::EULER_YAW) = 30.0/57.3;
+	initial_condition.Euler0(mathauxiliary::EULER_PITCH) = 4.0/57.3;
+	initial_condition.Euler0(mathauxiliary::EULER_YAW) = 0.0/57.3;
 	initial_condition.Omega0(mathauxiliary::VECTOR_X) = 0.0;
 	initial_condition.Omega0(mathauxiliary::VECTOR_Y) = 0.0;
 	initial_condition.Omega0(mathauxiliary::VECTOR_Z) = 0.0;
@@ -266,17 +266,14 @@ int main()
 	initial_condition.VI0(mathauxiliary::VECTOR_Z) = 0.0;
 	initial_condition.XI0(mathauxiliary::VECTOR_X) = 0.0;
 	initial_condition.XI0(mathauxiliary::VECTOR_Y) = 0.0;
-	initial_condition.XI0(mathauxiliary::VECTOR_Z) = 0.0; // END frame
+	initial_condition.XI0(mathauxiliary::VECTOR_Z) = -7.0; // END frame
 	unsigned int planekinematics = SimInstance1.AddSubSystem(initial_condition);
 	// define dynamics
 	dynamics::RigidBodyDynamicsParamter dynamics_parameter;
-	//dynamics_parameter.J(0, 0) = 1285.31541660000; // kg m^2
-	//dynamics_parameter.J(1, 1) = 1824.93096070000;
-	//dynamics_parameter.J(2, 2) = 2666.89390765000;
-	//dynamics_parameter.m = planemass; //kg
-	dynamics_parameter.J(0, 0) = 20.0; // kg m^2
-	dynamics_parameter.J(1, 1) = 20.0;
-	dynamics_parameter.J(2, 2) = 20.0;
+	dynamics_parameter.J.setZero();
+	dynamics_parameter.J(0, 0) = 1285.31541660000; // kg m^2
+	dynamics_parameter.J(1, 1) = 1824.93096070000;
+	dynamics_parameter.J(2, 2) = 2666.89390765000;
 	dynamics_parameter.m = planemass;
 	unsigned int planedynamics = SimInstance1.AddSubSystem(dynamics_parameter);
 	// define gravity 
@@ -605,15 +602,121 @@ int main()
 
 	unsigned int  trig_cos2 = SimInstance1.AddSubSystem(trig_param);
 
+	groundcontact::SimpleGearNormalForceParameter nose_gear_param;
+	nose_gear_param.MinNz = 0.5;
+	nose_gear_param.MaxHeight = 10.0;
+	nose_gear_param.kCompress = 1800.0 * 4.4482 / 0.3048;
+	nose_gear_param.dRebound = 2000.0 * 4.4482 / 0.3048;
+	nose_gear_param.dCompress = 500.0 * 4.4482 / 0.3048;
+	nose_gear_param.GearDirection(mathauxiliary::VECTOR_X) = 0.0;
+	nose_gear_param.GearDirection(mathauxiliary::VECTOR_Y) = 0.0;
+	nose_gear_param.GearDirection(mathauxiliary::VECTOR_Z) = 1.0;
+	nose_gear_param.GearPosition(mathauxiliary::VECTOR_X) = 1.2141;
+	nose_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = 0.0;
+	nose_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = 1.4351;
+
+	unsigned int nose_gear = SimInstance1.AddSubSystem(nose_gear_param);
+
+	groundcontact::SimpleGearNormalForceParameter left_gear_param;
+	left_gear_param.MinNz = 0.5;
+	left_gear_param.MaxHeight = 10.0;
+	left_gear_param.kCompress = 5400.0 * 4.4482 / 0.3048;
+	left_gear_param.dRebound = 320.0 * 4.4482 / 0.3048;
+	left_gear_param.dCompress = 160.0 * 4.4482 / 0.3048;
+	left_gear_param.GearDirection(mathauxiliary::VECTOR_X) = 0.0;
+	left_gear_param.GearDirection(mathauxiliary::VECTOR_Y) = 0.0;
+	left_gear_param.GearDirection(mathauxiliary::VECTOR_Z) = 1.0;
+	left_gear_param.GearPosition(mathauxiliary::VECTOR_X) = -0.4369;
+	left_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = -1.2763;
+	left_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = 1.3960;
+
+	unsigned int left_gear = SimInstance1.AddSubSystem(left_gear_param);
+
+	groundcontact::SimpleGearNormalForceParameter right_gear_param;
+	right_gear_param.MinNz = 0.5;
+	right_gear_param.MaxHeight = 10.0;
+	right_gear_param.kCompress = 5400.0 * 4.4482 / 0.3048;
+	right_gear_param.dRebound = 320.0 * 4.4482 / 0.3048;
+	right_gear_param.dCompress = 160 * 4.4482 / 0.3048;
+	right_gear_param.GearDirection(mathauxiliary::VECTOR_X) = 0.0;
+	right_gear_param.GearDirection(mathauxiliary::VECTOR_Y) = 0.0;
+	right_gear_param.GearDirection(mathauxiliary::VECTOR_Z) = 1.0;
+	right_gear_param.GearPosition(mathauxiliary::VECTOR_X) = -0.4369;
+	right_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = 1.2763;
+	right_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = 1.3960;
+
+	unsigned int right_gear = SimInstance1.AddSubSystem(right_gear_param);
+
+
+	mathblocks::SumParameter total_gear_force_param;
+	total_gear_force_param.input_dimensions = 3;
+	total_gear_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+	total_gear_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+	total_gear_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+
+	unsigned int total_gear_force = SimInstance1.AddSubSystem(total_gear_force_param);
+	// same parameter
+	unsigned int total_gear_moment = SimInstance1.AddSubSystem(total_gear_force_param);
+
+	mathblocks::SumParameter total_force_param;
+	total_force_param.input_dimensions = 3;
+	total_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+	total_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+	unsigned int total_force = SimInstance1.AddSubSystem(total_force_param);
+	// to body-fixed frame
+
+	mathblocks::MultiplicationParam gear_force_to_inertial_param;
+	gear_force_to_inertial_param.input1_dimension(mathblocks::MATRIX_ROW) = 3;
+	gear_force_to_inertial_param.input1_dimension(mathblocks::MATRIX_COL) = 3;
+	gear_force_to_inertial_param.input2_dimension(mathblocks::MATRIX_ROW) = 3;
+	gear_force_to_inertial_param.input2_dimension(mathblocks::MATRIX_COL) = 1;
+	gear_force_to_inertial_param.Mode = mathblocks::MULTI_MATRIX;
+
+	unsigned int gear_force_to_inertial = SimInstance1.AddSubSystem(gear_force_to_inertial_param);
+	// unsigned int 
+
+	mathblocks::ConstantParameter H_param;
+
+	H_param.value.resize(1, 1);
+	H_param.value(0) = -1.0;
+
+	unsigned int H_ground = SimInstance1.AddSubSystem(H_param);
+
+	mathblocks::ConstantParameter Ng_param;
+	Ng_param.value.resize(3, 1);
+	Ng_param.value(mathauxiliary::VECTOR_X) = 0.0;
+	Ng_param.value(mathauxiliary::VECTOR_Y) = 0.0;
+	Ng_param.value(mathauxiliary::VECTOR_Z) = - 1.0;
+
+	unsigned int N_ground = SimInstance1.AddSubSystem(Ng_param);
+
+	mathblocks::ConstantParameter gear_swithc_param;
+	gear_swithc_param.value.resize(1, 1);
+	gear_swithc_param.value(0) = 1.0;
+	unsigned int gear_switch = SimInstance1.AddSubSystem(gear_swithc_param);
+
 	// connections
 
 	// signal output to dynamics:
+
+	/*
+
 	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIx, signal_generator1, 0);
 	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIy, signal_generator2, 0);
 	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIz, signal_generator3, 0);
+
 	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBx, signal_generator1, 0);
 	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBy, signal_generator2, 0);
 	SimInstance1.EditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBz, signal_generator3, 0);
+	*/
+
+	SimInstance1.BatchEditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIx, dynamics::DYNAMICS_INPUT_FIz, total_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+
+	SimInstance1.BatchEditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBx, dynamics::DYNAMICS_INPUT_TBz, total_gear_moment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+
+
+
+
 	SimInstance1.BatchEditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_OmegaBIx, dynamics::DYNAMICS_INPUT_OmegaBIz, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
 
 	// dynamics to kinematics
@@ -682,7 +785,48 @@ int main()
 	SimInstance1.EditConnectionMatrix(division, 0, trig_cos1, 0);
 	SimInstance1.EditConnectionMatrix(division, 1, trig_cos2, 0);
 
-	// flush connection matrix
+	// connect landing gear
+
+	SimInstance1.EditConnectionMatrix(nose_gear, groundcontact::GEARNORMAL_INPUT_SWITCH, gear_switch, 0);
+	SimInstance1.EditConnectionMatrix(nose_gear, groundcontact::GEARNORMAL_INPUT_H, H_ground, 0);
+	SimInstance1.EditConnectionMatrix(nose_gear, groundcontact::GEARNORMAL_INPUT_Hdot, simulationcontrol::external, 0);
+	SimInstance1.BatchEditConnectionMatrix(nose_gear, groundcontact::GEARNORMAL_INPUT_NGx, groundcontact::GEARNORMAL_INPUT_NGz, N_ground, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(nose_gear, groundcontact::GEARNORMAL_INPUT_OMEGAbx, groundcontact::GEARNORMAL_INPUT_OMEGAbz, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+	SimInstance1.BatchEditConnectionMatrix(nose_gear, groundcontact::GEARNORMAL_INPUT_PIx, groundcontact::GEARNORMAL_INPUT_PIz, planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, dynamics::KINEMATICS_OUTPUT_XIz);
+	SimInstance1.BatchEditConnectionMatrix(nose_gear, groundcontact::GEARNORMAL_INPUT_R_IB00, groundcontact::GEARNORMAL_INPUT_R_IB22, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+	SimInstance1.BatchEditConnectionMatrix(nose_gear, groundcontact::GEARNORMAL_INPUT_VIx, groundcontact::GEARNORMAL_INPUT_VIz, planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
+
+	SimInstance1.EditConnectionMatrix(left_gear, groundcontact::GEARNORMAL_INPUT_SWITCH, gear_switch, 0);
+	SimInstance1.EditConnectionMatrix(left_gear, groundcontact::GEARNORMAL_INPUT_H, H_ground, 0);
+	SimInstance1.EditConnectionMatrix(left_gear, groundcontact::GEARNORMAL_INPUT_Hdot, simulationcontrol::external, 0);
+	SimInstance1.BatchEditConnectionMatrix(left_gear, groundcontact::GEARNORMAL_INPUT_NGx, groundcontact::GEARNORMAL_INPUT_NGz, N_ground, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(left_gear, groundcontact::GEARNORMAL_INPUT_OMEGAbx, groundcontact::GEARNORMAL_INPUT_OMEGAbz, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+	SimInstance1.BatchEditConnectionMatrix(left_gear, groundcontact::GEARNORMAL_INPUT_PIx, groundcontact::GEARNORMAL_INPUT_PIz, planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, dynamics::KINEMATICS_OUTPUT_XIz);
+	SimInstance1.BatchEditConnectionMatrix(left_gear, groundcontact::GEARNORMAL_INPUT_R_IB00, groundcontact::GEARNORMAL_INPUT_R_IB22, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+	SimInstance1.BatchEditConnectionMatrix(left_gear, groundcontact::GEARNORMAL_INPUT_VIx, groundcontact::GEARNORMAL_INPUT_VIz, planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
+
+	SimInstance1.EditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_SWITCH, gear_switch, 0);
+	SimInstance1.EditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_H, H_ground, 0);
+	SimInstance1.EditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_Hdot, simulationcontrol::external, 0);
+	SimInstance1.BatchEditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_NGx, groundcontact::GEARNORMAL_INPUT_NGz, N_ground, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_OMEGAbx, groundcontact::GEARNORMAL_INPUT_OMEGAbz, planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+	SimInstance1.BatchEditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_PIx, groundcontact::GEARNORMAL_INPUT_PIz, planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, dynamics::KINEMATICS_OUTPUT_XIz);
+	SimInstance1.BatchEditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_R_IB00, groundcontact::GEARNORMAL_INPUT_R_IB22, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+	SimInstance1.BatchEditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_VIx, groundcontact::GEARNORMAL_INPUT_VIz, planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
+	
+	SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X,       mathauxiliary::VECTOR_Z,     nose_gear,  groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
+	SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X + 3 ,  mathauxiliary::VECTOR_Z + 3, left_gear,  groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
+	SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X + 6,   mathauxiliary::VECTOR_Z + 6, right_gear, groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
+
+	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, nose_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
+	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X + 3, mathauxiliary::VECTOR_Z +3 , left_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
+	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X + 6, mathauxiliary::VECTOR_Z + 6, right_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
+
+	SimInstance1.BatchEditConnectionMatrix(gear_force_to_inertial, 0, 8, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+	SimInstance1.BatchEditConnectionMatrix(gear_force_to_inertial, 9, 11, total_gear_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+
+	SimInstance1.BatchEditConnectionMatrix(total_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, gear_force_to_inertial, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(total_force, mathauxiliary::VECTOR_X+3, mathauxiliary::VECTOR_Z+3, gravity, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 	SimInstance1.FlushMakeConnection();
 
 	// define the data log tag
@@ -778,6 +922,40 @@ int main()
 	SimInstance1.DefineDataLogging(piston_engine_1, propulsionsystem::PISTONENGINE_OUTPUT_FUELRATE, "FuelRate");
 
 	SimInstance1.DefineDataLogging(division, 0, "ans_1");
+
+	SimInstance1.DefineDataLogging(nose_gear, groundcontact::GEARNORMAL_OUTPUT_COMPRESSION, "Snose");
+	SimInstance1.DefineDataLogging(left_gear, groundcontact::GEARNORMAL_OUTPUT_COMPRESSION, "Sleft");
+	SimInstance1.DefineDataLogging(right_gear, groundcontact::GEARNORMAL_OUTPUT_COMPRESSION, "Sright");
+
+	SimInstance1.DefineDataLogging(nose_gear, groundcontact::GEARNORMAL_OUTPUT_COMPRESSIONRATE, "Sdotnose");
+	SimInstance1.DefineDataLogging(left_gear, groundcontact::GEARNORMAL_OUTPUT_COMPRESSIONRATE, "Sdotleft");
+	SimInstance1.DefineDataLogging(right_gear, groundcontact::GEARNORMAL_OUTPUT_COMPRESSIONRATE, "Sdotright");
+
+
+	SimInstance1.DefineDataLogging(nose_gear, groundcontact::GEARNORMAL_OUTPUT_Nbx, "NoseGearForceX");
+	SimInstance1.DefineDataLogging(nose_gear, groundcontact::GEARNORMAL_OUTPUT_Nby, "NoseGearForceY");
+	SimInstance1.DefineDataLogging(nose_gear, groundcontact::GEARNORMAL_OUTPUT_Nbz, "NoseGearForceZ");
+
+	SimInstance1.DefineDataLogging(left_gear, groundcontact::GEARNORMAL_OUTPUT_Nbx, "LeftGearForceX");
+	SimInstance1.DefineDataLogging(left_gear, groundcontact::GEARNORMAL_OUTPUT_Nby, "LeftGearForceY");
+	SimInstance1.DefineDataLogging(left_gear, groundcontact::GEARNORMAL_OUTPUT_Nbz, "LeftGearForceZ");
+
+	SimInstance1.DefineDataLogging(right_gear, groundcontact::GEARNORMAL_OUTPUT_Nbx, "RightGearForceX");
+	SimInstance1.DefineDataLogging(right_gear, groundcontact::GEARNORMAL_OUTPUT_Nby, "RightGearForceY");
+	SimInstance1.DefineDataLogging(right_gear, groundcontact::GEARNORMAL_OUTPUT_Nbz, "RightGearForceZ");
+
+	SimInstance1.DefineDataLogging(nose_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, "NoseGearMomentX");
+	SimInstance1.DefineDataLogging(nose_gear, groundcontact::GEARNORMAL_OUTPUT_Mby, "NoseGearMomentY");
+	SimInstance1.DefineDataLogging(nose_gear, groundcontact::GEARNORMAL_OUTPUT_Mbz, "NoseGearMomentZ");
+
+	SimInstance1.DefineDataLogging(left_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, "LeftGearMomentX");
+	SimInstance1.DefineDataLogging(left_gear, groundcontact::GEARNORMAL_OUTPUT_Mby, "LeftGearMomentY");
+	SimInstance1.DefineDataLogging(left_gear, groundcontact::GEARNORMAL_OUTPUT_Mbz, "LeftGearMomentZ");
+
+	SimInstance1.DefineDataLogging(right_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, "RightGearMomentX");
+	SimInstance1.DefineDataLogging(right_gear, groundcontact::GEARNORMAL_OUTPUT_Mby, "RightGearMomentY");
+	SimInstance1.DefineDataLogging(right_gear, groundcontact::GEARNORMAL_OUTPUT_Mbz, "RightGearMomentZ");
+
 
 	// SimInstance1.DisplayLoggerTagList();// show the logged tags
 

@@ -72,6 +72,9 @@
     <ClInclude Include="..\src\Application\Aircraftmodel.h">
       <Filter>Header Files\Aircraftdynamics</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Subsystems\GroundContact.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -127,6 +130,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Application\Aircraftmodel.cpp">
       <Filter>Source Files\Aircraftdynamics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Subsystems\GroundContact.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -7,10 +7,9 @@ namespace groundcontact {
 		Vector3d GearPosition;  // natural location of the landing gear 
 		Vector3d GearDirection; // the direction of the landing gear compression (if the gear has a complex suspension, this is the equivalent direction of compression)
 		double kCompress{0.0};    // the stiffness parameter of impact phase
-		double kRebound{0.0};     // the stiffness parameter of the rebound phase
 		double dCompress{0.0};    // the damping parameter of the impact phase
 		double dRebound{0.0};     // the damping parameter of the rebound phase
-		double MaxHeight{ 1.0 };   // the maximum height where the gear block starts calculation NED frame
+		double MaxHeight{ 1.0 };   // the maximum height where the gear block starts calculation NED frame (a positive number )
 		double MinNz{ 0.0 };      // gear block  will stop calculation when the third component of the z axis of the aircraft body fixed frame is lower than this value
 	};
 
@@ -44,9 +43,15 @@ namespace groundcontact {
 	enum GearNormalForceOutput {
 		GEARNORMAL_OUTPUT_COMPRESSION = 0, // the compression distance of the landing gear;
 		GEARNORMAL_OUTPUT_COMPRESSIONRATE, // the compression rate of the landing gear;
-		GEARNORMAL_OUTPUT_Nbx,               // the normal force of the landing gear relative to the ground in body-fixed frame
+		GEARNORMAL_OUTPUT_Nbx,             // the normal force of the landing gear relative to the ground in body-fixed frame
 		GEARNORMAL_OUTPUT_Nby,
 		GEARNORMAL_OUTPUT_Nbz,
+		GEARNORMAL_OUTPUT_NIx,             // the normal force of the landing gear relative to the ground in inertial frame
+		GEARNORMAL_OUTPUT_NIy,
+		GEARNORMAL_OUTPUT_NIz,
+		GEARNORMAL_OUTPUT_Mbx,             // moment created by the normal force in body-fixed frame
+		GEARNORMAL_OUTPUT_Mby,
+		GEARNORMAL_OUTPUT_Mbz,
 		GEARNORMAL_OUTPUT_F,               // the force along the landing gear suspension relative to the aircraft
 	};
 
@@ -78,6 +83,7 @@ namespace groundcontact {
 	/*--------------  simple gear friction force based on LuGre model ---------------------*/
 	struct LuGreFrictionParameter {
 		double rollingfriction{ 0.0 };
+		double staticfriction{ 0.0 };
 	};
 	/*--------------  TO DO: ground height model ---------------------*/
 }

@@ -169,6 +169,7 @@
     <ClInclude Include="..\src\Subsystems\AeroForceMoment.h" />
     <ClInclude Include="..\src\Subsystems\DiscontinuousSystem.h" />
     <ClInclude Include="..\src\Subsystems\ExternalModel.h" />
+    <ClInclude Include="..\src\Subsystems\GroundContact.h" />
     <ClInclude Include="..\src\Subsystems\LinearSystem.h" />
     <ClInclude Include="..\src\Subsystems\MathBlocks.h" />
     <ClInclude Include="..\src\Subsystems\PropulsionBlocks.h" />
@@ -188,6 +189,7 @@
     <ClCompile Include="..\src\Subsystems\AeroForceMoment.cpp" />
     <ClCompile Include="..\src\Subsystems\DiscontinuousSystem.cpp" />
     <ClCompile Include="..\src\Subsystems\ExternalModel.cpp" />
+    <ClCompile Include="..\src\Subsystems\GroundContact.cpp" />
     <ClCompile Include="..\src\Subsystems\LinearSystem.cpp" />
     <ClCompile Include="..\src\Subsystems\MathBlocks.cpp" />
     <ClCompile Include="..\src\Subsystems\PropulsionBlocks.cpp" />

@@ -122,6 +122,21 @@ namespace aircraft {
 
 	};
 
+
+	struct gearparameter {
+		double Rex{ 0.0 };
+		double Rey{ 0.0 };
+		double Rrez{ 0.0 };
+		double Nex{ 0.0 };
+		double Ney{ 0.0 };
+		double Nez{ 0.0 };
+		double Stiffness{ 0.0 };
+		double CompressDamping{ 0.0 };
+		double ReboundDamping{ 0.0 };
+		double Hmax{ 0.0 };
+		double NeMin{ 0.3 };
+	};
+
 	struct autopilotparameter {
 		struct {
 			double AltitudeErrorLimit{ 0.0 };
@@ -191,6 +206,16 @@ namespace aircraft {
 			double Span{ 0.0 };
 			double MeanChord{ 0.0 };
 			double ReferenceArea = 16.1651289600000;
+			struct {
+				gearparameter param;
+				double MaxSteering;
+			}nosegear;
+			struct {
+				gearparameter param;
+			}leftgear;
+			struct {
+				gearparameter param;
+			}rightgear;
 		}geometry;
 		// autopilot parameters
 		aerodynamicsparameter aerodynamics;
