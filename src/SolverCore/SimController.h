@@ -31,6 +31,7 @@ static const std::map<subsystem_type, std::string> subsystem_type_list{
 	{geographic_ATOMSPHERE, "Standard atmopshere "},
 	{geographic_GRAVITY, "Gravity block"},
 	{groundcontact_SIMPLENORMAL, "Ground contact block"},
+	{groundcontact_LUGREMODEL, "Lugre friction block"},
 	{math_CONSTANT, "Constant block"},
 	{math_CROSSPRODUCT, "Cross-product block"},
 	{math_DIVISION, "Division block"},

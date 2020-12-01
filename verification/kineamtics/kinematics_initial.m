@@ -57,5 +57,13 @@ geardirection2 = [0 0 1]';
 stiffness2 = 5400*4.4482/0.3048;% LBS/FT
 damping2 = 160*4.4482/0.3048;% LBS/FT/SEC
 damping_rebound2 =  320*4.4482/0.3048;% LBS/FT/SEC
+%%
+sigma_dynamic = 0.4;
+sigma_static = 0.5;
+sigma_roll = 0.15;
 
+sigma_0 = 3;
 
+vrelaxation_roll = 0.3;
+vrelaxation_side = 0.3;
+vlimit = 5;

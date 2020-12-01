@@ -40,6 +40,7 @@ enum subsystem_type {
 	geographic_DENSITYMODEL,
 	geographic_GRAVITY,
 	groundcontact_SIMPLENORMAL,
+	groundcontact_LUGREMODEL,
 	math_CONSTANT,
 	math_CROSSPRODUCT,
 	math_DIVISION,

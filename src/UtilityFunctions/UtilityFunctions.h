@@ -47,6 +47,15 @@ namespace mathauxiliary {
 	// form a rotation matrix with a 9 by 1 vector by columns
 	Matrix<double, 3, 3> ConvertVectorToRotationMatrix(const Matrix<double, 9,1>& v);
 	void ConvertVectorToRotationMatrix(const Matrix<double, 9, 1>& v, Matrix3d& R);
+	// output the rotation matrix based on roll, pitch, and yaw angles
+	// the rotation matrices obtained here are R21, where 1 frame is the base frame, 2 is the rotated frame
+	Matrix<double, 3, 3> RotationMatrixFromRoll(const double& phi);
+	Matrix<double, 3, 3> RotationMatrixFromPitch(const double& theta);
+	Matrix<double, 3, 3> RotationMatrixFromYaw(const double& psi);
+	void RotationMatrixFromRoll(const double& phi, Matrix3d& R21);
+	void RotationMatrixFromPitch(const double& theta, Matrix3d& R21);
+	void RotationMatrixFromYaw(const double& psi, Matrix3d& R21);
+
 	/*--------- topology --------------*/
 	Vector2i BinarySearchVector(bool isascending,
 								const VectorXd& p, 

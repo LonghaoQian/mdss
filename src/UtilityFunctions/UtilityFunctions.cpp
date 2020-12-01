@@ -157,6 +157,98 @@ void mathauxiliary::ConvertVectorToRotationMatrix(const Matrix<double, 9, 1>& v,
 	R.block<3, 1>(0, 1) = v.block<3, 1>(3, 0);
 	R.block<3, 1>(0, 2) = v.block<3, 1>(6, 0);
 }
+Matrix<double, 3, 3> mathauxiliary::RotationMatrixFromRoll(const double & phi)
+{
+	/*
+	R21 = [1 0 0;
+			0 cphi sphi;
+			0 -sphi cphi];
+	*/
+	double cphi = cos(phi);
+	double sphi = sin(phi);
+	Matrix<double, 3, 3> R21;
+	R21.setZero();
+	R21(0, 0) = 1.0;
+	R21(1, 1) = cphi;
+	R21(2, 2) = cphi;
+	R21(1, 2) = sphi;
+	R21(2, 1) = -sphi;
+	return R21;
+}
+Matrix<double, 3, 3> mathauxiliary::RotationMatrixFromPitch(const double & theta)
+{
+	/*
+	R21 = [ctheta 0 -stheta;
+			0   1   0;
+			stheta 0 ctheta]
+	*/
+	double ctheta = cos(theta);
+	double stheta = sin(theta);
+	Matrix<double, 3, 3> R21;
+	R21.setZero();
+	R21(0, 0) = ctheta;
+	R21(0, 2) = -stheta;
+	R21(1, 1) = 1.0;
+	R21(2, 0) = stheta;
+	R21(2, 2) = ctheta;
+	return R21;
+}
+Matrix<double, 3, 3> mathauxiliary::RotationMatrixFromYaw(const double & psi)
+{
+	/*
+	R21 = [cpsi spsi 0;
+			-spsi cpsi 0;
+			0   0  1]
+	*/
+	double cpsi = cos(psi);
+	double spsi = sin(psi);
+	Matrix<double, 3, 3> R21;
+	R21.setZero();
+	R21(0, 0) = cpsi;
+	R21(0, 1) = spsi;
+	R21(1, 0) = -spsi;
+	R21(1, 1) = cpsi;
+	R21(2, 2) = 1.0;
+	return R21;
+}
+void mathauxiliary::RotationMatrixFromRoll(const double & phi, Matrix3d & R21)
+{
+	/*
+	R21 = [1 0 0;
+		0 cphi sphi;
+		0 -sphi cphi];
+	*/
+	R21.setZero();
+	double cphi = cos(phi);
+	double sphi = sin(phi);
+	R21(0, 0) = 1.0;
+	R21(1, 1) = cphi;
+	R21(2, 2) = cphi;
+	R21(1, 2) = sphi;
+	R21(2, 1) = -sphi;
+}
+void mathauxiliary::RotationMatrixFromPitch(const double & theta, Matrix3d & R21)
+{
+	R21.setZero();
+	double ctheta = cos(theta);
+	double stheta = sin(theta);
+	R21(0, 0) = ctheta;
+	R21(0, 2) = -stheta;
+	R21(1, 1) = 1.0;
+	R21(2, 0) = stheta;
+	R21(2, 2) = ctheta;
+}
+void mathauxiliary::RotationMatrixFromYaw(const double & psi, Matrix3d & R21)
+{
+	R21.setZero();
+	double cpsi = cos(psi);
+	double spsi = sin(psi);
+	R21(0, 0) = cpsi;
+	R21(0, 1) = spsi;
+	R21(1, 0) = -spsi;
+	R21(1, 1) = cpsi;
+	R21(2, 2) = 1.0;
+}
 /*
 void mathauxiliary::ConvertVectorToRotationMatrix(const VectorXd & v, Matrix3d & R)
 {
