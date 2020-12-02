@@ -125,7 +125,7 @@ groundcontact::GearLuGreFriction::GearLuGreFriction(const GearLuGreFrictionParam
 	system_info.type = groundcontact_LUGREMODEL;
 	system_info.category = GROUNDCONTACT;
 	system_info.num_of_continuous_states = 2;
-	system_info.num_of_inputs = 14;
+	system_info.num_of_inputs = 15;
 	system_info.DIRECT_FEED_THROUGH = true;
 	system_info.input_connection.resize(6, 2);
 	system_info.num_of_outputs = 6;
@@ -209,9 +209,10 @@ void groundcontact::GearLuGreFriction::OutputEquation(const double & t, const Ve
 		RollingDynamicFriction = param_.RollingFrictionCoefficient;
 	}
 
-	TotalRollingFriction = -(state(LUGREFRICTION_STATE_ROLL_Z) * param_.StiffnessSigma0 + param_.DampingSigma1 *  LugreZdynamics(state(LUGREFRICTION_STATE_ROLL_Z), vw, RollingDynamicFriction, RollingStaticFriction) * exp(-param_.SwitchSigmaD * vw*vw));
-	TotalSideFriction = -(state(LUGREFRICTION_STATE_SIDE_Z) * param_.StiffnessSigma0 + param_.DampingSigma1 * LugreZdynamics(state(LUGREFRICTION_STATE_SIDE_Z), vp, RollingDynamicFriction, RollingStaticFriction) *exp(-param_.SwitchSigmaD * vp *vp));
+	TotalRollingFriction = -(state(LUGREFRICTION_STATE_ROLL_Z) * param_.StiffnessSigma0 + param_.DampingSigma1 *  LugreZdynamics(state(LUGREFRICTION_STATE_ROLL_Z), vw, RollingDynamicFriction, RollingStaticFriction) * exp(-param_.SwitchSigmaD*param_.SwitchSigmaD * vw*vw));
+	TotalSideFriction = -(state(LUGREFRICTION_STATE_SIDE_Z) * param_.StiffnessSigma0 + param_.DampingSigma1 * LugreZdynamics(state(LUGREFRICTION_STATE_SIDE_Z), vp, RollingDynamicFriction, RollingStaticFriction) *exp(-param_.SwitchSigmaD*param_.SwitchSigmaD * vp *vp));
 	output.segment(LUGREFRICTION_OUTPUT_FIx, 3) = input.segment(LUGREFRICTION_INPUT_NIx, 3) + input.segment(LUGREFRICTION_INPUT_NIx, 3).norm() * (TotalRollingFriction * input.segment(LUGREFRICTION_INPUT_Nwx, 3) + TotalSideFriction * input.segment(LUGREFRICTION_INPUT_Npx, 3));
+	//output.segment(LUGREFRICTION_OUTPUT_FIx, 3) = input.segment(LUGREFRICTION_INPUT_NIx, 3);
 	CPI = input.segment(LUGREFRICTION_INPUT_CPx, 3);
 	FI = output.segment(LUGREFRICTION_OUTPUT_FIx, 3);
 	output.segment(LUGREFRICTION_OUTPUT_MIx, 3) = CPI.cross(FI);
@@ -246,6 +247,6 @@ groundcontact::GearLuGreFriction::~GearLuGreFriction()
 
 double groundcontact::GearLuGreFriction::LugreZdynamics(const double& z, const double& v, const double& sigma_dynamic, const double& sigam_static)
 {
-	return v - param_.StiffnessSigma0 * z * abs(v) / (sigma_dynamic + (sigam_static - sigma_dynamic) * exp(-v*v*param_.SwitchSigmaS));
+	return v - param_.StiffnessSigma0 * z * abs(v) / (sigma_dynamic + (sigam_static - sigma_dynamic) * exp(-v*v*param_.SwitchSigmaS*param_.SwitchSigmaS));
 }
 

@@ -614,7 +614,7 @@ int main()
 	nose_gear_param.GearPosition(mathauxiliary::VECTOR_X) = 1.2141;
 	nose_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = 0.0;
 	nose_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = 1.4351;
-
+	nose_gear_param.isSteering = true;
 	unsigned int nose_gear = SimInstance1.AddSubSystem(nose_gear_param);
 
 	groundcontact::SimpleGearNormalForceParameter left_gear_param;
@@ -629,7 +629,7 @@ int main()
 	left_gear_param.GearPosition(mathauxiliary::VECTOR_X) = -0.4369;
 	left_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = -1.2763;
 	left_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = 1.3960;
-
+	left_gear_param.isSteering = false;
 	unsigned int left_gear = SimInstance1.AddSubSystem(left_gear_param);
 
 	groundcontact::SimpleGearNormalForceParameter right_gear_param;
@@ -644,7 +644,7 @@ int main()
 	right_gear_param.GearPosition(mathauxiliary::VECTOR_X) = -0.4369;
 	right_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = 1.2763;
 	right_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = 1.3960;
-
+	right_gear_param.isSteering = false;
 	unsigned int right_gear = SimInstance1.AddSubSystem(right_gear_param);
 
 
@@ -663,6 +663,9 @@ int main()
 	total_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
 	total_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
 	unsigned int total_force = SimInstance1.AddSubSystem(total_force_param);
+
+	unsigned int total_moment = SimInstance1.AddSubSystem(total_force_param);
+
 	// to body-fixed frame
 
 	mathblocks::MultiplicationParam gear_force_to_inertial_param;
@@ -673,6 +676,8 @@ int main()
 	gear_force_to_inertial_param.Mode = mathblocks::MULTI_MATRIX;
 
 	unsigned int gear_force_to_inertial = SimInstance1.AddSubSystem(gear_force_to_inertial_param);
+
+	unsigned int gear_moment_to_body = SimInstance1.AddSubSystem(gear_force_to_inertial_param);
 	// unsigned int 
 
 	mathblocks::ConstantParameter H_param;
@@ -695,6 +700,37 @@ int main()
 	gear_swithc_param.value(0) = 1.0;
 	unsigned int gear_switch = SimInstance1.AddSubSystem(gear_swithc_param);
 
+
+	double vrelaxation_roll = 0.3;
+	double vrelaxation_side = 0.3;
+	double vlimit = 5.0;
+
+	double sigma_dynamic = 0.4;
+	double sigma_static = 0.5;
+	double sigma_roll = 0.15;
+
+	groundcontact::GearLuGreFrictionParameter nose_gear_friction_param;
+	nose_gear_friction_param.StiffnessSigma0 = 3.0;
+	nose_gear_friction_param.DampingSigma1 = sqrt(nose_gear_friction_param.StiffnessSigma0);
+
+	nose_gear_friction_param.SwitchSigmaD = 1.0 / vrelaxation_roll;
+	nose_gear_friction_param.SwitchSigmaS = 1.0 / vrelaxation_roll;
+
+	nose_gear_friction_param.DynamicFrictionCoefficient = sigma_dynamic;
+	nose_gear_friction_param.RollingFrictionCoefficient = sigma_roll;
+	nose_gear_friction_param.StaticFrictionCoefficient = sigma_static;
+
+
+	nose_gear_friction_param.vlimit = vlimit;
+
+
+	unsigned int nose_gear_friction = SimInstance1.AddSubSystem(nose_gear_friction_param);
+	unsigned int left_gear_friction = SimInstance1.AddSubSystem(nose_gear_friction_param);
+	unsigned int right_gear_friction = SimInstance1.AddSubSystem(nose_gear_friction_param);
+
+
+
+
 	// connections
 
 	// signal output to dynamics:
@@ -712,7 +748,7 @@ int main()
 
 	SimInstance1.BatchEditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_FIx, dynamics::DYNAMICS_INPUT_FIz, total_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
-	SimInstance1.BatchEditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBx, dynamics::DYNAMICS_INPUT_TBz, total_gear_moment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(planedynamics, dynamics::DYNAMICS_INPUT_TBx, dynamics::DYNAMICS_INPUT_TBz, gear_moment_to_body, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
 
 
@@ -814,18 +850,56 @@ int main()
 	SimInstance1.BatchEditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_R_IB00, groundcontact::GEARNORMAL_INPUT_R_IB22, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
 	SimInstance1.BatchEditConnectionMatrix(right_gear, groundcontact::GEARNORMAL_INPUT_VIx, groundcontact::GEARNORMAL_INPUT_VIz, planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
 	
-	SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X,       mathauxiliary::VECTOR_Z,     nose_gear,  groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
-	SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X + 3 ,  mathauxiliary::VECTOR_Z + 3, left_gear,  groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
-	SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X + 6,   mathauxiliary::VECTOR_Z + 6, right_gear, groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
+	// connect the nose gear friction
+	SimInstance1.BatchEditConnectionMatrix(nose_gear_friction, groundcontact::LUGREFRICTION_INPUT_CPx, groundcontact::LUGREFRICTION_INPUT_CPz, nose_gear, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTx, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTz);
+	SimInstance1.BatchEditConnectionMatrix(nose_gear_friction, groundcontact::LUGREFRICTION_INPUT_NIx, groundcontact::LUGREFRICTION_INPUT_NIz, nose_gear, groundcontact::GEARNORMAL_OUTPUT_NIx, groundcontact::GEARNORMAL_OUTPUT_NIz);
+	SimInstance1.BatchEditConnectionMatrix(nose_gear_friction, groundcontact::LUGREFRICTION_INPUT_Npx, groundcontact::LUGREFRICTION_INPUT_Npz, nose_gear, groundcontact::GEARNORMAL_OUTPUT_npIx, groundcontact::GEARNORMAL_OUTPUT_npIz);
+	SimInstance1.BatchEditConnectionMatrix(nose_gear_friction, groundcontact::LUGREFRICTION_INPUT_Nwx, groundcontact::LUGREFRICTION_INPUT_Nwz, nose_gear, groundcontact::GEARNORMAL_OUTPUT_nwIx, groundcontact::GEARNORMAL_OUTPUT_nwIz);
+	SimInstance1.EditConnectionMatrix(nose_gear_friction, groundcontact::LUGREFRICTION_INPUT_VpI, nose_gear, groundcontact::GEARNORMAL_OUTPUT_VGIp);
+	SimInstance1.EditConnectionMatrix(nose_gear_friction, groundcontact::LUGREFRICTION_INPUT_VwI, nose_gear, groundcontact::GEARNORMAL_OUTPUT_VGIw);
+	SimInstance1.EditConnectionMatrix(nose_gear_friction, groundcontact::LUGREFRICTION_INPUT_BREAKING, simulationcontrol::external, 0);
 
-	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, nose_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
-	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X + 3, mathauxiliary::VECTOR_Z +3 , left_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
-	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X + 6, mathauxiliary::VECTOR_Z + 6, right_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
+	// connect the left gear friction
 
-	SimInstance1.BatchEditConnectionMatrix(gear_force_to_inertial, 0, 8, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
-	SimInstance1.BatchEditConnectionMatrix(gear_force_to_inertial, 9, 11, total_gear_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(left_gear_friction, groundcontact::LUGREFRICTION_INPUT_CPx, groundcontact::LUGREFRICTION_INPUT_CPz, left_gear, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTx, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTz);
+	SimInstance1.BatchEditConnectionMatrix(left_gear_friction, groundcontact::LUGREFRICTION_INPUT_NIx, groundcontact::LUGREFRICTION_INPUT_NIz, left_gear, groundcontact::GEARNORMAL_OUTPUT_NIx, groundcontact::GEARNORMAL_OUTPUT_NIz);
+	SimInstance1.BatchEditConnectionMatrix(left_gear_friction, groundcontact::LUGREFRICTION_INPUT_Npx, groundcontact::LUGREFRICTION_INPUT_Npz, left_gear, groundcontact::GEARNORMAL_OUTPUT_npIx, groundcontact::GEARNORMAL_OUTPUT_npIz);
+	SimInstance1.BatchEditConnectionMatrix(left_gear_friction, groundcontact::LUGREFRICTION_INPUT_Nwx, groundcontact::LUGREFRICTION_INPUT_Nwz, left_gear, groundcontact::GEARNORMAL_OUTPUT_nwIx, groundcontact::GEARNORMAL_OUTPUT_nwIz);
+	SimInstance1.EditConnectionMatrix(left_gear_friction, groundcontact::LUGREFRICTION_INPUT_VpI, left_gear, groundcontact::GEARNORMAL_OUTPUT_VGIp);
+	SimInstance1.EditConnectionMatrix(left_gear_friction, groundcontact::LUGREFRICTION_INPUT_VwI, left_gear, groundcontact::GEARNORMAL_OUTPUT_VGIw);
+	SimInstance1.EditConnectionMatrix(left_gear_friction, groundcontact::LUGREFRICTION_INPUT_BREAKING, simulationcontrol::external, 0);
+	// connect the right gear friction
+	SimInstance1.BatchEditConnectionMatrix(right_gear_friction, groundcontact::LUGREFRICTION_INPUT_CPx, groundcontact::LUGREFRICTION_INPUT_CPz, right_gear, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTx, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTz);
+	SimInstance1.BatchEditConnectionMatrix(right_gear_friction, groundcontact::LUGREFRICTION_INPUT_NIx, groundcontact::LUGREFRICTION_INPUT_NIz, right_gear, groundcontact::GEARNORMAL_OUTPUT_NIx, groundcontact::GEARNORMAL_OUTPUT_NIz);
+	SimInstance1.BatchEditConnectionMatrix(right_gear_friction, groundcontact::LUGREFRICTION_INPUT_Npx, groundcontact::LUGREFRICTION_INPUT_Npz, right_gear, groundcontact::GEARNORMAL_OUTPUT_npIx, groundcontact::GEARNORMAL_OUTPUT_npIz);
+	SimInstance1.BatchEditConnectionMatrix(right_gear_friction, groundcontact::LUGREFRICTION_INPUT_Nwx, groundcontact::LUGREFRICTION_INPUT_Nwz, right_gear, groundcontact::GEARNORMAL_OUTPUT_nwIx, groundcontact::GEARNORMAL_OUTPUT_nwIz);
+	SimInstance1.EditConnectionMatrix(right_gear_friction, groundcontact::LUGREFRICTION_INPUT_VpI, right_gear, groundcontact::GEARNORMAL_OUTPUT_VGIp);
+	SimInstance1.EditConnectionMatrix(right_gear_friction, groundcontact::LUGREFRICTION_INPUT_VwI, right_gear, groundcontact::GEARNORMAL_OUTPUT_VGIw);
+	SimInstance1.EditConnectionMatrix(right_gear_friction, groundcontact::LUGREFRICTION_INPUT_BREAKING, simulationcontrol::external, 0);
 
-	SimInstance1.BatchEditConnectionMatrix(total_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, gear_force_to_inertial, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+
+
+	SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X,       mathauxiliary::VECTOR_Z, nose_gear_friction,  groundcontact::LUGREFRICTION_OUTPUT_FIx, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+	SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X + 3 ,  mathauxiliary::VECTOR_Z + 3, left_gear_friction, groundcontact::LUGREFRICTION_OUTPUT_FIx, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+    SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X + 6,   mathauxiliary::VECTOR_Z + 6, right_gear_friction, groundcontact::LUGREFRICTION_OUTPUT_FIx, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+	//SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, nose_gear, groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
+	//SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X + 3 ,  mathauxiliary::VECTOR_Z + 3, left_gear,  groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
+	//SimInstance1.BatchEditConnectionMatrix(total_gear_force, mathauxiliary::VECTOR_X + 6,   mathauxiliary::VECTOR_Z + 6, right_gear, groundcontact::GEARNORMAL_OUTPUT_Nbx, groundcontact::GEARNORMAL_OUTPUT_Nbz);
+
+	//SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, nose_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
+	//SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X + 3, mathauxiliary::VECTOR_Z +3 , left_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
+	//SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X + 6, mathauxiliary::VECTOR_Z + 6, right_gear, groundcontact::GEARNORMAL_OUTPUT_Mbx, groundcontact::GEARNORMAL_OUTPUT_Mbz);
+
+	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, nose_gear_friction, groundcontact::LUGREFRICTION_OUTPUT_MIx, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X + 3, mathauxiliary::VECTOR_Z + 3, left_gear_friction, groundcontact::LUGREFRICTION_OUTPUT_MIx, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+	SimInstance1.BatchEditConnectionMatrix(total_gear_moment, mathauxiliary::VECTOR_X + 6, mathauxiliary::VECTOR_Z + 6, right_gear_friction, groundcontact::LUGREFRICTION_OUTPUT_MIx, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+
+	//SimInstance1.BatchEditConnectionMatrix(gear_force_to_inertial, 0, 8, planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+	//SimInstance1.BatchEditConnectionMatrix(gear_force_to_inertial, 9, 11, total_gear_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+	SimInstance1.BatchEditConnectionMatrix(gear_moment_to_body, 0, 8, planekinematics, dynamics::KINEMATICS_OUTPUT_R_BI00, dynamics::KINEMATICS_OUTPUT_R_BI22);
+	SimInstance1.BatchEditConnectionMatrix(gear_moment_to_body, 9, 11, total_gear_moment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+
+	SimInstance1.BatchEditConnectionMatrix(total_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, total_gear_force, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 	SimInstance1.BatchEditConnectionMatrix(total_force, mathauxiliary::VECTOR_X+3, mathauxiliary::VECTOR_Z+3, gravity, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 	SimInstance1.FlushMakeConnection();
 

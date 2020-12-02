@@ -167,6 +167,7 @@ namespace simulationcontrol {
 		unsigned int AddSubSystem(const geographic::GravityModelParameter& parameters);
 		// ground effect
 		unsigned int AddSubSystem(const groundcontact::SimpleGearNormalForceParameter& parameter);
+		unsigned int AddSubSystem(const groundcontact::GearLuGreFrictionParameter& parameter);
 		// aerodynamics
 		unsigned int AddSubSystem(const aero::AerosForceParameter& parameters);
 		unsigned int AddSubSystem(const aero::AeroAngleParameter& parameters);
