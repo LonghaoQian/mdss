@@ -6,7 +6,13 @@
 #include "Aircraftmodel.h"
 #include <time.h>
 
-#define DEBUG
+//#define DEBUG
+
+enum FlightInitialCondition {
+	INIT_MODE_GROUND = 0,
+	INIT_MODE_CRUISE,
+};
+
 int main()
 {
 	
@@ -15,19 +21,45 @@ int main()
 	/*------------- define initial condition --------------------*/
 	aircraft::initialcondition C172initialcondition;
 
-	C172initialcondition.engine.propellerRPM = 2200.0; // RPM
-	C172initialcondition.plane.omegax = 0.0;
-	C172initialcondition.plane.omegay = 0.0;
-	C172initialcondition.plane.omegaz = 0.0;
-	C172initialcondition.plane.inertialpositionx = 10.0;
-	C172initialcondition.plane.inertialpositiony = 10.0;
-	C172initialcondition.plane.inertialpositionz = -500.0;// initial height NED frame
-	C172initialcondition.plane.inertialvelocityx = 50.0; // 
-	C172initialcondition.plane.inertialvelocityy = 1.0;
-	C172initialcondition.plane.inertialvelocityz = 0.5;
-	C172initialcondition.plane.roll = 0.0;
-	C172initialcondition.plane.pitch = 5.0/57.3;
-	C172initialcondition.plane.yaw = 0.0/57.3;
+	FlightInitialCondition initmode = INIT_MODE_GROUND;
+
+	switch (initmode) {
+		case INIT_MODE_GROUND: {
+
+
+			break;
+		}
+		case INIT_MODE_CRUISE: {
+			C172initialcondition.engine.propellerRPM = 2200.0; // RPM
+			C172initialcondition.plane.omegax = 0.0;
+			C172initialcondition.plane.omegay = 0.0;
+			C172initialcondition.plane.omegaz = 0.0;
+			C172initialcondition.plane.inertialpositionx = 0.0;
+			C172initialcondition.plane.inertialpositiony = 0.0;
+			C172initialcondition.plane.inertialpositionz = -2.0;// initial height NED frame
+			C172initialcondition.plane.inertialvelocityx = 0.0; // 
+			C172initialcondition.plane.inertialvelocityy = 0.0;
+			C172initialcondition.plane.inertialvelocityz = 0.0;
+			C172initialcondition.plane.roll = 0.0;
+			C172initialcondition.plane.pitch = 0.0 / 57.3;
+			C172initialcondition.plane.yaw = 0.0 / 57.3;
+
+			C172initialcondition.engine.propellerRPM = 2200.0; // RPM
+			C172initialcondition.plane.omegax = 0.0;
+			C172initialcondition.plane.omegay = 0.0;
+			C172initialcondition.plane.omegaz = 0.0;
+			C172initialcondition.plane.inertialpositionx = 10.0;
+			C172initialcondition.plane.inertialpositiony = 10.0;
+			C172initialcondition.plane.inertialpositionz = -500.0;// initial height NED frame
+			C172initialcondition.plane.inertialvelocityx = 50.0; // 
+			C172initialcondition.plane.inertialvelocityy = 1.0;
+			C172initialcondition.plane.inertialvelocityz = 0.5;
+			C172initialcondition.plane.roll = 0.0;
+			C172initialcondition.plane.pitch = 5.0/57.3;
+			C172initialcondition.plane.yaw = 0.0/57.3;
+			break;
+		}
+	}
 
 	/*----------------define system parameter ---------------------*/
 	simulationcontrol::SolverConfig config1;

@@ -16,6 +16,8 @@ namespace  aircraft {
 
 		DefineEngine();
 
+		DefineLandingGear();
+
 		DefineAutopilot();
 
 		ConnectSystems();
@@ -29,10 +31,18 @@ namespace  aircraft {
 
 		modelok = SimInstance1.PreRunProcess();
 		// get the external input mapping for specific inputs
-		speedcommandindex = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTASError, 1);
-		trimthrottle = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTotoalThrottle, 1);
+		speedcommandindex     = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTASError, 1);
+		trimthrottle          = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTotoalThrottle, 1);
 		autothrottlePIDenable = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.PIDThrottleCom, 0);
-		altcommand = SimInstance1.GetExternalInputIndex(Modelist.pitchCAS.SumAltitError, 0);
+		altcommand            = SimInstance1.GetExternalInputIndex(Modelist.pitchCAS.SumAltitError, 0);
+		nosegearswitch        = SimInstance1.GetExternalInputIndex(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_SWITCH);
+		leftgearswitch        = SimInstance1.GetExternalInputIndex(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_SWITCH);
+		rightgeaswitch        = SimInstance1.GetExternalInputIndex(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_SWITCH);
+		nosegearbreak         = SimInstance1.GetExternalInputIndex(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_BREAKING);
+		leftgearbreak         = SimInstance1.GetExternalInputIndex(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_BREAKING);
+		rightgearbreak        = SimInstance1.GetExternalInputIndex(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_BREAKING);
+		steering              = SimInstance1.GetExternalInputIndex(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_STEERING);
+
 		//SimInstance1.DisplayLoggerTagList(); // logge tag list display
 
 		if (modelok) {
@@ -53,10 +63,41 @@ namespace  aircraft {
 	void AircraftDynamicModel::UpdateSimulation(const C172input & input)
 	{
 		if (modelok) { // if successful, run updates
-			extern_input(speedcommandindex) =     input.autopilot.autothrottle.targetspeed;
-			extern_input(trimthrottle) =          input.autopilot.autothrottle.trimthrottle;
-			extern_input(autothrottlePIDenable) = input.autopilot.autothrottle.ON;
-			extern_input(altcommand) =            input.autopilot.pitchCAS.commandaltitude;
+			// determine autopilot state
+			if (input.autopilot.autopilotmaster) {
+				// master off
+
+			}
+			else {
+				extern_input(speedcommandindex) =     input.autopilot.autothrottle.targetspeed;
+				extern_input(trimthrottle) =          input.autopilot.autothrottle.trimthrottle;
+				extern_input(autothrottlePIDenable) = input.autopilot.autothrottle.ON;
+				extern_input(altcommand) =            input.autopilot.pitchCAS.commandaltitude;
+			}
+			// load gear switch
+			if (input.gear.geardown) {
+				extern_input(nosegearswitch) = 1.0;
+				extern_input(leftgearswitch) = 1.0;
+				extern_input(rightgeaswitch) = 1.0;
+			}
+			else {
+				extern_input(nosegearswitch) = -1.0;
+				extern_input(leftgearswitch) = -1.0;
+				extern_input(rightgeaswitch) = -1.0;
+			}
+			// load break
+			if (input.gear.gearbreak) {
+				extern_input(nosegearbreak)  = 1.0;
+				extern_input(leftgearbreak)  = 1.0;
+				extern_input(rightgearbreak) = 1.0;
+			} else {
+				extern_input(nosegearbreak) = -1.0;
+				extern_input(leftgearbreak) = -1.0;
+				extern_input(rightgearbreak) = -1.0;
+			}
+			// load steering
+			extern_input(steering) = input.gear.steering;
+
 			isRunning = true;
 			SimInstance1.Run_Update(extern_input);
 		}else {
@@ -140,6 +181,7 @@ namespace  aircraft {
 		sum_total_force_parameter.input_dimensions = 3;                         // force is a 3 by 1 vector 
 		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // other forces
 		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // gravity
+		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // gear
 		Modelist.dynamics.sumtotalinertialforce = SimInstance1.AddSubSystem(sum_total_force_parameter);
 		// height
 		mathblocks::GainParameter height_param;
@@ -538,6 +580,101 @@ namespace  aircraft {
 		SumTotoalThrottle_param.SignList.push_back(mathblocks::SUM_POSITIVE);
 		SumTotoalThrottle_param.SignList.push_back(mathblocks::SUM_POSITIVE);
 		Modelist.autothrottle.SumTotoalThrottle = SimInstance1.AddSubSystem(SumTotoalThrottle_param);
+
+
+	}
+	void AircraftDynamicModel::DefineLandingGear()
+	{
+		// define landing gear modual
+		groundcontact::SimpleGearNormalForceParameter nose_gear_param;
+		nose_gear_param.MinNz = parameter.gear.nosegear.param.NeMin;
+		nose_gear_param.MaxHeight = parameter.gear.nosegear.param.Hmax;
+		nose_gear_param.kCompress = parameter.gear.nosegear.param.Stiffness;
+		nose_gear_param.dRebound = parameter.gear.nosegear.param.ReboundDamping;
+		nose_gear_param.dCompress = parameter.gear.nosegear.param.CompressDamping;
+		nose_gear_param.GearDirection(mathauxiliary::VECTOR_X) = parameter.gear.nosegear.param.Nex;
+		nose_gear_param.GearDirection(mathauxiliary::VECTOR_Y) = parameter.gear.nosegear.param.Ney;
+		nose_gear_param.GearDirection(mathauxiliary::VECTOR_Z) = parameter.gear.nosegear.param.Nez;
+		nose_gear_param.GearPosition(mathauxiliary::VECTOR_X) = parameter.gear.nosegear.param.Rex;
+		nose_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = parameter.gear.nosegear.param.Rey;
+		nose_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = parameter.gear.nosegear.param.Rez;
+		nose_gear_param.isSteering = true;
+		Modelist.landinggear.NoseGearNormalForce = SimInstance1.AddSubSystem(nose_gear_param);
+
+		groundcontact::SimpleGearNormalForceParameter left_gear_param;
+		left_gear_param.MinNz = parameter.gear.leftgear.param.NeMin;
+		left_gear_param.MaxHeight = parameter.gear.leftgear.param.Hmax;
+		left_gear_param.kCompress = parameter.gear.leftgear.param.Stiffness;
+		left_gear_param.dRebound = parameter.gear.leftgear.param.ReboundDamping;
+		left_gear_param.dCompress = parameter.gear.leftgear.param.CompressDamping;
+		left_gear_param.GearDirection(mathauxiliary::VECTOR_X) = parameter.gear.leftgear.param.Nex;
+		left_gear_param.GearDirection(mathauxiliary::VECTOR_Y) = parameter.gear.leftgear.param.Ney;
+		left_gear_param.GearDirection(mathauxiliary::VECTOR_Z) = parameter.gear.leftgear.param.Nez;
+		left_gear_param.GearPosition(mathauxiliary::VECTOR_X) = parameter.gear.leftgear.param.Rex;
+		left_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = parameter.gear.leftgear.param.Rey;
+		left_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = parameter.gear.leftgear.param.Rez;
+		left_gear_param.isSteering = false;
+		Modelist.landinggear.LeftGearNormalForce = SimInstance1.AddSubSystem(left_gear_param);
+
+		groundcontact::SimpleGearNormalForceParameter right_gear_param;
+		right_gear_param.MinNz = parameter.gear.rightgear.param.NeMin;
+		right_gear_param.MaxHeight = parameter.gear.rightgear.param.Hmax;
+		right_gear_param.kCompress = parameter.gear.rightgear.param.Stiffness;
+		right_gear_param.dRebound = parameter.gear.rightgear.param.ReboundDamping;
+		right_gear_param.dCompress = parameter.gear.rightgear.param.CompressDamping;
+		right_gear_param.GearDirection(mathauxiliary::VECTOR_X) = parameter.gear.rightgear.param.Nex;
+		right_gear_param.GearDirection(mathauxiliary::VECTOR_Y) = parameter.gear.rightgear.param.Ney;
+		right_gear_param.GearDirection(mathauxiliary::VECTOR_Z) = parameter.gear.rightgear.param.Nez;
+		right_gear_param.GearPosition(mathauxiliary::VECTOR_X) = parameter.gear.rightgear.param.Rex;
+		right_gear_param.GearPosition(mathauxiliary::VECTOR_Y) = parameter.gear.rightgear.param.Rey;
+		right_gear_param.GearPosition(mathauxiliary::VECTOR_Z) = parameter.gear.rightgear.param.Rez;
+		right_gear_param.isSteering = false;
+		Modelist.landinggear.RightGearNormalForce = SimInstance1.AddSubSystem(right_gear_param);
+
+		groundcontact::GearLuGreFrictionParameter nose_gear_friction_param;
+		nose_gear_friction_param.StiffnessSigma0 = parameter.gear.rightgear.param.Sigma0;
+		nose_gear_friction_param.DampingSigma1 = sqrt(nose_gear_friction_param.StiffnessSigma0);
+		nose_gear_friction_param.SwitchSigmaD = 1.0 / parameter.gear.rightgear.param.VrelaxationRoll;
+		nose_gear_friction_param.SwitchSigmaS = 1.0 / parameter.gear.rightgear.param.VrelaxationRoll;
+		nose_gear_friction_param.DynamicFrictionCoefficient = parameter.gear.rightgear.param.SigmaDynamic;
+		nose_gear_friction_param.RollingFrictionCoefficient = parameter.gear.rightgear.param.SigmaRoll;
+		nose_gear_friction_param.StaticFrictionCoefficient = parameter.gear.rightgear.param.SigmaStatic;
+		nose_gear_friction_param.vlimit = parameter.gear.rightgear.param.Vlimit;
+
+
+		Modelist.landinggear.NoseGearFrictionForce = SimInstance1.AddSubSystem(nose_gear_friction_param);
+		Modelist.landinggear.LeftGearFrictionForce = SimInstance1.AddSubSystem(nose_gear_friction_param);
+		Modelist.landinggear.RightGearFrictionForce = SimInstance1.AddSubSystem(nose_gear_friction_param);
+
+
+
+		mathblocks::MultiplicationParam gear_force_to_inertial_param;
+		gear_force_to_inertial_param.input1_dimension(mathblocks::MATRIX_ROW) = 3;
+		gear_force_to_inertial_param.input1_dimension(mathblocks::MATRIX_COL) = 3;
+		gear_force_to_inertial_param.input2_dimension(mathblocks::MATRIX_ROW) = 3;
+		gear_force_to_inertial_param.input2_dimension(mathblocks::MATRIX_COL) = 1;
+		gear_force_to_inertial_param.Mode = mathblocks::MULTI_MATRIX;
+
+		Modelist.landinggear.GearMomentToBody = SimInstance1.AddSubSystem(gear_force_to_inertial_param);
+
+		mathblocks::SumParameter total_gear_force_param;
+		total_gear_force_param.input_dimensions = 3;
+		total_gear_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		total_gear_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		total_gear_force_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+
+		Modelist.landinggear.TotalGearForce = SimInstance1.AddSubSystem(total_gear_force_param);
+		Modelist.landinggear.TotalGearMoment = SimInstance1.AddSubSystem(total_gear_force_param);
+
+		mathblocks::ConstantParameter Ng_param;
+		Ng_param.value.resize(3, 1);
+		Ng_param.value(mathauxiliary::VECTOR_X) = 0.0;
+		Ng_param.value(mathauxiliary::VECTOR_Y) = 0.0;
+		Ng_param.value(mathauxiliary::VECTOR_Z) = -1.0;
+
+		Modelist.landinggear.GroundNormal = SimInstance1.AddSubSystem(Ng_param);
+
+
 	}
 	void AircraftDynamicModel::DefineLogging()
 	{
@@ -555,29 +692,7 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, "omegax");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIy, "omegay");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIz, "omegaz");
-		/*
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB00, "RWB00");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB01, "RWB01");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB02, "RWB02");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB10, "RWB10");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB11, "RWB11");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB12, "RWB12");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB20, "RWB20");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB21, "RWB21");
-		SimInstance1.DefineDataLogging(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_R_WB22, "RWB22");
 
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, "RIB00");
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB01, "RIB01");
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB02, "RIB02");
-
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB10, "RIB10");
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB11, "RIB11");
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB12, "RIB12");
-
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB20, "RIB20");
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB21, "RIB21");
-		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB22, "RIB22");
-		*/
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VBx, "Vbx");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VBy, "Vby");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VBz, "Vbz");
@@ -648,7 +763,7 @@ namespace  aircraft {
 		// signal output to dynamics:
 		// connect dynamics to the input forces
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_FIx, dynamics::DYNAMICS_INPUT_FIz,  Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
-		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_TBx, dynamics::DYNAMICS_INPUT_TBz , Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBx, aero::AEROFORCE_OUTPUT_MBz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_TBx, dynamics::DYNAMICS_INPUT_TBz , Modelist.dynamics.sumtotalbodymoment, aero::AEROFORCE_OUTPUT_MBx, aero::AEROFORCE_OUTPUT_MBz);
 		// connect dynamics to the angular velocity
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_OmegaBIx, dynamics::DYNAMICS_INPUT_OmegaBIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
 		// dynamics to kinematics
@@ -740,6 +855,7 @@ namespace  aircraft {
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalbodyforce, 0, 2, Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBx, aero::AEROFORCE_OUTPUT_FBz);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalbodyforce, 3, 5, Modelist.engine.thrustforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
+
 		// rotate body forces to inertial frame
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.rotation2inertialframe, 0, 8, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.rotation2inertialframe, 9, 11, Modelist.dynamics.sumtotalbodyforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
@@ -747,7 +863,12 @@ namespace  aircraft {
 		// connect all inertial forces
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalinertialforce, 0, 2, Modelist.dynamics.rotation2inertialframe, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalinertialforce, 3, 5, Modelist.dynamics.gravityinertial, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);	
-
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalinertialforce, 6, 8, Modelist.landinggear.TotalGearForce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+		
+		// connect all body moments
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalbodymoment, 0, 2, Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBx, aero::AEROFORCE_OUTPUT_MBz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.sumtotalbodymoment, 3, 5, Modelist.landinggear.GearMomentToBody, 0, 2);
+		
 		// connect load factor
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.loadfactor, 1, 3, Modelist.dynamics.sumtotalbodyforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 		SimInstance1.EditConnectionMatrix(Modelist.dynamics.loadfactor, 0, Modelist.dynamics.planecurrentweight, 0);
@@ -799,6 +920,74 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumVSError, 1, Modelist.dynamics.climbrate, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainVS, 0, Modelist.pitchCAS.SumVSError, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainDeCom, 0, Modelist.pitchCAS.GainVS, 0);
+
+
+		// connect landing gear normal force to aircraft
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_STEERING, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_SWITCH, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_H, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_Hdot, simulationcontrol::external, 0);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_NGx, groundcontact::GEARNORMAL_INPUT_NGz, Modelist.landinggear.GroundNormal, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_OMEGAbx, groundcontact::GEARNORMAL_INPUT_OMEGAbz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_PIx, groundcontact::GEARNORMAL_INPUT_PIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, dynamics::KINEMATICS_OUTPUT_XIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_R_IB00, groundcontact::GEARNORMAL_INPUT_R_IB22, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_VIx, groundcontact::GEARNORMAL_INPUT_VIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
+
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_SWITCH, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_H, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_Hdot, simulationcontrol::external, 0);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_NGx, groundcontact::GEARNORMAL_INPUT_NGz, Modelist.landinggear.GroundNormal, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_OMEGAbx, groundcontact::GEARNORMAL_INPUT_OMEGAbz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_PIx, groundcontact::GEARNORMAL_INPUT_PIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, dynamics::KINEMATICS_OUTPUT_XIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_R_IB00, groundcontact::GEARNORMAL_INPUT_R_IB22, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_INPUT_VIx, groundcontact::GEARNORMAL_INPUT_VIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
+
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_SWITCH, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_H, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_Hdot, simulationcontrol::external, 0);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_NGx, groundcontact::GEARNORMAL_INPUT_NGz, Modelist.landinggear.GroundNormal, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_OMEGAbx, groundcontact::GEARNORMAL_INPUT_OMEGAbz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_PIx, groundcontact::GEARNORMAL_INPUT_PIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIx, dynamics::KINEMATICS_OUTPUT_XIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_R_IB00, groundcontact::GEARNORMAL_INPUT_R_IB22, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_IB00, dynamics::KINEMATICS_OUTPUT_R_IB22);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_INPUT_VIx, groundcontact::GEARNORMAL_INPUT_VIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIx, dynamics::KINEMATICS_OUTPUT_VIz);
+
+		// connect the landing gear friction to normal force
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_CPx, groundcontact::LUGREFRICTION_INPUT_CPz, Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTx, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_NIx, groundcontact::LUGREFRICTION_INPUT_NIz, Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_NIx, groundcontact::GEARNORMAL_OUTPUT_NIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_Npx, groundcontact::LUGREFRICTION_INPUT_Npz, Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_npIx, groundcontact::GEARNORMAL_OUTPUT_npIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_Nwx, groundcontact::LUGREFRICTION_INPUT_Nwz, Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_nwIx, groundcontact::GEARNORMAL_OUTPUT_nwIz);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_VpI, Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_VGIp);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_VwI, Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_VGIw);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_BREAKING, simulationcontrol::external, 0);
+
+		// connect the left gear friction
+
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_CPx, groundcontact::LUGREFRICTION_INPUT_CPz, Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTx, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_NIx, groundcontact::LUGREFRICTION_INPUT_NIz, Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_NIx, groundcontact::GEARNORMAL_OUTPUT_NIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_Npx, groundcontact::LUGREFRICTION_INPUT_Npz, Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_npIx, groundcontact::GEARNORMAL_OUTPUT_npIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_Nwx, groundcontact::LUGREFRICTION_INPUT_Nwz, Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_nwIx, groundcontact::GEARNORMAL_OUTPUT_nwIz);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_VpI, Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_VGIp);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_VwI, Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_VGIw);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_BREAKING, simulationcontrol::external, 0);
+		// connect the right gear friction
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_CPx, groundcontact::LUGREFRICTION_INPUT_CPz, Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTx, groundcontact::GEARNORMAL_OUTPUT_CONTACTPOINTz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_NIx, groundcontact::LUGREFRICTION_INPUT_NIz, Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_NIx, groundcontact::GEARNORMAL_OUTPUT_NIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_Npx, groundcontact::LUGREFRICTION_INPUT_Npz, Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_npIx, groundcontact::GEARNORMAL_OUTPUT_npIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_Nwx, groundcontact::LUGREFRICTION_INPUT_Nwz, Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_nwIx, groundcontact::GEARNORMAL_OUTPUT_nwIz);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_VpI, Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_VGIp);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_VwI, Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_VGIw);
+		SimInstance1.EditConnectionMatrix(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_BREAKING, simulationcontrol::external, 0);
+
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.TotalGearForce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIx, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.TotalGearForce, mathauxiliary::VECTOR_X + 3, mathauxiliary::VECTOR_Z + 3, Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIx, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.TotalGearForce, mathauxiliary::VECTOR_X + 6, mathauxiliary::VECTOR_Z + 6, Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIx, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.TotalGearMoment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z, Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.TotalGearMoment, mathauxiliary::VECTOR_X + 3, mathauxiliary::VECTOR_Z + 3, Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.TotalGearMoment, mathauxiliary::VECTOR_X + 6, mathauxiliary::VECTOR_Z + 6, Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.GearMomentToBody, 0, 8,  Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_BI00, dynamics::KINEMATICS_OUTPUT_R_BI22);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.GearMomentToBody, 9, 11, Modelist.landinggear.TotalGearMoment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
 	}
 }

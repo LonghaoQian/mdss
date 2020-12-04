@@ -40,6 +40,13 @@ namespace aircraft {
 			double flap;         // normalized flap     0 - 1
 		}controlsurface;
 		struct {
+			double steering; // deg steering angle
+			bool gearbreak;
+			bool geardown; // gear force enable
+		}gear;
+
+
+		struct {
 			bool autopilotmaster;   // master swith of the entire autopilot system
 			struct {
 				autopliotpitchmode mode{ PITCHMODE_DIRECT };
@@ -124,18 +131,27 @@ namespace aircraft {
 
 
 	struct gearparameter {
-		double Rex{ 0.0 };
+		double Rex{ 0.0 };// gear position
 		double Rey{ 0.0 };
-		double Rrez{ 0.0 };
-		double Nex{ 0.0 };
+		double Rez{ 0.0 };
+		double Nex{ 0.0 };// gear direction
 		double Ney{ 0.0 };
 		double Nez{ 0.0 };
 		double Stiffness{ 0.0 };
 		double CompressDamping{ 0.0 };
 		double ReboundDamping{ 0.0 };
-		double Hmax{ 0.0 };
-		double NeMin{ 0.3 };
+		double Hmax{ 10.0 };
+		double NeMin{ 0.1 };
+		double VrelaxationRoll{0.0};
+		double VrelaxationSide{ 0.0 };
+		double Vlimit{ 0.0 };
+		double SigmaDynamic{ 0.0 };
+		double SigmaStatic{ 0.0 };
+		double SigmaRoll{ 0.0 };
+		double Sigma0{ 0.0 };
+		double Vlimit{ 0.0 };
 	};
+
 
 	struct autopilotparameter {
 		struct {
@@ -206,6 +222,9 @@ namespace aircraft {
 			double Span{ 0.0 };
 			double MeanChord{ 0.0 };
 			double ReferenceArea = 16.1651289600000;
+		}geometry;
+
+		struct {
 			struct {
 				gearparameter param;
 				double MaxSteering;
@@ -216,7 +235,9 @@ namespace aircraft {
 			struct {
 				gearparameter param;
 			}rightgear;
-		}geometry;
+		}gear;
+
+
 		// autopilot parameters
 		aerodynamicsparameter aerodynamics;
 		autopilotparameter autopilot;
@@ -245,8 +266,9 @@ namespace aircraft {
 			unsigned int rotation2inertialframe{ 0 };
 			unsigned int planecurrentweight{ 0 };
 			unsigned int loadfactor{ 0 };
-			unsigned int loadfactorfluy{0};
+			unsigned int loadfactorfluy{ 0 };
 			unsigned int loadfactorfluz{ 0 };
+			unsigned int sumtotalbodymoment{ 0 };
 		}dynamics;
 
 		struct {
@@ -296,6 +318,20 @@ namespace aircraft {
 			unsigned int PIDThrottleCom{ 0 };
 			unsigned int SumTotoalThrottle{ 0 };
 		}autothrottle;
+
+		struct {
+			unsigned int NoseGearNormalForce{ 0 };
+			unsigned int LeftGearNormalForce{ 0 };
+			unsigned int RightGearNormalForce{ 0 };
+			unsigned int NoseGearFrictionForce{ 0 };
+			unsigned int LeftGearFrictionForce{ 0 };
+			unsigned int RightGearFrictionForce{ 0 };
+			unsigned int TotalGearMoment{ 0 };
+			unsigned int TotalGearForce{ 0 };
+			unsigned int GearMomentToBody{ 0 };
+			unsigned int GroundNormal{ 0 };
+		}landinggear;
+
 		// some temporary blocks
 		struct {
 			unsigned int fixedthrottle;
@@ -345,6 +381,17 @@ namespace aircraft {
 		void DisplayParameters();
 		// display initial conditions
 		void DisplayInitialConditions();
+		// get aerodynamic block output
+		void DisplayAerodynamicInfo();
+		// get engine info
+		void DisplayEngineInfo();
+		// 
+		void DisplayPropeller();
+		// 
+		void DisplayGearInfo();
+		// 
+		void DisplayGNCInfo();
+
 	private:
 		// a flag to show whether the simulation is running. It is set to false initially.
 		// If UpdateSimulation is executed, then it is set to true.
@@ -362,6 +409,13 @@ namespace aircraft {
 		unsigned int trimthrottle{ 0 };
 		unsigned int altcommand{ 0 };
 		unsigned int autothrottlePIDenable{ 0 };
+		unsigned int steering{ 0 };
+		unsigned int nosegearbreak{ 0 };
+		unsigned int leftgearbreak{ 0 };
+		unsigned int rightgearbreak{ 0 };
+		unsigned int nosegearswitch{ 0 };
+		unsigned int leftgearswitch{ 0 };
+		unsigned int rightgeaswitch{ 0 };
 		// establish the aircraft model
 		// step 1. define the rigid body
 		void DefineRigidbody();
@@ -371,7 +425,9 @@ namespace aircraft {
 		void DefineEngine();
 		// step 4. define the autopilot
 		void DefineAutopilot();
-		// step 5. define the logging
+		// step 5. define landing gear
+		void DefineLandingGear();
+		// step 6. define the logging
 		void DefineLogging();
 		// connect system
 		void ConnectSystems();
