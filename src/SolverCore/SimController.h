@@ -214,6 +214,7 @@ namespace simulationcontrol {
 		int Run_Update(const VectorXd& extern_input);                                     // update the simulation based on the configuration parameters and external inputs
 		double Run_GetSystemTime();														  // 
 		VectorXd Run_GetSubsystemOuput(const unsigned int system_ID);
+		double GetSubsystemOutput(const unsigned int system_ID, const unsigned int output_portID);
 		/*------------------------Data logging--------------------------------------*/
 		bool DefineDataLogging(const unsigned int output_system_ID,
 							   const unsigned int output_port_ID,

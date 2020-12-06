@@ -746,6 +746,12 @@ namespace simulationcontrol {
 		return subsystem_list[system_ID]->GetOutput();
 	}
 
+	double SimController::GetSubsystemOutput(const unsigned int system_ID, const unsigned int output_portID)
+	{
+		// TO DO: add an id range check
+		return subsystem_list[system_ID]->GetOutput()(output_portID);
+	}
+
 	bool SimController::DefineDataLogging(const unsigned int output_system_ID, const unsigned int output_port_ID, string tag)
 	{
 		bool flag = false;

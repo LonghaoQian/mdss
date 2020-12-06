@@ -61,7 +61,7 @@ namespace aircraft {
 			}rollCAS;
 
 			struct {
-				double ON; // 1.0 on 
+				bool ON;
 				double targetspeed{0.0}; // target true airspeed (m/s)
 				double trimthrottle{0.0}; // the trim throttle to the 
 			}autothrottle;
@@ -149,7 +149,6 @@ namespace aircraft {
 		double SigmaStatic{ 0.0 };
 		double SigmaRoll{ 0.0 };
 		double Sigma0{ 0.0 };
-		double Vlimit{ 0.0 };
 	};
 
 
@@ -248,7 +247,7 @@ namespace aircraft {
 
 	struct modellist { // list containing all the model indexes of the system
 		struct {
-			unsigned int planekinematics{ 0 };
+			unsigned int planekinematics{ 0 }; // TO DO: potential risk of forgetting definintion of system
 			unsigned int planedynamics{ 0 };
 			unsigned int gravityinertial{ 0 };
 			//unsigned int gravity
@@ -308,6 +307,9 @@ namespace aircraft {
 			unsigned int SaturationAltit{ 0 };
 			unsigned int SumAltitError{ 0 };
 			unsigned int SumVSError{ 0 };
+			unsigned int PitchCASSwitch{ 0 };
+			unsigned int PitchIntegralSwitch{ 0 };
+			unsigned int PitchCASDeInputSwitch{ 0 };
 		}pitchCAS;
 
 		struct
@@ -317,6 +319,7 @@ namespace aircraft {
 			unsigned int GainTASError{ 0 };
 			unsigned int PIDThrottleCom{ 0 };
 			unsigned int SumTotoalThrottle{ 0 };
+			unsigned int AutoThrottleSwitch{ 0 };
 		}autothrottle;
 
 		struct {
@@ -362,6 +365,10 @@ namespace aircraft {
 		}engine;
 	};
 
+	struct GNCdata {
+		double TAS;
+	};
+
 	// wrapper to estabilish the C172 model using the solver components
 	class AircraftDynamicModel {
 	public:
@@ -391,7 +398,7 @@ namespace aircraft {
 		void DisplayGearInfo();
 		// 
 		void DisplayGNCInfo();
-
+		const GNCdata* GetGNCInfo();
 	private:
 		// a flag to show whether the simulation is running. It is set to false initially.
 		// If UpdateSimulation is executed, then it is set to true.
@@ -416,6 +423,15 @@ namespace aircraft {
 		unsigned int nosegearswitch{ 0 };
 		unsigned int leftgearswitch{ 0 };
 		unsigned int rightgeaswitch{ 0 };
+		unsigned int pitchCASMasterSwitch{ 0 };
+		unsigned int pitchCASIntegralSwitch{ 0 };
+		unsigned int altitudeHoldSwitch{ 0 };
+		unsigned int autothrottleSwitch{ 0 };
+		unsigned int throttleinput{ 0 };
+		unsigned int elevatorinput{ 0 };
+		// flight data
+		GNCdata gncdata;
+
 		// establish the aircraft model
 		// step 1. define the rigid body
 		void DefineRigidbody();
@@ -431,5 +447,6 @@ namespace aircraft {
 		void DefineLogging();
 		// connect system
 		void ConnectSystems();
+		// 
 	};
 }

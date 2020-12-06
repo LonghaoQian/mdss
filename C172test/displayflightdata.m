@@ -360,4 +360,116 @@ xlabel('t(s)')
 ylabel('height (m)')
 grid on
 title('height')
+%%
+figure(10)
+subplot(3,2,1)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('TOTALX')))
+xlabel('t(s)')
+ylabel('TOTALX (N)')
+grid on
+title('TOTALX')
 
+subplot(3,2,3)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('TOTALY')))
+xlabel('t(s)')
+ylabel('TOTALY (N)')
+grid on
+title('TOTALY')
+
+
+subplot(3,2,5)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('TOTALZ')))
+xlabel('t(s)')
+ylabel('TOTALZ (N)')
+grid on
+title('TOTALZ')
+
+subplot(3,2,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('TOTALBODYMOMENTX')))
+xlabel('t(s)')
+ylabel('TOTALBODYMOMENTX (Nm)')
+grid on
+title('TOTALBODYMOMENTX')
+
+subplot(3,2,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('TOTALBODYMOMENTY')))
+xlabel('t(s)')
+ylabel('TOTALBODYMOMENTY (Nm)')
+grid on
+title('TOTALBODYMOMENTY')
+
+
+subplot(3,2,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('TOTALBODYMOMENTZ')))
+xlabel('t(s)')
+ylabel('TOTALBODYMOMENTZ (Nm)')
+grid on
+title('TOTALBODYMOMENTZ')
+%%
+figure(11)
+subplot(3,3,1)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('NOSEGEARMOMENTX')))
+xlabel('t(s)')
+ylabel('NOSEGEARMOMENTX (Nm)')
+grid on
+title('NOSEGEARMOMENTX')
+
+subplot(3,3,2)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('NOSEGEARMOMENTY')))
+xlabel('t(s)')
+ylabel('NOSEGEARMOMENTY (Nm)')
+grid on
+title('NOSEGEARMOMENTY')
+
+
+subplot(3,3,3)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('NOSEGEARMOMENTZ')))
+xlabel('t(s)')
+ylabel('NOSEGEARMOMENTZ (Nm)')
+grid on
+title('NOSEGEARMOMENTZ')
+
+subplot(3,3,4)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('LEFTGEARMOMENTX')))
+xlabel('t(s)')
+ylabel('LEFTGEARMOMENTX (Nm)')
+grid on
+title('LEFTGEARMOMENTX')
+
+subplot(3,3,5)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('LEFTGEARMOMENTY')))
+xlabel('t(s)')
+ylabel('LEFTGEARMOMENTY (Nm)')
+grid on
+title('LEFTGEARMOMENTY')
+
+
+subplot(3,3,6)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('LEFTGEARMOMENTZ')))
+xlabel('t(s)')
+ylabel('LEFTGEARMOMENTZ (Nm)')
+grid on
+title('LEFTGEARMOMENTZ')
+
+
+subplot(3,3,7)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('RIGHTGEARMOMENTX')))
+xlabel('t(s)')
+ylabel('RIGHTGEARMOMENTX (Nm)')
+grid on
+title('RIGHTGEARMOMENTX')
+
+subplot(3,3,8)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('RIGHTGEARMOMENTY')))
+xlabel('t(s)')
+ylabel('RIGHTGEARMOMENTY (Nm)')
+grid on
+title('RIGHTGEARMOMENTY')
+
+
+subplot(3,3,9)
+plot(logged_data.data(:,logged_data.tagmap('t')),logged_data.data(:,logged_data.tagmap('RIGHTGEARMOMENTZ')))
+xlabel('t(s)')
+ylabel('RIGHTGEARMOMENTZ (Nm)')
+grid on
+title('RIGHTGEARMOMENTZ')

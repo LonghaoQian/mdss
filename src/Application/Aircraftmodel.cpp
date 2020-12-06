@@ -28,7 +28,8 @@ namespace  aircraft {
 		// run preprocess
 
 		SimInstance1.DisplaySystemParameter(Modelist.dynamics.loadfactorfluy);
-
+		SimInstance1.DisplaySystemParameter(Modelist.landinggear.RightGearFrictionForce);
+		SimInstance1.DisplaySystemParameter(Modelist.landinggear.RightGearFrictionForce);
 		modelok = SimInstance1.PreRunProcess();
 		// get the external input mapping for specific inputs
 		speedcommandindex     = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.SumTASError, 1);
@@ -43,6 +44,12 @@ namespace  aircraft {
 		rightgearbreak        = SimInstance1.GetExternalInputIndex(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_INPUT_BREAKING);
 		steering              = SimInstance1.GetExternalInputIndex(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_STEERING);
 
+		pitchCASMasterSwitch = SimInstance1.GetExternalInputIndex(Modelist.pitchCAS.PitchCASSwitch, discontinuoussystem::SWITCH_INPUT);
+		elevatorinput = SimInstance1.GetExternalInputIndex(Modelist.pitchCAS.PitchCASSwitch, 2);
+		pitchCASIntegralSwitch = SimInstance1.GetExternalInputIndex(Modelist.pitchCAS.PitchIntegralSwitch, discontinuoussystem::SWITCH_INPUT);
+		//altitudeHoldSwitch
+		autothrottleSwitch = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.AutoThrottleSwitch, discontinuoussystem::SWITCH_INPUT);
+		throttleinput = SimInstance1.GetExternalInputIndex(Modelist.autothrottle.AutoThrottleSwitch, 2);
 		//SimInstance1.DisplayLoggerTagList(); // logge tag list display
 
 		if (modelok) {
@@ -63,17 +70,35 @@ namespace  aircraft {
 	void AircraftDynamicModel::UpdateSimulation(const C172input & input)
 	{
 		if (modelok) { // if successful, run updates
+			// get the inputs from control surfaces
+			extern_input(throttleinput) = input.engine.throttle;
+			extern_input(elevatorinput) = input.controlsurface.elevator;
 			// determine autopilot state
 			if (input.autopilot.autopilotmaster) {
-				// master off
-
+				extern_input(altcommand) = input.autopilot.pitchCAS.commandaltitude;
+				extern_input(pitchCASMasterSwitch) = 1.0;
+				extern_input(pitchCASIntegralSwitch) = 1.0;
 			}
 			else {
-				extern_input(speedcommandindex) =     input.autopilot.autothrottle.targetspeed;
-				extern_input(trimthrottle) =          input.autopilot.autothrottle.trimthrottle;
-				extern_input(autothrottlePIDenable) = input.autopilot.autothrottle.ON;
-				extern_input(altcommand) =            input.autopilot.pitchCAS.commandaltitude;
+				extern_input(altcommand) = 0.0;
+				extern_input(pitchCASMasterSwitch) = -1.0;
+				extern_input(pitchCASIntegralSwitch) = -1.0;
 			}
+			// determine auto throttle state
+			if (input.autopilot.autothrottle.ON) {
+				extern_input(trimthrottle) = input.autopilot.autothrottle.trimthrottle;
+				extern_input(autothrottlePIDenable) = 1.0;
+				extern_input(speedcommandindex) = input.autopilot.autothrottle.targetspeed;
+				extern_input(autothrottleSwitch) = 1.0;
+			} else {
+				extern_input(trimthrottle) = 0.0;
+				extern_input(autothrottlePIDenable) = -1.0;
+				extern_input(speedcommandindex) = 0.0;
+				extern_input(autothrottleSwitch) = -1.0;
+			}
+
+
+
 			// load gear switch
 			if (input.gear.geardown) {
 				extern_input(nosegearswitch) = 1.0;
@@ -183,6 +208,12 @@ namespace  aircraft {
 		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // gravity
 		sum_total_force_parameter.SignList.push_back(mathblocks::SUM_POSITIVE); // gear
 		Modelist.dynamics.sumtotalinertialforce = SimInstance1.AddSubSystem(sum_total_force_parameter);
+		// total moment
+		mathblocks::SumParameter sum_total_moment_parameter;
+		sum_total_moment_parameter.input_dimensions = 3;
+		sum_total_moment_parameter.SignList.push_back(mathblocks::SUM_POSITIVE);
+		sum_total_moment_parameter.SignList.push_back(mathblocks::SUM_POSITIVE);
+		Modelist.dynamics.sumtotalbodymoment = SimInstance1.AddSubSystem(sum_total_moment_parameter);
 		// height
 		mathblocks::GainParameter height_param;
 		height_param.K.resize(1, 1);
@@ -581,7 +612,13 @@ namespace  aircraft {
 		SumTotoalThrottle_param.SignList.push_back(mathblocks::SUM_POSITIVE);
 		Modelist.autothrottle.SumTotoalThrottle = SimInstance1.AddSubSystem(SumTotoalThrottle_param);
 
-
+		discontinuoussystem::SwitchParameter autothrottle_switch_param;
+		autothrottle_switch_param.num_of_channels = 1;
+		autothrottle_switch_param.switch_value = 0.0;
+		Modelist.autothrottle.AutoThrottleSwitch = SimInstance1.AddSubSystem(autothrottle_switch_param);
+		Modelist.pitchCAS.PitchCASSwitch =         SimInstance1.AddSubSystem(autothrottle_switch_param);
+		Modelist.pitchCAS.PitchIntegralSwitch =    SimInstance1.AddSubSystem(autothrottle_switch_param);
+		Modelist.pitchCAS.PitchCASDeInputSwitch =  SimInstance1.AddSubSystem(autothrottle_switch_param);
 	}
 	void AircraftDynamicModel::DefineLandingGear()
 	{
@@ -750,6 +787,22 @@ namespace  aircraft {
 		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_Y, "TOTALY");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_Z, "TOTALZ");
 
+		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalbodymoment, mathauxiliary::VECTOR_X, "TOTALBODYMOMENTX");
+		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalbodymoment, mathauxiliary::VECTOR_Y, "TOTALBODYMOMENTY");
+		SimInstance1.DefineDataLogging(Modelist.dynamics.sumtotalbodymoment, mathauxiliary::VECTOR_Z, "TOTALBODYMOMENTZ");
+
+		SimInstance1.DefineDataLogging(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx, "NOSEGEARMOMENTX");
+		SimInstance1.DefineDataLogging(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIy, "NOSEGEARMOMENTY");
+		SimInstance1.DefineDataLogging(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIz, "NOSEGEARMOMENTZ");
+
+		SimInstance1.DefineDataLogging(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx, "LEFTGEARMOMENTX");
+		SimInstance1.DefineDataLogging(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIy, "LEFTGEARMOMENTY");
+		SimInstance1.DefineDataLogging(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIz, "LEFTGEARMOMENTZ");
+
+		SimInstance1.DefineDataLogging(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx, "RIGHTGEARMOMENTX");
+		SimInstance1.DefineDataLogging(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIy, "RIGHTGEARMOMENTY");
+		SimInstance1.DefineDataLogging(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIz, "RIGHTGEARMOMENTZ");
+
 		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactor, mathauxiliary::VECTOR_X, "loadfactorbodyx");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactorfluy, 0, "loadfactorbodyy");
 		SimInstance1.DefineDataLogging(Modelist.dynamics.loadfactorfluz, 0, "loadfactorbodyz");
@@ -763,7 +816,8 @@ namespace  aircraft {
 		// signal output to dynamics:
 		// connect dynamics to the input forces
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_FIx, dynamics::DYNAMICS_INPUT_FIz,  Modelist.dynamics.sumtotalinertialforce, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
-		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_TBx, dynamics::DYNAMICS_INPUT_TBz , Modelist.dynamics.sumtotalbodymoment, aero::AEROFORCE_OUTPUT_MBx, aero::AEROFORCE_OUTPUT_MBz);
+		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_TBx, dynamics::DYNAMICS_INPUT_TBz , Modelist.dynamics.sumtotalbodymoment,  0, 2);
+		
 		// connect dynamics to the angular velocity
 		SimInstance1.BatchEditConnectionMatrix(Modelist.dynamics.planedynamics, dynamics::DYNAMICS_INPUT_OmegaBIx, dynamics::DYNAMICS_INPUT_OmegaBIz, Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
 		// dynamics to kinematics
@@ -826,7 +880,7 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_DYNAMICPRESSURE, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_DYNAMICPRESSURE);
 
 		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_AOARATE_FILTERED, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_AOARATE);
-		// SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_SIDESLIPRATE_FILTERED, Modelist.aerodynamics.filteredBetarate, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_SIDESLIPRATE_FILTERED, Modelist.aerodynamics.filteredBetarate, 0);
 
 		// connect engine block
 		// connect the propeller to the shaft dynamics
@@ -893,24 +947,40 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumCstar1, 1, Modelist.pitchCAS.GainThetadot2, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumCstar1, 2, Modelist.pitchCAS.SumDeltaDz, 0);
 		// 
-		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.Deintegral, 0, Modelist.pitchCAS.SumCstar1, 0);
+
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.PitchIntegralSwitch, discontinuoussystem::SWITCH_INPUT, simulationcontrol::external, 0);// switch 0 input is external
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.PitchIntegralSwitch, 1, Modelist.pitchCAS.SumCstar1, 0);// switch 1 input is the sum of C star
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.PitchIntegralSwitch, 2, simulationcontrol::external, 0);// switch 2 input is 0 (external)
+
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.Deintegral, 0, Modelist.pitchCAS.PitchIntegralSwitch, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SaturationDeIntegral, 0, Modelist.pitchCAS.Deintegral, 0);
+
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumDeCom, 0, Modelist.pitchCAS.GainThetadot1, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumDeCom, 1, Modelist.pitchCAS.SaturationDeIntegral, 0);
+		// connect the autpilot output to pitch cas switch
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.PitchCASSwitch, discontinuoussystem::SWITCH_INPUT, simulationcontrol::external, 0);// switch condition is external
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.PitchCASSwitch, 1, Modelist.pitchCAS.SumDeCom, 0);// 1 is de from auto pilot
+		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.PitchCASSwitch, 2, simulationcontrol::external, 0);// 2 is de from external input
 		// connect the controller to aircraft input
-		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_ELEVATOR, Modelist.pitchCAS.SumDeCom,0);
-		// connect the 
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_ELEVATOR, Modelist.pitchCAS.PitchCASSwitch, 0);
+
+		// connect the auto throttle 
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTASError, 0, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_TAS);
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTASError, 1, simulationcontrol::external, 0);
 
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SaturateTASError, 0, Modelist.autothrottle.SumTASError, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.GainTASError, 0, Modelist.autothrottle.SaturateTASError, 0);
-		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.PIDThrottleCom, 0, simulationcontrol::external, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.PIDThrottleCom, 0, simulationcontrol::external, 0);// switch is from external input
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.PIDThrottleCom, 1, Modelist.autothrottle.GainTASError, 0);
 
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTotoalThrottle, 0, Modelist.autothrottle.PIDThrottleCom, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTotoalThrottle, 1, simulationcontrol::external, 0);
-		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, Modelist.autothrottle.SumTotoalThrottle, 0);
+
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.AutoThrottleSwitch, discontinuoussystem::SWITCH_INPUT, simulationcontrol::external, 0);// switch input is external
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.AutoThrottleSwitch, 1, Modelist.autothrottle.SumTotoalThrottle, 0);// input 1 is from auto throttle
+		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.AutoThrottleSwitch, 2, simulationcontrol::external, 0); // input 2 is external throttle input
+
+		SimInstance1.EditConnectionMatrix(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_INPUT_THROTTLE, Modelist.autothrottle.AutoThrottleSwitch, 0);
 		// connect the altitude controller
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumAltitError, 0, simulationcontrol::external, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.SumAltitError, 1, Modelist.dynamics.height, 0);
@@ -989,5 +1059,10 @@ namespace  aircraft {
 		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.GearMomentToBody, 0, 8,  Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_R_BI00, dynamics::KINEMATICS_OUTPUT_R_BI22);
 		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.GearMomentToBody, 9, 11, Modelist.landinggear.TotalGearMoment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
+	}
+	const GNCdata* AircraftDynamicModel::GetGNCInfo()
+	{
+		gncdata.TAS = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_TAS);
+		return &gncdata;
 	}
 }

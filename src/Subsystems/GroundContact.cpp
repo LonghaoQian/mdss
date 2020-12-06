@@ -13,7 +13,7 @@ groundcontact::SimpleGearNormalForce::SimpleGearNormalForce(const SimpleGearNorm
 	system_info.system_parameter_ok = true;
 	system_info.NO_CONTINUOUS_STATE = true;
 	param_ = param;
-	// load the direction of wheel
+	// load the direction of wheel, TO DO: determine whether the H max is too low
 	nwb.setZero();
 	nwb(0) = 1.0;
 	npb.setZero();

@@ -56,7 +56,7 @@ namespace discontinuoussystem {
 	enum {
 		SWITCH_INPUT = 0
 	};
-
+	// if input>switch value, use input(1 -> param_.num_of_channels ), else input(param_.num_of_channels + 1 -> 2* param_.num_of_channels)
 	struct SwitchParameter {
 		int num_of_channels;
 		double switch_value;

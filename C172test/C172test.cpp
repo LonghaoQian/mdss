@@ -22,14 +22,9 @@ int main()
 	aircraft::initialcondition C172initialcondition;
 
 	FlightInitialCondition initmode = INIT_MODE_GROUND;
-
+	FlightInitialCondition flightstate = INIT_MODE_GROUND;
 	switch (initmode) {
 		case INIT_MODE_GROUND: {
-
-
-			break;
-		}
-		case INIT_MODE_CRUISE: {
 			C172initialcondition.engine.propellerRPM = 2200.0; // RPM
 			C172initialcondition.plane.omegax = 0.0;
 			C172initialcondition.plane.omegay = 0.0;
@@ -44,19 +39,39 @@ int main()
 			C172initialcondition.plane.pitch = 0.0 / 57.3;
 			C172initialcondition.plane.yaw = 0.0 / 57.3;
 
+			break;
+		}
+		case INIT_MODE_CRUISE: {
 			C172initialcondition.engine.propellerRPM = 2200.0; // RPM
 			C172initialcondition.plane.omegax = 0.0;
 			C172initialcondition.plane.omegay = 0.0;
 			C172initialcondition.plane.omegaz = 0.0;
-			C172initialcondition.plane.inertialpositionx = 10.0;
-			C172initialcondition.plane.inertialpositiony = 10.0;
+			C172initialcondition.plane.inertialpositionx = 0.0;
+			C172initialcondition.plane.inertialpositiony = 0.0;
 			C172initialcondition.plane.inertialpositionz = -500.0;// initial height NED frame
-			C172initialcondition.plane.inertialvelocityx = 50.0; // 
-			C172initialcondition.plane.inertialvelocityy = 1.0;
-			C172initialcondition.plane.inertialvelocityz = 0.5;
+			C172initialcondition.plane.inertialvelocityx = 40.0; // 
+			C172initialcondition.plane.inertialvelocityy = 0.0;
+			C172initialcondition.plane.inertialvelocityz = 0.0;
 			C172initialcondition.plane.roll = 0.0;
-			C172initialcondition.plane.pitch = 5.0/57.3;
-			C172initialcondition.plane.yaw = 0.0/57.3;
+			C172initialcondition.plane.pitch = 1.0 / 57.3;
+			C172initialcondition.plane.yaw = 0.0 / 57.3;
+
+			break;
+		}
+		default: {// default case is te ground
+			C172initialcondition.engine.propellerRPM = 2200.0; // RPM
+			C172initialcondition.plane.omegax = 0.0;
+			C172initialcondition.plane.omegay = 0.0;
+			C172initialcondition.plane.omegaz = 0.0;
+			C172initialcondition.plane.inertialpositionx = 0.0;
+			C172initialcondition.plane.inertialpositiony = 0.0;
+			C172initialcondition.plane.inertialpositionz = -2.0;// initial height NED frame
+			C172initialcondition.plane.inertialvelocityx = 0.0; // 
+			C172initialcondition.plane.inertialvelocityy = 0.0;
+			C172initialcondition.plane.inertialvelocityz = 0.0;
+			C172initialcondition.plane.roll = 0.0;
+			C172initialcondition.plane.pitch = 0.0 / 57.3;
+			C172initialcondition.plane.yaw = 0.0 / 57.3;
 			break;
 		}
 	}
@@ -216,6 +231,65 @@ int main()
 	C172parameter.propeller.diameter = 76 * 0.0254; //m
 	C172parameter.propeller.minimumAngularRate = 1.0;
 	C172parameter.propeller.shaftinertia = 1.6700/(2.0*M_PI);
+	// landing gear parameter
+	C172parameter.gear.nosegear.MaxSteering = 10.0;
+	C172parameter.gear.nosegear.param.CompressDamping = 500.0 * 4.4482 / 0.3048;
+	C172parameter.gear.nosegear.param.Hmax = 10.0;
+	C172parameter.gear.nosegear.param.NeMin = 0.1;
+	C172parameter.gear.nosegear.param.Nex = 0.0;
+	C172parameter.gear.nosegear.param.Ney = 0.0;
+	C172parameter.gear.nosegear.param.Nez = 1.0;
+	C172parameter.gear.nosegear.param.ReboundDamping = 800.0 * 4.4482 / 0.3048;
+	C172parameter.gear.nosegear.param.Rex = 1.2141;
+	C172parameter.gear.nosegear.param.Rey = 0.0;
+	C172parameter.gear.nosegear.param.Rez = 1.4351;
+	C172parameter.gear.nosegear.param.Sigma0 = 3.0;
+	C172parameter.gear.nosegear.param.Stiffness = 1800.0 * 4.4482 / 0.3048;
+	C172parameter.gear.nosegear.param.SigmaDynamic = 0.4;
+	C172parameter.gear.nosegear.param.SigmaRoll = 0.15;
+	C172parameter.gear.nosegear.param.SigmaStatic = 0.5;
+	C172parameter.gear.nosegear.param.Vlimit = 5.0;
+	C172parameter.gear.nosegear.param.VrelaxationRoll = 0.3;
+	C172parameter.gear.nosegear.param.VrelaxationSide = 0.3;
+
+	C172parameter.gear.leftgear.param.CompressDamping = 160.0 * 4.4482 / 0.3048;
+	C172parameter.gear.leftgear.param.ReboundDamping = 320.0 * 4.4482 / 0.3048;
+	C172parameter.gear.leftgear.param.Hmax = 10.0;
+	C172parameter.gear.leftgear.param.NeMin = 0.1;
+	C172parameter.gear.leftgear.param.Nex = 0.0;
+	C172parameter.gear.leftgear.param.Ney = 0.0;
+	C172parameter.gear.leftgear.param.Nez = 1.0;
+	C172parameter.gear.leftgear.param.Rex = -0.4369;
+	C172parameter.gear.leftgear.param.Rey = -1.2763;
+	C172parameter.gear.leftgear.param.Rez = 1.3960;
+	C172parameter.gear.leftgear.param.Stiffness = 5400.0 * 4.4482 / 0.3048;
+	C172parameter.gear.leftgear.param.Sigma0 = 3.0;
+	C172parameter.gear.leftgear.param.SigmaDynamic = 0.4;
+	C172parameter.gear.leftgear.param.SigmaRoll = 0.15;
+	C172parameter.gear.leftgear.param.SigmaStatic = 0.5;
+	C172parameter.gear.leftgear.param.Vlimit = 5.0;
+	C172parameter.gear.leftgear.param.VrelaxationRoll = 0.3;
+	C172parameter.gear.leftgear.param.VrelaxationSide = 0.3;
+
+	C172parameter.gear.rightgear.param.CompressDamping = 160 * 4.4482 / 0.3048;
+	C172parameter.gear.rightgear.param.ReboundDamping  = 320.0 * 4.4482 / 0.3048;
+	C172parameter.gear.rightgear.param.Hmax = 10.0;
+	C172parameter.gear.rightgear.param.NeMin = 0.1;
+	C172parameter.gear.rightgear.param.Nex = 0.0;
+	C172parameter.gear.rightgear.param.Ney = 0.0;
+	C172parameter.gear.rightgear.param.Nez = 1.0;
+	C172parameter.gear.rightgear.param.Rex = -0.4369;
+	C172parameter.gear.rightgear.param.Rey = 1.2763;
+	C172parameter.gear.rightgear.param.Rez = 1.3960;;
+	C172parameter.gear.rightgear.param.Sigma0 = 3.0;
+	C172parameter.gear.rightgear.param.SigmaDynamic = 0.4;
+	C172parameter.gear.rightgear.param.SigmaRoll = 0.15;
+	C172parameter.gear.rightgear.param.SigmaStatic = 0.5;
+	C172parameter.gear.rightgear.param.Vlimit = 5.0;
+	C172parameter.gear.rightgear.param.Stiffness = 5400.0 * 4.4482 / 0.3048;
+	C172parameter.gear.rightgear.param.VrelaxationRoll = 0.3;
+	C172parameter.gear.rightgear.param.VrelaxationSide = 0.3;
+
 	// auto throttle parameters
 	C172parameter.autopilot.autothrottle.TASErrorLimit = 10.0;
 	C172parameter.autopilot.autothrottle.TASErrorGain = 0.1;
@@ -235,10 +309,9 @@ int main()
 
 	/*------------ define control inputs ----------------------*/
 	aircraft::C172input controlinput;
-	controlinput.autopilot.pitchCAS.commandaltitude = 600.0;//m
-	controlinput.autopilot.autothrottle.ON = 1.0;
-	controlinput.autopilot.autothrottle.targetspeed = 50.0;// m / s
-	controlinput.autopilot.autothrottle.trimthrottle = 0.6;
+
+
+
 	aircraft::AircraftDynamicModel C172aicraftmodel(C172parameter, C172initialcondition);
 	clock_t t; // measure the time used
 	int start = 0;
@@ -250,7 +323,56 @@ int main()
 	int N_steps = 3000;
 	t = clock();
 	for (int i = 0; i < N_steps; i++) {
+		// run the control logic
+		switch (flightstate)
+		{
+		case INIT_MODE_GROUND:
+			// on the ground 
+			controlinput.controlsurface.elevator = 0.0;
+			controlinput.engine.throttle = 0.0;
+			controlinput.autopilot.autopilotmaster = false;
+			controlinput.autopilot.pitchCAS.commandaltitude = 30.0;//m
+			// define auto throttle input
+			controlinput.autopilot.autothrottle.ON = true;
+			controlinput.autopilot.autothrottle.targetspeed = 40.0;// m / s
+			controlinput.autopilot.autothrottle.trimthrottle = 0.7;
+			// 
+
+			// gear command
+			controlinput.gear.gearbreak = false;
+			controlinput.gear.geardown = true;
+			controlinput.gear.steering = 0.0;
+			break;
+		case INIT_MODE_CRUISE:
+			controlinput.controlsurface.elevator = 0.0;
+			controlinput.engine.throttle = 0.0;
+			controlinput.autopilot.autopilotmaster = true;
+			controlinput.autopilot.pitchCAS.commandaltitude = 100.0;//m
+			// define auto throttle input
+			controlinput.autopilot.autothrottle.ON = true;
+			controlinput.autopilot.autothrottle.targetspeed = 55.0;// m / s
+			controlinput.autopilot.autothrottle.trimthrottle = 0.7;
+			// 
+
+			// gear command
+			controlinput.gear.gearbreak = false;
+			controlinput.gear.geardown = true;
+			controlinput.gear.steering = 0.0;
+			break;
+		default:
+
+			break;
+		}
+		// update the aircraft state
 		C172aicraftmodel.UpdateSimulation(controlinput);
+		// determine mode
+		if (C172aicraftmodel.GetGNCInfo()->TAS > 39.0) {
+			flightstate = INIT_MODE_CRUISE;
+		} else
+		{
+			flightstate = INIT_MODE_GROUND;
+		}
+
 	}
 	t = clock() - t;
 	std::cout << "Calculation Takes " << t << " clicks " << ((float)t) / CLOCKS_PER_SEC << " seconds \n";
