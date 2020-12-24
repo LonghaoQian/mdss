@@ -27,4 +27,5 @@
 #include <map>
 #include <fstream>
 #include <functional>
+#include <memory>
 #endif //PCH_H
