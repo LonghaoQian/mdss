@@ -11,7 +11,15 @@
 
 // TODO: add headers that you want to pre-compile here
 #include <iostream>
-#include <Eigen\Dense>
+
+// This file is being reused under Unix, so check OS for filepath separator
+#if defined(_WIN32) || defined(WIN32) || defined(_WIN64) || defined(WIN64)
+#include <Eigen\Core>
+#include <Eigen\Geometry>
+#else
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#endif
 #include <vector>
 #define _USE_MATH_DEFINES // for C++
 #include <math.h>

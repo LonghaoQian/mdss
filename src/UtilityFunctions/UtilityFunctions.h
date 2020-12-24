@@ -1,5 +1,11 @@
 #pragma once
-#include <Eigen\Dense>
+#if defined(_WIN32) || defined(WIN32) || defined(_WIN64) || defined(WIN64)
+#include <Eigen\Core>
+#include <Eigen\Geometry>
+#else
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#endif
 #define _USE_MATH_DEFINES // for C++
 #include <math.h>
 #include <vector>
