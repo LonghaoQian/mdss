@@ -307,12 +307,22 @@ int main()
 	C172parameter.autopilot.pitchCAS.SaturationDeIntegral = 0.4;
 	// heading command
 
+
+	//actuators:
+
+	C172parameter.actuator.aileron.Ts = 0.05;
+	C172parameter.actuator.elevator.Ts = 0.05;
+	C172parameter.actuator.rudder.Ts = 0.05;
+	C172parameter.actuator.flap.MaxSpeed = 20;
+	C172parameter.actuator.flap.Shapfactor = 10;
 	/*------------ define control inputs ----------------------*/
 	aircraft::C172input controlinput;
 
 
 
 	aircraft::AircraftDynamicModel C172aicraftmodel(C172parameter, C172initialcondition);
+	C172aicraftmodel.DisplayAerodynamicInfo();
+	C172aicraftmodel.DisplayActuatorInfo();
 	clock_t t; // measure the time used
 	int start = 0;
 	std::cin >> start;

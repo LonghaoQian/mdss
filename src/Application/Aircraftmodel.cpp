@@ -20,6 +20,8 @@ namespace  aircraft {
 
 		DefineAutopilot();
 
+		DefineActuator();
+
 		ConnectSystems();
 
 		SimInstance1.FlushMakeConnection();
@@ -138,12 +140,61 @@ namespace  aircraft {
 
 	bool AircraftDynamicModel::ResetParameter(const modelparameter & param)
 	{
+		// right now this function is under development
 		return false;
 	}
 
 	bool AircraftDynamicModel::ResetSimulation(const initialcondition & IC)
 	{
+		// right now this function is under development
 		return false;
+	}
+	void AircraftDynamicModel::DisplayInitialConditions()
+	{
+		std::cout << "------- Initial conditions for the C172 simulation ------- \n";
+		std::cout << "---------------- aircraft -------------- \n";
+		std::cout << "X £º " << currentIC.plane.inertialpositionx << "(m), Y " << currentIC.plane.inertialpositiony << "(m), Z " << currentIC.plane.inertialpositionz << "(m) \n";
+		std::cout << "Vx £º " << currentIC.plane.inertialvelocityx << "(m/s), Vy " << currentIC.plane.inertialvelocityy << "(m/s), Vz " << currentIC.plane.inertialvelocityz << " (m/s) \n";
+		std::cout << "Roll £º " << 57.3*currentIC.plane.roll << "(deg), Pitch " << 57.3*currentIC.plane.pitch << "(deg), Yaw" << 57.3*currentIC.plane.yaw << "(deg)\n";
+		std::cout << "Omegax £º " << 57.3*currentIC.plane.roll << "(deg/s), Omegay " << 57.3*currentIC.plane.omegay << "(deg/s), Omegaz" << 57.3*currentIC.plane.omegaz<< "(deg/s)\n";
+		std::cout << "---------------- aircraft -------------- \n";
+		std::cout << "RPM£º " << currentIC.engine.propellerRPM << "\n";
+		std::cout << "---------------- aircraft -------------- \n";
+		std::cout << "Flap angle : " << currentIC.controlsurface.flap << "\n";
+	}
+	void AircraftDynamicModel::DisplayAerodynamicInfo()
+	{
+		SimInstance1.DisplaySystemParameter(Modelist.aerodynamics.aeroangle);
+		SimInstance1.DisplaySystemParameter(Modelist.aerodynamics.aeroforcemoment);
+	}
+	void AircraftDynamicModel::DisplayEngineInfo()
+	{
+		SimInstance1.DisplaySystemParameter(Modelist.engine.propeller);
+		SimInstance1.DisplaySystemParameter(Modelist.engine.pistonengine);
+		SimInstance1.DisplaySystemParameter(Modelist.engine.shaftinertia);
+	}
+
+	void AircraftDynamicModel::DisplayGearInfo()
+	{
+		std::cout << "---------- nose gear ------------- \n";
+		SimInstance1.DisplaySystemParameter(Modelist.landinggear.NoseGearNormalForce);
+		SimInstance1.DisplaySystemParameter(Modelist.landinggear.NoseGearFrictionForce);
+		std::cout << "---------- left gear ------------- \n";
+		SimInstance1.DisplaySystemParameter(Modelist.landinggear.LeftGearNormalForce);
+		SimInstance1.DisplaySystemParameter(Modelist.landinggear.LeftGearFrictionForce);
+		std::cout << "---------- right gear ------------- \n";
+		SimInstance1.DisplaySystemParameter(Modelist.landinggear.RightGearNormalForce);
+		SimInstance1.DisplaySystemParameter(Modelist.landinggear.RightGearFrictionForce);
+	}
+	void AircraftDynamicModel::DisplayActuatorInfo()
+	{
+		std::cout<< "---------- aileron ------------- \n";
+		//SimInstance1.DisplaySystemParameter(Modelist.actuator.aileronactuator);
+		std::cout << "---------- elevator ------------- \n";
+		SimInstance1.DisplaySystemParameter(Modelist.actuator.elevatoractuator);
+		std::cout << "---------- rudder ------------- \n";
+		//SimInstance1.DisplaySystemParameter(Modelist.actuator.rudderactuator);
+		std::cout << "---------- flap ------------- \n";
 	}
 	void AircraftDynamicModel::DefineRigidbody()
 	{
@@ -573,6 +624,78 @@ namespace  aircraft {
 		SumVSError_param.SignList.push_back(mathblocks::SUM_POSITIVE);
 		SumVSError_param.SignList.push_back(mathblocks::SUM_NEGATIVE);
 		Modelist.pitchCAS.SumVSError = SimInstance1.AddSubSystem(SumVSError_param);
+		// define the lateral controller
+
+		mathblocks::GainParameter TAS_blender1_param;
+
+		TAS_blender1_param.Mode = mathblocks::ElementWise;
+		TAS_blender1_param.num_of_inputs = 1;
+		TAS_blender1_param.K.resize(1, 1);
+		TAS_blender1_param.K(0, 0) = parameter.autopilot.speedblenderconstant;
+		Modelist.speedblender.GainSpeedBlendConstant = SimInstance1.AddSubSystem(TAS_blender1_param);
+
+		mathblocks::TrigonometryParameter blender_atan_param;
+
+		blender_atan_param.num_of_channels = 1;
+		blender_atan_param.type = mathblocks::ATAN;
+		Modelist.speedblender.GainBlenderAtan = SimInstance1.AddSubSystem(blender_atan_param);
+
+		mathblocks::GainParameter TAS_blenderouput_param;
+		TAS_blenderouput_param.Mode = mathblocks::ElementWise;
+		TAS_blenderouput_param.num_of_inputs = 1;
+		TAS_blenderouput_param.K.resize(1, 1);
+		TAS_blenderouput_param.K(0, 0) = 2.0 / M_PI;
+		Modelist.speedblender.GainBlenderOuput = SimInstance1.AddSubSystem(TAS_blenderouput_param);
+
+		mathblocks::GainParameter GainKAileronInputCAS_param;
+		GainKAileronInputCAS_param.Mode = mathblocks::ElementWise;
+		GainKAileronInputCAS_param.num_of_inputs = 1;
+		GainKAileronInputCAS_param.K.resize(1, 1);
+		GainKAileronInputCAS_param.K(0, 0) = parameter.autopilot.rollCAS.KStickINt;
+		Modelist.rollCAS.GainKAileronInputCAS = SimInstance1.AddSubSystem(GainKAileronInputCAS_param);
+
+		mathblocks::GainParameter GainKAileronInput_param;
+		GainKAileronInput_param.Mode = mathblocks::ElementWise;
+		GainKAileronInput_param.num_of_inputs = 1;
+		GainKAileronInput_param.K.resize(1, 1);
+		GainKAileronInput_param.K(0, 0) = parameter.autopilot.rollCAS.KStickCom;
+		Modelist.rollCAS.GainKAileronInput = SimInstance1.AddSubSystem(GainKAileronInput_param);
+
+		mathblocks::GainParameter GainKPhidot_param;
+		GainKPhidot_param.Mode = mathblocks::ElementWise;
+		GainKPhidot_param.num_of_inputs = 1;
+		GainKPhidot_param.K.resize(1, 1);
+		GainKPhidot_param.K(0, 0) = parameter.autopilot.rollCAS.KStickCom;
+		Modelist.rollCAS.GainDampingPhidot = SimInstance1.AddSubSystem(GainKPhidot_param);
+
+		mathblocks::GainParameter GainKPhidotCAS_param;
+		GainKPhidotCAS_param.Mode = mathblocks::ElementWise;
+		GainKPhidotCAS_param.num_of_inputs = 1;
+		GainKPhidotCAS_param.K.resize(1, 1);
+		GainKPhidotCAS_param.K(0, 0) = parameter.autopilot.rollCAS.KPhiDotInt;
+		Modelist.rollCAS.GainKPhidot = SimInstance1.AddSubSystem(GainKPhidotCAS_param);
+
+
+		mathblocks::SumParameter SumAileronCAS_param;
+		SumAileronCAS_param.input_dimensions = 1;
+		SumAileronCAS_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		SumAileronCAS_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		SumAileronCAS_param.SignList.push_back(mathblocks::SUM_POSITIVE);
+		Modelist.rollCAS.SumAileronCAS = SimInstance1.AddSubSystem(SumAileronCAS_param);
+
+
+		mathblocks::SumParameter SumAileronCommand_param;
+		SumAileronCommand_param.input_dimensions = 1;
+		SumAileronCommand_param.SignList.push_back(mathblocks::SUM_NEGATIVE);// from Phi_dot
+		SumAileronCommand_param.SignList.push_back(mathblocks::SUM_POSITIVE);// from stick aileron
+		Modelist.rollCAS.SumAileronCommand = SimInstance1.AddSubSystem(SumAileronCommand_param);
+
+		linearsystem::IntegratorParameter CASintegral_param;
+		CASintegral_param.num_of_channels = 1;
+		linearsystem::IntegratorInitialCondition  CASintegral_init;
+		CASintegral_init.X_0.resize(1, 1);
+		CASintegral_init.X_0(0) = 0.0;
+		Modelist.rollCAS.CASintegral = SimInstance1.AddSubSystem(CASintegral_param, CASintegral_init);
 
 
 		// define the auto throttle
@@ -619,6 +742,9 @@ namespace  aircraft {
 		Modelist.pitchCAS.PitchCASSwitch =         SimInstance1.AddSubSystem(autothrottle_switch_param);
 		Modelist.pitchCAS.PitchIntegralSwitch =    SimInstance1.AddSubSystem(autothrottle_switch_param);
 		Modelist.pitchCAS.PitchCASDeInputSwitch =  SimInstance1.AddSubSystem(autothrottle_switch_param);
+
+		Modelist.rollCAS.AileronOutputSwitch = SimInstance1.AddSubSystem(autothrottle_switch_param);
+		Modelist.yawCAS.RudderOutputSwitch = SimInstance1.AddSubSystem(autothrottle_switch_param);
 	}
 	void AircraftDynamicModel::DefineLandingGear()
 	{
@@ -711,6 +837,48 @@ namespace  aircraft {
 
 		Modelist.landinggear.GroundNormal = SimInstance1.AddSubSystem(Ng_param);
 
+
+	}
+	void AircraftDynamicModel::DefineActuator()
+	{
+		/*
+		the block representing a transfer funtion
+		h(s) = n(s)/d(s)
+		n(s) = numerator(0) s^(n-1) + ... + numerator(n-1) s + numerator(n)
+		d(s) = denominator(0) s^n + denominator(1) s^(n-1) + ... + denominator(n-1) s + denominator(n)
+		*/
+		linearsystem::TransferFunctionParameter aileron_actuator_param;
+		aileron_actuator_param.Numerator.resize(1);
+		aileron_actuator_param.Numerator(0) = 1.0;
+		aileron_actuator_param.Denominator.resize(2);
+		aileron_actuator_param.Denominator(0) = parameter.actuator.aileron.Ts;
+		aileron_actuator_param.Denominator(1) = 1.0;
+		Modelist.actuator.aileronactuator = SimInstance1.AddSubSystem(aileron_actuator_param);
+
+		linearsystem::TransferFunctionParameter elevator_actuator_param;
+		elevator_actuator_param.Numerator.resize(1);
+		elevator_actuator_param.Numerator(0) = 1.0;
+		elevator_actuator_param.Denominator.resize(2);
+		elevator_actuator_param.Denominator(0) = parameter.actuator.elevator.Ts;
+		elevator_actuator_param.Denominator(1) = 1.0;
+		Modelist.actuator.elevatoractuator = SimInstance1.AddSubSystem(elevator_actuator_param);
+
+		linearsystem::TransferFunctionParameter rudder_actuator_param;
+		rudder_actuator_param.Numerator.resize(1);
+		rudder_actuator_param.Numerator(0) = 1.0;
+		rudder_actuator_param.Denominator.resize(2);
+		rudder_actuator_param.Denominator(0) = parameter.actuator.rudder.Ts;
+		rudder_actuator_param.Denominator(1) = 1.0;
+		Modelist.actuator.rudderactuator = SimInstance1.AddSubSystem(rudder_actuator_param);
+
+		linearsystem::RateLimitedActuatorParameter flap_actutor_param;
+		flap_actutor_param.num_of_channels = 1;
+		flap_actutor_param.shape_factor = parameter.actuator.flap.Shapfactor;
+		flap_actutor_param.steady_speed = parameter.actuator.flap.MaxSpeed;
+		linearsystem::RateLimitedActuatorInitialCondition flap_actutor_IC;
+		flap_actutor_IC.initial_condition.resize(1);
+		flap_actutor_IC.initial_condition(0) = currentIC.controlsurface.flap;
+		Modelist.actuator.flapactuator = SimInstance1.AddSubSystem(flap_actutor_param, flap_actutor_IC);
 
 	}
 	void AircraftDynamicModel::DefineLogging()
@@ -962,7 +1130,10 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.PitchCASSwitch, 1, Modelist.pitchCAS.SumDeCom, 0);// 1 is de from auto pilot
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.PitchCASSwitch, 2, simulationcontrol::external, 0);// 2 is de from external input
 		// connect the controller to aircraft input
-		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_ELEVATOR, Modelist.pitchCAS.PitchCASSwitch, 0);
+
+		SimInstance1.EditConnectionMatrix(Modelist.actuator.elevatoractuator, 0, Modelist.pitchCAS.PitchCASSwitch, 0);
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_ELEVATOR, Modelist.actuator.elevatoractuator, 0);
+		//SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_ELEVATOR, Modelist.pitchCAS.PitchCASSwitch, 0);
 
 		// connect the auto throttle 
 		SimInstance1.EditConnectionMatrix(Modelist.autothrottle.SumTASError, 0, Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_TAS);
@@ -991,6 +1162,17 @@ namespace  aircraft {
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainVS, 0, Modelist.pitchCAS.SumVSError, 0);
 		SimInstance1.EditConnectionMatrix(Modelist.pitchCAS.GainDeCom, 0, Modelist.pitchCAS.GainVS, 0);
 
+		// connect the roll cas switch
+		SimInstance1.EditConnectionMatrix(Modelist.rollCAS.AileronOutputSwitch, discontinuoussystem::SWITCH_INPUT, simulationcontrol::external, 0);// switch condition is external
+		SimInstance1.EditConnectionMatrix(Modelist.rollCAS.AileronOutputSwitch, 1, simulationcontrol::external, 0);// 2 is da from external input (TO DO: add roll control)
+		SimInstance1.EditConnectionMatrix(Modelist.rollCAS.AileronOutputSwitch, 2, simulationcontrol::external, 0);// 2 is de from external input
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_AILERON, Modelist.rollCAS.AileronOutputSwitch, 0);
+
+		// connect the yaw cas switch
+		SimInstance1.EditConnectionMatrix(Modelist.yawCAS.RudderOutputSwitch, discontinuoussystem::SWITCH_INPUT, simulationcontrol::external, 0);// switch condition is external
+		SimInstance1.EditConnectionMatrix(Modelist.yawCAS.RudderOutputSwitch, 1, simulationcontrol::external, 0);// 2 is da from external input (TO DO: add roll control)
+		SimInstance1.EditConnectionMatrix(Modelist.yawCAS.RudderOutputSwitch, 2, simulationcontrol::external, 0);// 2 is de from external input
+		SimInstance1.EditConnectionMatrix(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_INPUT_RUDDER, Modelist.yawCAS.RudderOutputSwitch, 0);
 
 		// connect landing gear normal force to aircraft
 		SimInstance1.EditConnectionMatrix(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_INPUT_STEERING, simulationcontrol::external, 0);
@@ -1060,9 +1242,133 @@ namespace  aircraft {
 		SimInstance1.BatchEditConnectionMatrix(Modelist.landinggear.GearMomentToBody, 9, 11, Modelist.landinggear.TotalGearMoment, mathauxiliary::VECTOR_X, mathauxiliary::VECTOR_Z);
 
 	}
+	void AircraftDynamicModel::DisplayGNCInfo()
+	{
+		std::cout << "---------- GNC data @t = " << SimInstance1.Run_GetSystemTime() << " (s)----------  \n";
+		std::cout << "True airspeed: " << SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_TAS)
+			<< "(m/s), altitude : " << SimInstance1.GetSubsystemOutput(Modelist.dynamics.height, 0) 
+	        << "Climbrate: " << SimInstance1.GetSubsystemOutput(Modelist.dynamics.climbrate, 0)
+			<< "(m/s), altitude : " << SimInstance1.GetSubsystemOutput(Modelist.dynamics.height, 0) << "\n";
+		std::cout << "Roll : " << 57.3*SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerRoll)
+			<< "(deg), Pitch : " << 57.3*SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerPitch)
+			<< "(deg), Yaw : " << 57.3*SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerYaw)
+			<< "(deg) \n";
+		std::cout << "Gamma : " << 57.3*SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_GAMMA) << "(deg) \n";
+		// you may add additional info here if you wish, refer to the get...info functions to see the data
+		std::cout << "---------- End of GNC data ---------- \n";
+	}
+
+
 	const GNCdata* AircraftDynamicModel::GetGNCInfo()
 	{
 		gncdata.TAS = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_TAS);
+		gncdata.Altitude = SimInstance1.GetSubsystemOutput(Modelist.dynamics.height, 0);
+		gncdata.climbrate = SimInstance1.GetSubsystemOutput(Modelist.dynamics.climbrate, 0);
+		gncdata.Roll = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerRoll);
+		gncdata.Pitch = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerPitch);
+		gncdata.Yaw = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerYaw);
+		gncdata.X = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIx);
+		gncdata.Y = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIy);
+		gncdata.Z = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_XIz);
+		gncdata.Vx = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIx);
+		gncdata.Vy = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIy);
+		gncdata.Vz = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_VIz);
+		gncdata.gamma = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_GAMMA);
 		return &gncdata;
+	}
+	const AEROdata * AircraftDynamicModel::GetAEROdata()
+	{
+		aerodata.AOA = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_AOA);
+		aerodata.AOArate = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_AOARATE);
+		aerodata.DynamicPressure = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_DYNAMICPRESSURE);
+		aerodata.Pbar = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_Pbar);
+		aerodata.Qbar = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_Qbar);
+		aerodata.Rbar = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_Rbar);
+		aerodata.SideSlip = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_SIDESLIP);
+		aerodata.SideSliprate = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroangle, aero::AERO_OUTPUT_SIDESLIPRATE);
+		return &aerodata;
+	}
+	const AEROFORCEdata * AircraftDynamicModel::GetAEROFORCEdata()
+	{
+		aeroforcedata.Lift = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_LIFT);
+		aeroforcedata.Drag= SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_DRAG);
+		aeroforcedata.Side = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_SIDE);
+		aeroforcedata.RollMoment = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBx);
+		aeroforcedata.PitchMoment = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBy);
+		aeroforcedata.YawMoment= SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_MBz);
+		aeroforcedata.Fx = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBx);
+		aeroforcedata.Fy = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBy);
+		aeroforcedata.Fz = SimInstance1.GetSubsystemOutput(Modelist.aerodynamics.aeroforcemoment, aero::AEROFORCE_OUTPUT_FBz);
+		return &aeroforcedata;
+	}
+	const ENGdata * AircraftDynamicModel::GetENGdata()
+	{
+		enginedata.rps = SimInstance1.GetSubsystemOutput(Modelist.engine.omega2rps, 0);
+		enginedata.throttlecmd = SimInstance1.GetSubsystemOutput(Modelist.autothrottle.AutoThrottleSwitch, 0);
+		enginedata.thrust = SimInstance1.GetSubsystemOutput(Modelist.engine.propeller, propulsionsystem::PROPELLER_OUTPUT_T);
+		enginedata.Cp = SimInstance1.GetSubsystemOutput(Modelist.engine.propeller, propulsionsystem::PROPELLER_OUTPUT_CP);
+		enginedata.Ct = SimInstance1.GetSubsystemOutput(Modelist.engine.propeller, propulsionsystem::PROPELLER_OUTPUT_CT);
+		enginedata.torqueavailable = SimInstance1.GetSubsystemOutput(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_OUTPUT_Q);
+		enginedata.torquerequired = SimInstance1.GetSubsystemOutput(Modelist.engine.propeller, propulsionsystem::PROPELLER_OUTPUT_Q);
+		enginedata.fuelrate = SimInstance1.GetSubsystemOutput(Modelist.engine.pistonengine, propulsionsystem::PISTONENGINE_OUTPUT_FUELRATE);
+		return &enginedata;
+	}
+	const RIGIDdata * AircraftDynamicModel::GetRigidBodydata()
+	{
+		rigidbodydata.Roll = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerRoll);
+		rigidbodydata.Pitch = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerPitch);
+		rigidbodydata.Yaw = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_EulerYaw);
+		rigidbodydata.Rollrate = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIx);
+		rigidbodydata.Pitchrate = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIy);
+		rigidbodydata.Yawrate = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_OmegaBIz);
+		rigidbodydata.Phi_dot = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_PHIDOT);
+		rigidbodydata.Thetat_dot = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_THETADOT);
+		rigidbodydata.Psi_dot   = SimInstance1.GetSubsystemOutput(Modelist.dynamics.planekinematics, dynamics::KINEMATICS_OUTPUT_PSIDOT);
+		rigidbodydata.Nz = SimInstance1.GetSubsystemOutput(Modelist.dynamics.loadfactorfluz, 0);
+		return &rigidbodydata;
+	}
+	const GEARdata * AircraftDynamicModel::GetGeardata()
+	{
+		landinggeardata.nosegear.compression = SimInstance1.GetSubsystemOutput(Modelist.landinggear.NoseGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_COMPRESSION);
+		landinggeardata.leftgear.compression = SimInstance1.GetSubsystemOutput(Modelist.landinggear.LeftGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_COMPRESSION);
+		landinggeardata.rightgear.compression = SimInstance1.GetSubsystemOutput(Modelist.landinggear.RightGearNormalForce, groundcontact::GEARNORMAL_OUTPUT_COMPRESSION);
+
+		landinggeardata.nosegear.gearforceX = SimInstance1.GetSubsystemOutput(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIx);
+		landinggeardata.nosegear.gearforceY = SimInstance1.GetSubsystemOutput(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIy);
+		landinggeardata.nosegear.gearforceZ = SimInstance1.GetSubsystemOutput(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+
+		landinggeardata.nosegear.gearmomentX = SimInstance1.GetSubsystemOutput(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx);
+		landinggeardata.nosegear.gearmomentY = SimInstance1.GetSubsystemOutput(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIy);
+		landinggeardata.nosegear.gearmomentZ = SimInstance1.GetSubsystemOutput(Modelist.landinggear.NoseGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+
+
+
+		landinggeardata.leftgear.gearforceX = SimInstance1.GetSubsystemOutput(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIx);
+		landinggeardata.leftgear.gearforceY = SimInstance1.GetSubsystemOutput(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIy);
+		landinggeardata.leftgear.gearforceZ = SimInstance1.GetSubsystemOutput(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+
+		landinggeardata.leftgear.gearmomentX = SimInstance1.GetSubsystemOutput(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx);
+		landinggeardata.leftgear.gearmomentY = SimInstance1.GetSubsystemOutput(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIy);
+		landinggeardata.leftgear.gearmomentZ = SimInstance1.GetSubsystemOutput(Modelist.landinggear.LeftGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+
+		landinggeardata.rightgear.gearforceX = SimInstance1.GetSubsystemOutput(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIx);
+		landinggeardata.rightgear.gearforceY = SimInstance1.GetSubsystemOutput(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIy);
+		landinggeardata.rightgear.gearforceZ = SimInstance1.GetSubsystemOutput(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_FIz);
+
+		landinggeardata.rightgear.gearmomentX = SimInstance1.GetSubsystemOutput(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIx);
+		landinggeardata.rightgear.gearmomentY = SimInstance1.GetSubsystemOutput(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIy);
+		landinggeardata.rightgear.gearmomentZ = SimInstance1.GetSubsystemOutput(Modelist.landinggear.RightGearFrictionForce, groundcontact::LUGREFRICTION_OUTPUT_MIz);
+
+		return &landinggeardata;
+	}
+	const CONTROLdata * AircraftDynamicModel::GetControldata()
+	{
+		controldata.throttlecommad = SimInstance1.GetSubsystemOutput(Modelist.autothrottle.AutoThrottleSwitch, 0);
+		controldata.elevatorcommand = SimInstance1.GetSubsystemOutput(Modelist.pitchCAS.PitchCASSwitch, 0);
+		controldata.aileroncommand = SimInstance1.GetSubsystemOutput(Modelist.rollCAS.AileronOutputSwitch, 0);
+		controldata.ruddercommand = SimInstance1.GetSubsystemOutput(Modelist.yawCAS.RudderOutputSwitch, 0);
+		controldata.elevatorpos = SimInstance1.GetSubsystemOutput(Modelist.actuator.elevatoractuator, 0);
+
+		return &controldata;
 	}
 }

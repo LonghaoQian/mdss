@@ -15,7 +15,7 @@ aero::AeroForceMoment1::AeroForceMoment1(const AerosForceParameter& param)
 	system_info.NO_CONTINUOUS_STATE = true;
 	system_info.num_of_continuous_states = 0;
 	system_info.num_of_inputs = 19;
-	system_info.num_of_outputs = 15;
+	system_info.num_of_outputs = 18;
 	system_info.system_parameter_ok = 0;
 	ready_to_run = true;
 	output.resize(system_info.num_of_outputs);
@@ -31,7 +31,9 @@ void aero::AeroForceMoment1::DifferentialEquation(const double & t, const Vector
 void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & state, const VectorXd & input, VectorXd & output)
 {
 	
-	/*
+	/* 
+	refer to the definition of aeroforceinput and aeroforceoutput for input-output definition and size
+	the reference frame of the body-fixed frame: front : x, left : y, down : z
 	Input:
 	0.dynamic pressure
 	1.  alpha
@@ -71,10 +73,10 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 	// calculate R_WB
 	CalculateR_BW(input(AEROFORCE_INPUT_AOA), input(AEROFORCE_INPUT_SIDESLIP));
 
-	// calculate CL
+	// calculate CL (Modifiy this to accomodate different types of aero dynamic data, if you modifed the input and output ports, make sure to update the input-output size)
 	CL_ = param_.AeroCoefficient.Lift.CL0_
-		+ param_.AeroCoefficient.Lift.CLadot_  * input(AEROFORCE_INPUT_AOARATE_FILTERED)
-		+ param_.AeroCoefficient.Lift.CL_alpha_* input(AEROFORCE_INPUT_AOA)
+		+ param_.AeroCoefficient.Lift.CLadot_  * input(AEROFORCE_INPUT_AOARATE_FILTERED) // use the filtered rate to avoide algebraric loop
+		+ param_.AeroCoefficient.Lift.CL_alpha_* input(AEROFORCE_INPUT_AOA) // flap position will also affect CLalpha because the flap changes the camber of the wing, so need to modify this according to flap
 		+ param_.AeroCoefficient.Lift.CLq_     * input(AEROFORCE_INPUT_Qbar)
 		+ param_.AeroCoefficient.Lift.CLde_    * input(AEROFORCE_INPUT_ELEVATOR)
 		+ param_.AeroCoefficient.Lift.CL_alpha_squared_ * AOA_square
@@ -104,11 +106,18 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 	3-5:
 	M_B
 	6 - 14 R_WB
+	15 Lift
+	16 Drag
+	17 Side
 	*/
-
+	// 
 	F_W(mathauxiliary::VECTOR_X) = -(QS * CD_); // Drag
-	F_W(mathauxiliary::VECTOR_Y) = QS * CY_; //  Side
+	F_W(mathauxiliary::VECTOR_Y) = QS * CY_; //  Side (assume side force is along the y axis of the wind frame)
 	F_W(mathauxiliary::VECTOR_Z) = -(QS * CL_); // lift
+	// 
+	output(AEROFORCE_OUTPUT_LIFT) = - F_W(mathauxiliary::VECTOR_Z);
+	output(AEROFORCE_OUTPUT_DRAG) = -F_W(mathauxiliary::VECTOR_X);
+	output(AEROFORCE_OUTPUT_SIDE) = F_W(mathauxiliary::VECTOR_Y);
 
 
 	Cl_ = param_.AeroCoefficient.Roll.Clb_ * input(AEROFORCE_INPUT_SIDESLIP)
@@ -146,15 +155,48 @@ void aero::AeroForceMoment1::OutputEquation(const double & t, const VectorXd & s
 
 void aero::AeroForceMoment1::IncrementState()
 {
-	// No increment states for aero force lib
+	// No increment states for aero force block
 }
 
 void aero::AeroForceMoment1::DisplayParameters()
 {
-	// display aeroparameters
+	// display aeroparameters (in you modified the block, please modify the display parameters, accordingly)
 	std::cout << "--------- Aeroforce and aeromoment block parameters ---------" << std::endl;
 	std::cout << "S : " << param_.S << " m^2. Cbar : " << param_.c_bar_ <<" m. b : " << param_.b_<<" m. " << std::endl;
-	std::cout << "CDalphasquare: " << param_.AeroCoefficient.Drag.CD_alpha_squared_ << "\n";
+	std::cout << " --------Lift parameters-------- \n";
+	std::cout << "CL0 : " << param_.AeroCoefficient.Lift.CL0_ << ", CLalphadot : " << param_.AeroCoefficient.Lift.CLadot_ << ", CLalpha : " << param_.AeroCoefficient.Lift.CL_alpha_ << "\n";
+	std::cout << "CLq : " << param_.AeroCoefficient.Lift.CLq_ << ", CLde : " << param_.AeroCoefficient.Lift.CLde_ << ", CLalpha^2 : " << param_.AeroCoefficient.Lift.CL_alpha_squared_ << "\n";
+	std::cout << "CLalpha^3 : " << param_.AeroCoefficient.Lift.CL_alpha_cubed_ << ", CLflap : " << param_.AeroCoefficient.Lift.CL_flap_ << ", CLflap^2 : " << param_.AeroCoefficient.Lift.CL_flap_squared_ << "\n";
+	std::cout << " --------Drag parameters-------- \n";
+	std::cout << "CD0 : " << param_.AeroCoefficient.Drag.CD0_ << ", CDbeta : " << param_.AeroCoefficient.Drag.CDbeta_ << ", CDde : " << param_.AeroCoefficient.Drag.CDde_ << "\n";
+	std::cout << "CDflap : " << param_.AeroCoefficient.Drag.CD_flap_ << ", CDbeta : " << param_.AeroCoefficient.Drag.CDbeta_ << ", CDde : " << param_.AeroCoefficient.Drag.CDde_ << "\n";
+	std::cout << "CDflap^2 : " << param_.AeroCoefficient.Drag.CD_flap_squared_ << ", CDalpha: " << param_.AeroCoefficient.Drag.CD_alpha_ << ", CDalpha^2 : " << param_.AeroCoefficient.Drag.CD_alpha_squared_ << "\n";
+	std::cout << " --------Side parameters-------- \n";
+	std::cout << "CYbeta : " << param_.AeroCoefficient.Side.CYb_
+			  << ", CYda :  " << param_.AeroCoefficient.Side.CYda_
+			  << ", CYdr: " << param_.AeroCoefficient.Side.CYdr_ << "\n";
+	std::cout << "CYp : " << param_.AeroCoefficient.Side.CYp_
+		      << ", CYr: " << param_.AeroCoefficient.Side.CYr_ << "\n";
+	std::cout << " --------Rolling  moment parameters-------- \n";
+	std::cout << "Clbeta : " << param_.AeroCoefficient.Roll.Clb_
+		      << ", Clda :  " << param_.AeroCoefficient.Roll.Clda_
+		      << ", Cldr: " << param_.AeroCoefficient.Roll.Cldr_ << "\n";
+	std::cout << "Clp : " << param_.AeroCoefficient.Roll.Clp_
+		      << ", Clr: " << param_.AeroCoefficient.Roll.Clr_ << "\n";
+	std::cout << " --------Pitching moment parameters-------- \n";
+	std::cout << "Cmq : " << param_.AeroCoefficient.Pitch.Cmq_
+		      << ", Cm0 :  " << param_.AeroCoefficient.Pitch.Cm0_
+		      << ", Cmalphadot : " << param_.AeroCoefficient.Pitch.Cmadot_  << "\n";
+	std::cout << "Cmalpha : " << param_.AeroCoefficient.Pitch.Cmalpha_
+		      << ", Cmde :  " << param_.AeroCoefficient.Pitch.Cmde_
+		      << ", Cmflap : " << param_.AeroCoefficient.Pitch.Cm_flap_ << "\n";
+	std::cout << "Cmflap^2 : " << param_.AeroCoefficient.Pitch.Cm_flap_squared_ << "\n";
+	std::cout << " --------Yawing moment parameters-------- \n";
+	std::cout << "Cnbeta : " << param_.AeroCoefficient.Yaw.Cnb_
+		      << ", Cnda :  " << param_.AeroCoefficient.Yaw.Cnda_
+		      << ", Cndr : " << param_.AeroCoefficient.Yaw.Cndr_ << "\n";
+	std::cout << "Cnp : " << param_.AeroCoefficient.Yaw.Cnp_
+		      << ", Cnr: " << param_.AeroCoefficient.Yaw.Cnr_ << "\n";
 	std::cout << "-------- End of block parameters -------- \n" << std::endl;
 }
 

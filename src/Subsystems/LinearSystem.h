@@ -63,9 +63,14 @@ namespace linearsystem {
 		void DisplayInitialCondition();
 		~Integrator();
 	};
-
+	/*
+	the block representing a transfer funtion
+	h(s) = n(s)/d(s)
+	n(s) = numerator(0) s^(n-1) + ... + numerator(n-1) s + numerator(n)
+	d(s) = denominator(0) s^n + denominator(1) s^(n-1) + ... + denominator(n) s + denominator(0)
+	*/
 	struct TransferFunctionParameter {
-		VectorXd Numerator; 
+		VectorXd Numerator;   
 		VectorXd Denominator;
 	};
 	class TransferFunction :

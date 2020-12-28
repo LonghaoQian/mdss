@@ -14,18 +14,19 @@ namespace aircraft {
 
 	enum autopliotpitchmode {
 		PITCHMODE_DIRECT = 0,  // the pitch CAS is off
-		PITCHMODE_CAS,       // the pitch CAS is on (C star controller). Normal Acc Command Mode
-		PITCHMODE_GAMMA,     // flight path hold mode
-		PITCHMODE_ALTITUDE,  // altitude command mode
+		PITCHMODE_CAS,         // the pitch CAS is on (C star controller). Normal Acc Command Mode
+		PITCHMODE_GAMMA,       // flight path hold mode
+		PITCHMODE_ALTITUDE,    // altitude command mode
 	};
 
-	enum autopliotrollhmode {
-		ROLLMODE_DIRECT = 0, // the roll CAS is off
-		ROLLMODE_CAS,      // the roll CAS is on
-		ROLLMODE_ROLLANGLE,
-		ROLLMODE_HEADINGANGLE,
+	enum autopliotlateralmode {
+		LATERAL_DIRECT = 0, // the LATERAL CAS is off aileron and rudder direct command
+		LATERAL_CAS,        // the LATERAL CAS is on roll rate and coordinated turn mode
+		LATERAL_ROLLANGLE,  // roll angle command
+		LATERAL_HEADINGANGLE,// heading angle command 
 	};
 
+	// define the external input to the C172 model
 	struct C172input {
 		struct {
 			bool starter;    // starter true: ON
@@ -41,11 +42,11 @@ namespace aircraft {
 		}controlsurface;
 		struct {
 			double steering; // deg steering angle
-			bool gearbreak;
-			bool geardown; // gear force enable
+			bool gearbreak;  // break, true = on
+			bool geardown;   // gear force enable, true = enable
 		}gear;
 
-
+		// autopilot input
 		struct {
 			bool autopilotmaster;   // master swith of the entire autopilot system
 			struct {
@@ -55,7 +56,7 @@ namespace aircraft {
 			}pitchCAS;
 
 			struct {
-				autopliotrollhmode mode{ ROLLMODE_DIRECT };
+				autopliotlateralmode mode{ LATERAL_DIRECT };
 				double commandrollangle{ 0.0 };
 				double commandheadingangle{ 0.0 };
 			}rollCAS;
@@ -153,6 +154,9 @@ namespace aircraft {
 
 
 	struct autopilotparameter {
+
+		double speedblenderconstant{ 0.0 };
+
 		struct {
 			double AltitudeErrorLimit{ 0.0 };
 			double AltitudeErrorToVSGain{ 0.0 };
@@ -173,26 +177,33 @@ namespace aircraft {
 		}autothrottle;
 
 		struct {
-
+			double KPhiDotCom{ 0.0 };
+			double KPhiDotInt{ 0.0 };
+			double KStickCom{ 0.0 };
+			double KStickINt{ 0.0 };
+			double KIntegral{ 0.0 };
 		}rollCAS;
 
 		struct {
-
+			double KaileronCross{0.0};
+			double KIntegral{ 0.0 };
+			double KrudderGain{ 0.0 };
+			double Kbeta{ 0.0 };
+			double rWashouta1{ 0.0 };
+			double rWashoutb1{ 0.0 };
 		}yawCAS;
 
 	};
 
-
-
 	struct modelparameter {
-
+		// propeller parameters:
 		struct {
 			Matrix<double, Eigen::Dynamic, 3> Chart; // an N by 3 matrix , first col: J, second col: CT, third col: CP
 			double diameter{ 0.0 };
 			double minimumAngularRate{0.0};
 			double shaftinertia{ 0.0 };
 		}propeller;
-
+		// piston engine parameters:
 		struct {
 			Eigen::Matrix<double, Dynamic, 2> TorqueRPMChart;                      // output power versus RPM chart  an N by 2 matrix 0 RPM 1 Torque (m*s)
 			Eigen::Matrix<double, Dynamic, 2> PowerMixtureChart;                   // power factor versus mixture chart an N by 2 matrix  0 RPM  1 toque factor
@@ -207,7 +218,7 @@ namespace aircraft {
 			double stater_breakaway_RPM{ 0.0 };      // the PRM where the starter torque begins to decline with RPM
 			double stater_zero_torque_RPM{ 0.0 };    // if below this torque, the engine produces no torque output
 		}pistonengine;
-
+		// mass and inertia property of the aircraft
 		struct {
 			double EmptyWeight{ 0.0 }; // the empty weight of the aircraft, excluding payload, passenger and fuel
 			double Pilot1{ 0.0 };
@@ -216,17 +227,17 @@ namespace aircraft {
 			double Pilot4{ 0.0 };
 			Matrix3d J; // moment of inertia
 		}inertia;
-
+		// geometry properties of the aircraft
 		struct {
 			double Span{ 0.0 };
 			double MeanChord{ 0.0 };
 			double ReferenceArea = 16.1651289600000;
 		}geometry;
-
+		// define the landing gear parameters
 		struct {
 			struct {
 				gearparameter param;
-				double MaxSteering;
+				double MaxSteering; // only the nose gear has steering capability
 			}nosegear;
 			struct {
 				gearparameter param;
@@ -235,22 +246,39 @@ namespace aircraft {
 				gearparameter param;
 			}rightgear;
 		}gear;
+		// actutors are modeled as fist order systems
+		struct {
+			// rate limited 1st order system
+			struct {
+				double MaxSpeed{ 0.0 };
+				double Shapfactor{ 0.0 };
+			}flap;
+			// 1st order system 
+			struct {
+				double Ts{0.0};
+			}elevator;
+			// 1st order system
+			struct {
+				double Ts{ 0.0 };
+			}aileron;
+			// 1st order system
+			struct {
+				double Ts{ 0.0 };
+			}rudder;
 
-
+		}actuator;
 		// autopilot parameters
 		aerodynamicsparameter aerodynamics;
 		autopilotparameter autopilot;
 		// solver configuration
 		simulationcontrol::SolverConfig Config;
-
 	};
-
+	// a list of model indexes of the system
 	struct modellist { // list containing all the model indexes of the system
 		struct {
 			unsigned int planekinematics{ 0 }; // TO DO: potential risk of forgetting definintion of system
 			unsigned int planedynamics{ 0 };
 			unsigned int gravityinertial{ 0 };
-			//unsigned int gravity
 			unsigned int gravitybody{ 0 };
 			unsigned int Vbdot;
 			unsigned int crossproduct{ 0 };
@@ -290,6 +318,12 @@ namespace aircraft {
 		}engine;
 
 		struct {
+			unsigned int GainSpeedBlendConstant{ 0 };
+			unsigned int GainBlenderAtan{ 0 };
+			unsigned int GainBlenderOuput{ 0 };
+		}speedblender;
+
+		struct {
 			unsigned int GainThetadot1{ 0 };
 			unsigned int GainThetadot2{ 0 };
 			unsigned int GainDeCom{ 0 };
@@ -311,6 +345,35 @@ namespace aircraft {
 			unsigned int PitchIntegralSwitch{ 0 };
 			unsigned int PitchCASDeInputSwitch{ 0 };
 		}pitchCAS;
+
+		struct {
+			unsigned int GainKAileronInputCAS{ 0 };
+			unsigned int GainKAileronInput{ 0 };
+			unsigned int GainKPhidot{ 0 };
+			unsigned int SumAileronCAS{ 0 };
+			unsigned int CASintegral{ 0 };
+			unsigned int ProductIntegralBlender{ 0 };
+			unsigned int GainKAileronIntegral{ 0 };
+			unsigned int ProductCASblender{ 0 };
+			unsigned int GainDampingPhidot{ 0 };
+			unsigned int SumAileronCommand{ 0 };
+			unsigned int AileronIntegralSwitch{ 0 };
+			unsigned int AileronOutputSwitch{ 0 };
+		}rollCAS;
+
+		struct {
+			unsigned int ProductCrossFeedingBlender{ 0 };
+			unsigned int GainKbeta{ 0 };
+			unsigned int Rwashoutfilter{ 0 };
+			unsigned int CASintegral{ 0 };
+			unsigned int GainKCAS{ 0 };
+			unsigned int ProductIntegralblender{ 0 };
+			unsigned int ProductCASblender{ 0 };
+			unsigned int Sumdrbeta{ 0 };
+			unsigned int RudderCommand{ 0 };
+			unsigned int RudderIntegralSwitch{ 0 };
+			unsigned int RudderOutputSwitch{ 0 };
+		}yawCAS;
 
 		struct
 		{
@@ -335,11 +398,18 @@ namespace aircraft {
 			unsigned int GroundNormal{ 0 };
 		}landinggear;
 
-		// some temporary blocks
 		struct {
-			unsigned int fixedthrottle;
-			unsigned int fixedmixture;
-			unsigned int fixedfuelstate;
+			unsigned int aileronactuator{ 0 };
+			unsigned int elevatoractuator{ 0 };
+			unsigned int rudderactuator{ 0 };
+			unsigned int flapactuator{ 0 };
+		}actuator;
+
+		// some temporary blocks for debugging
+		struct {
+			unsigned int fixedthrottle{ 0 };
+			unsigned int fixedmixture{ 0 };
+			unsigned int fixedfuelstate{ 0 };
 		}temp;
 
 	};
@@ -361,12 +431,116 @@ namespace aircraft {
 		}plane;
 
 		struct {
-			double propellerRPM;
+			double propellerRPM{0.0};
 		}engine;
+
+		struct {
+			double flap{ 0.0 };
+		}controlsurface;
 	};
 
 	struct GNCdata {
-		double TAS;
+		double TAS{ 0.0 };
+		double Altitude{ 0.0 };
+		double X{ 0.0 };
+		double Y{ 0.0 };
+		double Z{ 0.0 };
+		double Vx{ 0.0 };
+		double Vy{ 0.0 };
+		double Vz{ 0.0 };
+		double climbrate{ 0.0 };
+		double Roll{ 0.0 };
+		double Pitch{ 0.0 };
+		double Yaw{ 0.0 };
+		double gamma{ 0.0 };
+	};
+
+	struct CONTROLdata {
+		double elevatorcommand{ 0.0 };
+		double elevatorpos{ 0.0 };
+		double aileroncommand{ 0.0 };
+		double aileronpos{ 0.0 };
+		double ruddercommand{ 0.0 };
+		double rudderpos{ 0.0 };
+		double throttlecommad{ 0.0 };
+	};
+
+	struct AEROdata {
+		double AOA{ 0.0 };
+		double SideSlip{ 0.0 };
+		double AOArate{ 0.0 };
+		double SideSliprate{ 0.0 };
+		double DynamicPressure{ 0.0 };
+		double Pbar{ 0.0 };
+		double Qbar{ 0.0 };
+		double Rbar{ 0.0 };
+	};
+
+	struct AEROFORCEdata {
+		double Lift{ 0.0 };
+		double Drag{ 0.0 };
+		double Side{ 0.0 };
+		double RollMoment{ 0.0 };
+		double PitchMoment{ 0.0 };
+		double YawMoment{ 0.0 };
+		// lift drag and side force in the body-fixed frame
+		double Fx{ 0.0 };
+		double Fy{ 0.0 };
+		double Fz{ 0.0 };
+	};
+
+	struct ENGdata {
+		double torqueavailable{ 0.0 };
+		double torquerequired{ 0.0 };
+		double fuelrate{ 0.0 };
+		double rps{ 0.0 };
+		double throttlecmd{ 0.0 };
+		double thrust{ 0.0 };
+		double Cp{ 0.0 };
+		double Ct{ 0.0 };
+	};
+
+	struct RIGIDdata {
+		double Roll{ 0.0 };
+		double Pitch{ 0.0 };
+		double Yaw{ 0.0 };
+		double Rollrate{ 0.0 };
+		double Pitchrate{ 0.0 };
+		double Yawrate{ 0.0 };
+		double Phi_dot{ 0.0 };
+		double Thetat_dot{ 0.0 };
+		double Psi_dot{ 0.0 };
+		double Nz{ 0.0 };
+	};
+
+	struct GEARdata {
+		struct {
+			double compression{ 0.0 };
+			double gearforceX{ 0.0 };
+			double gearforceY{ 0.0 };
+			double gearforceZ{ 0.0 };
+			double gearmomentX{ 0.0 };
+			double gearmomentY{ 0.0 };
+			double gearmomentZ{ 0.0 };
+		}nosegear;
+		struct {
+			double compression{ 0.0 };
+			double gearforceX{ 0.0 };
+			double gearforceY{ 0.0 };
+			double gearforceZ{ 0.0 };
+			double gearmomentX{ 0.0 };
+			double gearmomentY{ 0.0 };
+			double gearmomentZ{ 0.0 };
+		}leftgear;
+		struct {
+			double compression{ 0.0 };
+			double gearforceX{ 0.0 };
+			double gearforceY{ 0.0 };
+			double gearforceZ{ 0.0 };
+			double gearmomentX{ 0.0 };
+			double gearmomentY{ 0.0 };
+			double gearmomentZ{ 0.0 };
+		}rightgear;
 	};
 
 	// wrapper to estabilish the C172 model using the solver components
@@ -384,21 +558,25 @@ namespace aircraft {
 		bool ResetParameter(const modelparameter& param);
 		// reset the simulation and initial condition if the isRunning is false. Return ture if reset successful
 		bool ResetSimulation(const  initialcondition& IC);
-		// display parameters
-		void DisplayParameters();
 		// display initial conditions
 		void DisplayInitialConditions();
-		// get aerodynamic block output
+		// display aerodynamic block input and output
 		void DisplayAerodynamicInfo();
-		// get engine info
+		// display engine input and output
 		void DisplayEngineInfo();
-		// 
-		void DisplayPropeller();
-		// 
+		// display landing gear input and output
 		void DisplayGearInfo();
-		// 
+		// display actuator info
+		void DisplayActuatorInfo();
+		// display general naviagation input and output
 		void DisplayGNCInfo();
 		const GNCdata* GetGNCInfo();
+		const AEROdata* GetAEROdata();
+		const AEROFORCEdata* GetAEROFORCEdata();
+		const ENGdata* GetENGdata();
+		const RIGIDdata* GetRigidBodydata();
+		const GEARdata* GetGeardata();
+		const CONTROLdata* GetControldata();
 	private:
 		// a flag to show whether the simulation is running. It is set to false initially.
 		// If UpdateSimulation is executed, then it is set to true.
@@ -431,7 +609,12 @@ namespace aircraft {
 		unsigned int elevatorinput{ 0 };
 		// flight data
 		GNCdata gncdata;
-
+		AEROdata aerodata;
+		AEROFORCEdata aeroforcedata;
+		ENGdata enginedata;
+		RIGIDdata rigidbodydata;
+		GEARdata landinggeardata;
+		CONTROLdata controldata;
 		// establish the aircraft model
 		// step 1. define the rigid body
 		void DefineRigidbody();
@@ -443,7 +626,9 @@ namespace aircraft {
 		void DefineAutopilot();
 		// step 5. define landing gear
 		void DefineLandingGear();
-		// step 6. define the logging
+		// step 6. define actuator
+		void DefineActuator();
+		// step 7. define the logging
 		void DefineLogging();
 		// connect system
 		void ConnectSystems();
